@@ -272,7 +272,7 @@ swaddle_package_create()
 		_swaddle_package_appendSwitch debug-workspace
 	fi
     
-	_swaddle_package_appendArrayOfPaths 'config-file' swaddle_configFiles
+	_swaddle_package_appendArrayOfPaths 'config-files' swaddle_configFiles
 	_swaddle_package_appendArrayOfPaths 'directories' swaddle_directories
 	
 	core_TODO 'Provide a way of templating stuff - in some ways, this is muscalture'
@@ -375,8 +375,8 @@ _swaddle_package_appendArrayOfPaths()
 	_swaddle_package_appendArrayOfPaths_callback()
 	{
 		local path="$core_variable_array_element"
-		if core_variable_startsWith "$path" '/'; then
-			path=."$path"
+		if core_variable_doesNotstartWith "$path" '/'; then
+			core_exitError $core_commandLine_exitCode_DATAERR "Config files and directories must be absolute"
 		fi
 		_swaddle_package_appendSwitch ${switchName} "$path"
 	}
