@@ -243,11 +243,19 @@ swaddle_package_create()
 	local options
 	local options_initialised
 	core_variable_array_initialise options
+    
+	if [ $(core_init_verbosity) -gt 0 ]; then
+		_swaddle_package_appendSwitch verbose
+	fi
+	
+	if [ $(core_init_verbosity) -gt 1 ]; then
+		_swaddle_package_appendSwitch debug
+		_swaddle_package_appendSwitch debug-workspace
+	fi
 	
     _swaddle_package_appendSwitch 'force'
 	
     _swaddle_package_appendSwitch 's' 'dir'
-	_swaddle_package_appendSwitch 't' 'rpm'
 	
     _swaddle_package_appendSwitch 'package' "$swaddle_outputPath"
     _swaddle_package_appendSwitch 'workdir' "$_swaddle_package_workFolderPath"
@@ -262,15 +270,6 @@ swaddle_package_create()
     _swaddle_package_appendSwitch 'maintainer' "$swaddle_maintainer"
     _swaddle_package_appendSwitch 'description' "$swaddle_description"
     _swaddle_package_appendSwitch 'url' "$swaddle_url"
-    
-	if [ $(core_init_verbosity) -gt 0 ]; then
-		_swaddle_package_appendSwitch verbose
-	fi
-	
-	if [ $(core_init_verbosity) -gt 1 ]; then
-		_swaddle_package_appendSwitch debug
-		_swaddle_package_appendSwitch debug-workspace
-	fi
     
 	_swaddle_package_appendArrayOfPaths 'config-files' swaddle_configFiles
 	_swaddle_package_appendArrayOfPaths 'directories' swaddle_directories

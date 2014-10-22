@@ -25,6 +25,8 @@ _swaddle_package_rpm_appendScript()
 
 swaddle_package_rpm_create()
 {
+	_swaddle_package_appendSwitch 't' 'rpm'
+	
 	if core_variable_isFalse $swaddle_rpm_autoDepends; then
 		_swaddle_package_appendSwitch 'no-auto-depends'
 	fi
