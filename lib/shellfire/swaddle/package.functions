@@ -261,6 +261,7 @@ swaddle_package_create()
     _swaddle_package_appendSwitch 'architecture' "$swaddle_architecture"
     _swaddle_package_appendSwitch 'maintainer' "$swaddle_maintainer"
     _swaddle_package_appendSwitch 'description' "$swaddle_description"
+    _swaddle_package_appendSwitch 'url' "$swaddle_url"
     
 	if [ $(core_init_verbosity) -gt 0 ]; then
 		_swaddle_package_appendSwitch verbose
