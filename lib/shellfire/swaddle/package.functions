@@ -34,12 +34,27 @@ swaddle_package_createWorkFolder()
 	mkdir -m 0700 -p "$_swaddle_package_workFolderPath"
 }
 
+core_dependency_requires '*' rm mkdir
+core_functions_register _swaddle_package_functions swaddle_package_createGeneratedScriptsFolder
+swaddle_package_createGeneratedScriptsFolder()
+{
+	_swaddle_package_generatedScriptsFolderPath="$swaddle_temporaryPackagesFolderPath"/"$swaddle_package"/generated-scripts
+	rm -rf "$_swaddle_package_generatedScriptsFolderPath" 2>/dev/null || true
+	mkdir -m 0700 -p "$_swaddle_package_generatedScriptsFolderPath"
+}
+
 core_dependency_requires '*' mkdir
 core_functions_register _swaddle_package_functions swaddle_package_createPackageRootFolder
 swaddle_package_createPackageRootFolder()
 {
 	_swaddle_package_root="$_swaddle_package_temporaryFolderPath"/root
 	mkdir -m 0755 -p "$_swaddle_package_root"
+}
+
+core_functions_register _swaddle_package_functions swaddle_package_setScriptsFolder
+swaddle_package_setScriptsFolder()
+{
+	_swaddle_package_scriptsFolderPath="$_swaddle_package_swaddlePath"/scripts
 }
 
 core_functions_register _swaddle_package_functions swaddle_package_resetConfiguration
@@ -78,10 +93,6 @@ swaddle_package_resetConfiguration()
 	unset swaddle_rpm_regexFilterFromProvides
 	unset swaddle_rpm_regexFilterFromRequires
 	core_variable_array_unset swaddle_rpm_buildDefinitions
-	unset swaddle_rpm_changelog
-	unset swaddle_rpm_verifyscript
-	unset swaddle_rpm_pretrans
-	unset swaddle_rpm_posttrans
 }
 
 # We should break this out
@@ -126,11 +137,6 @@ swaddle_package_defaultConfiguration()
 	swaddle_rpm_regexFilterFromProvides=
 	swaddle_rpm_regexFilterFromRequires=
 	core_variable_array_initialise swaddle_rpm_buildDefinitions
-	
-	swaddle_rpm_changelog=
-	swaddle_rpm_verifyscript=
-	swaddle_rpm_pretrans=
-	swaddle_rpm_posttrans=
 }
 
 core_functions_register _swaddle_package_functions swaddle_package_loadConfiguration
@@ -198,17 +204,6 @@ swaddle_package_verifyConfiguration()
 			core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting 'swaddle_rpm_compression' is '$swaddle_rpm_compression' (it must be one of 'none', 'xz'. 'gzip' or 'bzip2')."
 		;;
 	esac
-	
-	for configurationSetting in rpm_changelog rpm_verifyscript rpm_pretrans rpm_posttrans
-	do
-		local core_variable_indirectValue_result
-		core_variable_indirectValue "swaddle_$configurationSetting"
-		if [ -n "$core_variable_indirectValue_result" ]; then
-			if [ ! -f "$core_variable_indirectValue_result" ]; then
-				core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting 'swaddle_$configurationSetting' is not a valid file path for package '$swaddle_package'"
-			fi
-		fi
-	done
 }
 
 core_dependency_requires '*' rsync
@@ -279,27 +274,13 @@ swaddle_package_create()
 	_swaddle_package_appendArrayOfPaths 'directories' swaddle_directories
 	
 	core_TODO 'Provide a way of templating stuff - in some ways, this is muscalture'
-	core_TODO 'Some hooks might be the result of a build, ie muscalture'
-	core_TODO 'Hooks vary between Debs and RPMs, and potentially even Ubuntu and Debian'
-	local packageHooksPath="$_swaddle_package_swaddlePath"/hooks
-
-	core_TODO 'broken - we need to collate files'
-    local packageHookKind
-	local packageHookFolder
-    local packageHookFile
-    for packageHookKind in before-install after-install before-remove after-remove
-    do
-		packageHookFolder="$packageHooksPath"/"$packageHookKind"
-		if [ -d "$packageHookFolder" ]; then
-			for packageHookFile in "$packageHookFolder"/*
-			do
-				if core_path_isReadableNonEmptyExecutableFilePath "$packageHookFile"; then
-					_swaddle_package_appendSwitch "$packageHookKind" "$packageHookFile"
-				fi
-			done
-		fi
-    done
-    
+	core_TODO 'Some scripts might be the result of a build, ie muscalture'
+	core_TODO 'Scripts vary between Debs and RPMs, and potentially even Ubuntu and Debian'
+	
+	_swaddle_package_appendScript before-install
+	_swaddle_package_appendScript after-install
+	_swaddle_package_appendScript before-remove
+	_swaddle_package_appendScript after-remove
     
 	swaddle_package_rpm_create
 	
@@ -307,8 +288,6 @@ swaddle_package_create()
 	
 	# Package contents
 	core_variable_array_append options '--'
-	
-	ls -la $_swaddle_package_root
     
     local fileOrFolderToInclude
 	local count=0
@@ -351,6 +330,12 @@ core_functions_register _swaddle_package_functions swaddle_package_removeWorkFol
 swaddle_package_removeWorkFolderPath()
 {
 	rm -rf "$_swaddle_package_workFolderPath"
+}
+
+core_functions_register _swaddle_package_functions swaddle_package_done
+swaddle_package_done()
+{
+	core_message NOTICE "Built swaddle '$swaddle_package'"
 }
 
 _swaddle_package_appendSwitch()
@@ -412,4 +397,54 @@ _swaddle_package_appendBoolean()
 	fi
 	
     _swaddle_package_appendSwitch "$switch"
+}
+
+_swaddle_package_appendScript()
+{
+	local scriptType="$1"
+	if _swaddle_package_makeScript "$scriptType"; then
+		_swaddle_package_rpm_appendSwitch "$scriptType" "$_swaddle_package_scriptsFolderPath"/"$scriptType"
+	fi
+}
+
+core_dependency_requires '*' cat rm chmod
+_swaddle_package_makeScript()
+{
+	local scriptType="$1"
+	local scriptTypePath="$_swaddle_package_scriptsFolderPath"/"$scriptType"
+	
+	core_TODO 'Templated scripts, scripts in other repositories and shellshock scripts'
+	
+	if ! core_path_isReadableAndSearchableFolderPath "$scriptTypePath"; then
+		return 1
+	fi
+	
+	local generatedScript="$_swaddle_package_generatedScriptsFolderPath"/"$scriptType"
+	printf '%s\n\n' '/bin/sh' >"$generatedScript"
+	
+	local scriptFragment
+	local count=0
+	pushd "$scriptTypePath"
+	
+		set +f
+		for scriptFragment in *
+		do
+			set -f
+			if core_path_isReadableNonEmptyFilePath "$scriptFragment"; then
+				count=$((count+1))
+				printf '\n\n# %s\n' "$scriptFragment"
+				cat "$scriptFragment" >>"$generatedScript"
+			fi
+		done
+		set -f
+		
+	popd
+	
+	if [ $count -eq 0 ]; then
+		rm "$generatedScript"
+		return 1
+	fi
+	
+	chmod +x "$generatedScript"
+	return 0
 }

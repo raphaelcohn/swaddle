@@ -18,6 +18,11 @@ _swaddle_package_rpm_appendBoolean()
 	_swaddle_package_appendBoolean rpm-${1} $2
 }
 
+_swaddle_package_rpm_appendScript()
+{
+	_swaddle_package_appendScript "rpm-$1"
+}
+
 swaddle_package_rpm_create()
 {
 	if core_variable_isFalse $swaddle_rpm_autoDepends; then
@@ -60,18 +65,11 @@ swaddle_package_rpm_create()
     if [ -n "$swaddle_rpm_regexFilterFromRequires" ]; then
         _swaddle_package_rpm_appendSwitch 'filter-from-requires' $swaddle_rpm_regexFilterFromRequires
     fi
-    
-	local fileSwitch
-	local filePath
-	for fileSwitch in changelog verifyscript pretrans posttrans
-	do
-		local core_variable_indirectValue_result
-		core_variable_indirectValue swaddle_rpm_$fileSwitch
-		filePath=$core_variable_indirectValue_result
-		if [ -n "$filePath" ]; then
-			_swaddle_package_rpm_appendSwitch $fileSwitch $filePath
-		fi
-	done
+	
+	_swaddle_package_rpm_appendScript changelog
+	_swaddle_package_rpm_appendScript verifyscript
+	_swaddle_package_rpm_appendScript pretrans
+	_swaddle_package_rpm_appendScript posttrans
 	
 	_swaddle_package_rpm_appendArray 'rpmbuild-define' swaddle_rpm_buildDefinitions
 }
