@@ -1,0 +1,77 @@
+core_usesIn core/variable array
+
+_swaddle_package_rpm_appendSwitch()
+{
+	local switchName=$1
+	shift 1
+	
+	_swaddle_package_appendSwitch rpm-${switchName} $@
+}
+
+_swaddle_package_rpm_appendArray()
+{
+	_swaddle_package_appendArray rpm-${1} $2
+}
+
+_swaddle_package_rpm_appendBoolean()
+{
+	_swaddle_package_appendBoolean rpm-${1} $2
+}
+
+swaddle_package_rpm_create()
+{
+	if core_variable_isFalse $swaddle_rpm_autoDepends; then
+		_swaddle_package_appendSwitch 'no-auto-depends'
+	fi
+	
+	if core_variable_array_isEmpty swaddle_rpm_depends; then
+		_swaddle_package_appendSwitch 'no-depends'
+	fi
+	
+	_swaddle_package_appendArray 'depends' swaddle_rpm_depends
+	_swaddle_package_appendArray 'provides' swaddle_rpm_provides
+	_swaddle_package_appendArray 'conflicts' swaddle_rpm_conflicts
+	_swaddle_package_appendArray 'replaces' swaddle_rpm_replaces
+	
+	
+	
+	
+	
+	_swaddle_package_rpm_appendSwitch 'use-file-permissions'
+	_swaddle_package_rpm_appendSwitch 'user' $swaddle_rpm_user
+	_swaddle_package_rpm_appendSwitch 'group' $swaddle_rpm_group
+	_swaddle_package_rpm_appendSwitch 'defattrfile' $swaddle_rpm_defattrfile
+	_swaddle_package_rpm_appendSwitch 'defattrdir' $swaddle_rpm_defattrdir
+	_swaddle_package_rpm_appendSwitch 'digest' $swaddle_rpm_digest
+	_swaddle_package_rpm_appendSwitch 'compression' $swaddle_rpm_compression
+	#_swaddle_package_rpm_appendSwitch 'os' linux
+	
+	_swaddle_package_rpm_appendBoolean 'sign' swaddle_rpm_sign
+	_swaddle_package_rpm_appendBoolean 'auto-add-directories' swaddle_rpm_autoAddDirectories
+	_swaddle_package_rpm_appendBoolean 'autoreqprov' swaddle_rpm_autoReqProv
+	_swaddle_package_rpm_appendBoolean 'autoreq' swaddle_rpm_autoReq
+	_swaddle_package_rpm_appendBoolean 'autoprov' swaddle_rpm_autoProv
+	_swaddle_package_rpm_appendBoolean 'ignore-iteration-in-dependencies' swaddle_rpm_ignoreIterationInDependencies
+	
+    if [ -n "$swaddle_rpm_regexFilterFromProvides" ]; then
+        _swaddle_package_rpm_appendSwitch 'filter-from-provides' $swaddle_rpm_regexFilterFromProvides
+    fi
+    
+    if [ -n "$swaddle_rpm_regexFilterFromRequires" ]; then
+        _swaddle_package_rpm_appendSwitch 'filter-from-requires' $swaddle_rpm_regexFilterFromRequires
+    fi
+    
+	local fileSwitch
+	local filePath
+	for fileSwitch in changelog verifyscript pretrans posttrans
+	do
+		local core_variable_indirectValue_result
+		core_variable_indirectValue swaddle_rpm_$fileSwitch
+		filePath=$core_variable_indirectValue_result
+		if [ -n "$filePath" ]; then
+			_swaddle_package_rpm_appendSwitch $fileSwitch $filePath
+		fi
+	done
+	
+	_swaddle_package_rpm_appendArray 'rpmbuild-define' swaddle_rpm_buildDefinitions
+}

@@ -1,0 +1,6 @@
+This folder contains the package 'skeleton' - a full file system layout, including empty folders.
+
+If you're using git, then empty folders can be supported by using .gitignore files (we do not copy these into the package), eg with
+
+# Ignore everything in this directory except .gitignore
+!.gitignore
