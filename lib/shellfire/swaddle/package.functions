@@ -102,7 +102,7 @@ swaddle_package_defaultConfiguration()
 {
 	core_TODO 'Make version/iteration (a release counter, perhaps) something that can be build-related / base it on git [much more sensible]'
 	core_TODO 'Make it easier to have multiple architectures'
-	swaddle_architecture='noarch'
+	swaddle_architecture='all'
 	swaddle_epoch=0
 	swaddle_version=0
 	# iteration is for packaging changes as opposed to software changes.
@@ -258,7 +258,7 @@ swaddle_package_create()
     _swaddle_package_appendSwitch 'epoch' "$swaddle_epoch"
     _swaddle_package_appendSwitch 'version' "$swaddle_version"
     _swaddle_package_appendSwitch 'iteration' "$swaddle_iteration"
-    #_swaddle_package_appendSwitch 'architecture' "$swaddle_architecture"
+    _swaddle_package_appendSwitch 'architecture' "$swaddle_architecture"
     _swaddle_package_appendSwitch 'maintainer' "$swaddle_maintainer"
     _swaddle_package_appendSwitch 'description' "$swaddle_description"
     
@@ -268,6 +268,7 @@ swaddle_package_create()
 	
 	if [ $(core_init_verbosity) -gt 1 ]; then
 		_swaddle_package_appendSwitch debug
+		_swaddle_package_appendSwitch debug-workspace
 	fi
     
 	_swaddle_package_appendArrayOfPaths 'config-file' swaddle_configFiles
