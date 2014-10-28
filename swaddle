@@ -18,11 +18,11 @@ _program()
 	}
 	
 	core_dependency_requires '*' rm mkdir
-	swaddle_createEmptyFolderSoWeCanLeverageRsyncToRemoveMuscalture()
+	swaddle_createEmptyFolderSoWeCanLeverageRsyncToRemoveBody()
 	{
-		swaddle_emptyFolderSoWeCanLeverageRsyncToRemoveMuscalturePath="$swaddle_temporaryPath"/empty
-		rm -rf "$swaddle_emptyFolderSoWeCanLeverageRsyncToRemoveMuscalturePath" 2>/dev/null || true
-		mkdir -m 0700 -p "$swaddle_emptyFolderSoWeCanLeverageRsyncToRemoveMuscalturePath"
+		swaddle_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath="$swaddle_temporaryPath"/empty
+		rm -rf "$swaddle_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath" 2>/dev/null || true
+		mkdir -m 0700 -p "$swaddle_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath"
 	}
 	
 	core_dependency_requires '*' mkdir
@@ -46,7 +46,7 @@ _program()
 	swaddle()
 	{
 		swaddle_createTemporaryFolder
-		swaddle_createEmptyFolderSoWeCanLeverageRsyncToRemoveMuscalture
+		swaddle_createEmptyFolderSoWeCanLeverageRsyncToRemoveBody
 		swaddle_createPackagesFolder
 		swaddle_createOutputFolder
 		swaddle_buildPackages
