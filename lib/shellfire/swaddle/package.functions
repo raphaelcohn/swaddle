@@ -223,24 +223,24 @@ swaddle_package_synchronisePackageSkeletonToPackageRoot()
 	
 	if ! core_path_isReadableAndSearchableFolderPath "$packageSkeletonPath"; then
 		core_message WARN "Skipping package '$swaddle_package' skeleton path '$packageSkeletonPath' because it is not readable or searchable. This is usually not what you want."
-		packageSkeletonPath="$swaddle_emptyFolderSoWeCanLeverageRsyncToRemoveMuscalturePath"
+		packageSkeletonPath="$swaddle_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath"
 	fi
 	
 	rsync --quiet --archive --acls --xattrs --hard-links --delete --delete-after --delete-excluded --exclude=.gitignore --exclude=.hgignore "$packageSkeletonPath"/ "$_swaddle_package_root"/
 }
 
 core_dependency_requires '*' rsync
-core_functions_register _swaddle_package_functions swaddle_package_synchronisePackageMusculatureToPackageRoot
-swaddle_package_synchronisePackageMusculatureToPackageRoot()
+core_functions_register _swaddle_package_functions swaddle_package_synchronisePackageBodyToPackageRoot
+swaddle_package_synchronisePackageBodyToPackageRoot()
 {
-	local packageMuscalturePath="$_swaddle_package_swaddlePath"/muscalture
+	local packageBodyPath="$_swaddle_package_swaddlePath"/body
 	
-	if ! core_path_isReadableAndSearchableFolderPath "$packageMuscalturePath"; then
-		core_message INFO "Skipping package '$swaddle_package' muscalture path '$packageMuscalturePath' because it is not readable or searchable."
+	if ! core_path_isReadableAndSearchableFolderPath "$packageBodyPath"; then
+		core_message INFO "Skipping package '$swaddle_package' body path '$packageBodyPath' because it is not readable or searchable."
 		return 0
 	fi
 	
-	rsync --quiet --archive --acls --xattrs --hard-links --exclude=.gitignore --exclude=.hgignore "$packageMuscalturePath"/ "$_swaddle_package_root"/
+	rsync --quiet --archive --acls --xattrs --hard-links --exclude=.gitignore --exclude=.hgignore "$packageBodyPath"/ "$_swaddle_package_root"/
 }
 
 core_usesIn swaddle/package rpm
@@ -282,11 +282,7 @@ swaddle_package_create()
     
 	_swaddle_package_appendArrayOfPaths 'config-files' swaddle_configFiles
 	_swaddle_package_appendArrayOfPaths 'directories' swaddle_directories
-	
-	core_TODO 'Provide a way of templating stuff - in some ways, this is muscalture'
-	core_TODO 'Some scripts might be the result of a build, ie muscalture'
-	core_TODO 'Scripts vary between Debs and RPMs, and potentially even Ubuntu and Debian'
-	
+		
 	_swaddle_package_appendScript before-install
 	_swaddle_package_appendScript after-install
 	_swaddle_package_appendScript before-remove
@@ -318,7 +314,7 @@ swaddle_package_create()
     popd
     
 	if [ $count -eq 0 ]; then
-		core_exitError $core_commandLine_exitCode_CONFIG "We need at least one file or folder in the package root (eg your skeleton or muscalture is empty) for package '$swaddle_package'"
+		core_exitError $core_commandLine_exitCode_CONFIG "We need at least one file or folder in the package root (eg your skeleton or body is empty) for package '$swaddle_package'"
 	fi
 	
 	_swaddle_package_create_fpmInfo()
