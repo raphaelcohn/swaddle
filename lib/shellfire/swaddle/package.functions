@@ -174,7 +174,16 @@ swaddle_package_verifyConfiguration()
 		fi
 	done
 	
-	for configurationSetting in rpm_autoDepends rpm_autoAddDirectories rpm_autoReqProv rpm_autoReq rpm_autoProv rpm_ignoreIterationInDependencies
+	for configurationSetting in description group epoch version iteration category vendor licence maintainer description url
+	do
+		local core_variable_indirectValue_result
+		core_variable_indirectValue "swaddle_$configurationSetting"
+		if [ -z "$core_variable_indirectValue_result" ]; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting 'swaddle_$configurationSetting' can not be empty for the package '$swaddle_package'"
+		fi
+	done
+	
+	for configurationSetting in rpm_autoDepends rpm_sign rpm_autoAddDirectories rpm_autoReqProv rpm_autoReq rpm_autoProv rpm_ignoreIterationInDependencies
 	do
 		local core_variable_indirectValue_result
 		core_variable_indirectValue "swaddle_$configurationSetting"
@@ -196,7 +205,7 @@ swaddle_package_verifyConfiguration()
 	
 	case "$swaddle_rpm_compression" in
 		
-		none|xz|gzip|bzip2)
+		none|gzip|bzip2|xz)
 			:
 		;;
 		
@@ -374,7 +383,7 @@ _swaddle_package_appendArrayOfPaths()
 	_swaddle_package_appendArrayOfPaths_callback()
 	{
 		local path="$core_variable_array_element"
-		if core_variable_doesNotstartWith "$path" '/'; then
+		if core_variable_doesNotStartWith "$path" '/'; then
 			core_exitError $core_commandLine_exitCode_DATAERR "Config files and directories must be absolute"
 		fi
 		_swaddle_package_appendSwitch ${switchName} "$path"

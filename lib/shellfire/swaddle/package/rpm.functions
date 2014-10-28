@@ -75,3 +75,68 @@ swaddle_package_rpm_create()
 	
 	_swaddle_package_rpm_appendArray 'rpmbuild-define' swaddle_rpm_buildDefinitions
 }
+
+_swaddle_package_rpm_generateSpecFile_digestAlgorithm()
+{
+	case "$swaddle_rpm_digest" in
+		
+		md5)
+			printf '%s' 1
+		;;
+		
+		sha1)
+			printf '%s' 2
+		;;
+		
+		sha256)
+			printf '%s' 8
+		;;
+		
+		sha384)
+			printf '%s' 9
+		;;
+		
+		sha512)
+			printf '%s' 10
+		;;
+		
+	esac
+}
+
+_swaddle_package_rpm_generateSpecFile_compression()
+{
+	case "$swaddle_rpm_compression" in
+		
+		none)
+			printf '%s' 'w0.gzdio'
+		;;
+		
+		gzip)
+			printf '%s' 'w9.gzdio'
+		;;
+		
+		bzip2)
+			printf '%s' 'w9.bzdio'
+		;;
+		
+		lzma)
+			# Level 7 in Fedora's suggestions
+			printf '%s' 'w9.lzdio'
+		;;
+		
+		xz)
+			# Level 7 in Fedora's suggestions; FPM uses level 2
+			printf '%s' 'w9.xzdio'
+		;;
+		
+	esac
+}
+
+_swaddle_package_rpm_generateSpecFile_yesNo()
+{
+	if core_variable_isTrue "$1"; then
+		printf 'yes'
+	else
+		printf 'no'
+	fi
+}

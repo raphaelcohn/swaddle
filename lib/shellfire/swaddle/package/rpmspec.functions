@@ -1,0 +1,325 @@
+swaddle_package_rpm_generateSpecFile()
+{
+	core_TODO 'Fix up name'
+	
+	local numberOfPackagesInstalled="\$1"
+	
+	local specFile="$_swaddle_package_workFolderPath"/"$swaddle_package".spec
+	{
+		# Shamelessly based on Jordan Sissel's FPM
+		printf '%s' "
+# Disable any distro build-system global settings
+%define __spec_prep_post true
+%define __spec_prep_pre true
+%define __spec_build_post true
+%define __spec_build_pre true
+%define __spec_install_post true
+%define __spec_install_pre true
+%define __spec_clean_post true
+%define __spec_clean_pre true
+
+# Disable checking for unpackaged files
+#%undefine __check_files
+
+# Digest method is '${swaddle_rpm_digest}'
+# %define _source_filedigest_algorithm $(_swaddle_package_rpm_generateSpecFile_digestAlgorithm)
+%define _binary_filedigest_algorithm $(_swaddle_package_rpm_generateSpecFile_digestAlgorithm)
+
+# Compression method is '${swaddle_rpm_compression}'
+# %define _source_payload $(_swaddle_package_rpm_generateSpecFile_compression)
+%define _binary_payload $(_swaddle_package_rpm_generateSpecFile_compression)
+
+Name: ${swaddle_package}
+Version: ${swaddle_version}
+# Epoch is not required
+Epoch: ${swaddle_epoch}
+Release: $((swaddle_iteration+1))
+Summary: $(_swaddle_package_rpm_spec_summaryDescription)
+AutoReqProv: $(_swaddle_package_rpm_generateSpecFile_yesNo swaddle_rpm_autoReqProv)
+AutoReq: $(_swaddle_package_rpm_generateSpecFile_yesNo swaddle_rpm_autoReq)
+AutoProv: $(_swaddle_package_rpm_generateSpecFile_yesNo swaddle_rpm_autoProv)
+# BuildRoot is required on old rpmbuild versions (eg CentOS 5, AIX)
+# CentOS 5 is now on life-support and will be dead after 31st March 2017
+BuildRoot: %buildroot
+Prefix: /
+Group: default
+License: ${swaddle_licence}
+Vendor: ${swaddle_vendor}
+URL: ${swaddle_url}
+Packager: ${swaddle_maintainer}
+
+$(_swaddle_package_rpm_spec_iterateDependencies Requires  swaddle_rpm_depends)
+$(_swaddle_package_rpm_spec_iterateScriptDependencies pre before-install)
+$(_swaddle_package_rpm_spec_iterateScriptDependencies post after-install)
+$(_swaddle_package_rpm_spec_iterateScriptDependencies preun before-remove)
+$(_swaddle_package_rpm_spec_iterateScriptDependencies postun after-remove)
+$(_swaddle_package_rpm_spec_iterateScriptDependencies postun after-remove)
+$(_swaddle_package_rpm_spec_iterateScriptDependencies verifyscript verify)
+$(_swaddle_package_rpm_spec_iterateScriptDependencies pretrans pre-transaction)
+$(_swaddle_package_rpm_spec_iterateScriptDependencies posttrans post-transaction)
+$(_swaddle_package_rpm_spec_iterateDependencies Provides  swaddle_rpm_provides)
+$(_swaddle_package_rpm_spec_iterateDependencies Conflicts swaddle_rpm_conflicts)
+$(_swaddle_package_rpm_spec_iterateDependencies Obsoletes swaddle_rpm_replaces)
+
+%description
+$(_swaddle_package_rpm_spec_formatDescription)
+
+%prep
+
+%build
+
+%install
+
+%clean
+
+$(_swaddle_package_rpm_spec_script pre before-install)
+
+$(_swaddle_package_rpm_spec_script post after-install)
+
+$(_swaddle_package_rpm_spec_script preun before-remove)
+
+$(_swaddle_package_rpm_spec_script postun after-remove)
+
+$(_swaddle_package_rpm_spec_script postun after-remove)
+
+$(_swaddle_package_rpm_spec_script verifyscript verify)
+
+$(_swaddle_package_rpm_spec_script pretrans pre-transaction)
+
+$(_swaddle_package_rpm_spec_script posttrans post-transaction)
+
+$(_swaddle_package_rpm_spec_trigger triggerin trigger-on)
+
+$(_swaddle_package_rpm_spec_trigger triggerun trigger-off)
+
+$(_swaddle_package_rpm_spec_trigger triggerpostun trigger-fixerrors)
+
+%changelog
+$(_swaddle_package_rpm_spec_changelog)
+"
+	} >"$specFile"
+}
+
+core_dependency_requires '*' head
+_swaddle_package_rpm_spec_summaryDescription()
+{
+	head -n 1 "$swaddle_description"
+}
+
+_swaddle_package_rpm_spec_iterateDependencies()
+{
+	_swaddle_package_rpm_spec_iterateDependencies_callback()
+	{
+		local dependency="$core_variable_array_element"
+		printf "$rpmName: $dependency"
+	}
+	
+	local rpmName="$1"
+	local arrayName="$2"
+	core_variable_array_iterate "$arrayName" _swaddle_package_rpm_spec_iterateDependencies_callback
+}
+
+_swaddle_package_rpm_spec_iterateScriptDependencies_printIfValid()
+{
+	if [ -z "$dependency" ]; then
+		return 0
+	fi
+	
+	if core_variables_startsWith "$dependency" '#'; then
+		return 0
+	fi
+	
+	printf 'Requires(%s): %s\n' "$rpmScriptType" "$dependency"
+}
+
+_swaddle_package_rpm_spec_iterateScriptDependencies()
+{
+	local rpmScriptType="$1"
+	local scriptType="$2"
+	local scriptTypeDependenciesPath="$_swaddle_package_scriptsFolderPath"/"$scriptType"
+	
+	if ! core_path_isReadableAndSearchableFolderPath "$scriptTypePath"; then
+		return 0
+	fi
+	
+	set +f
+	set -- "$scriptTypePath"/*.depends
+	set -f
+	if [ ! -e "$1" ]; then
+		return 0
+	fi
+	
+	local dependsFile
+	local dependency
+	for dependsFile in "$@"
+	do
+		if core_path_isReadableNonEmptyFilePath "$dependsFile"; then
+			
+			while IFS='' read -r dependency
+			do
+				_swaddle_package_rpm_spec_iterateScriptDependencies_printIfValid
+			done <"$dependsFile"
+			if [ -n "$dependency" ]; then
+				_swaddle_package_rpm_spec_iterateScriptDependencies_printIfValid
+			fi
+		fi
+	done
+}
+
+core_dependency_requires '*' sed
+_swaddle_package_rpm_spec_formatDescription()
+{
+	sed -e 's/^\w*$/ \./g' <<EOF
+${swaddle_description}
+EOF
+}
+
+core_dependency_requires '*' cat
+_swaddle_package_rpm_spec_script()
+{
+	local rpmScriptType="$1"
+	local scriptType="$2"
+	local scriptTypePath="$_swaddle_package_scriptsFolderPath"/"$scriptType"
+	
+	core_TODO 'Templated scripts, scripts in other repositories and shellshock scripts'
+	
+	if ! core_path_isReadableAndSearchableFolderPath "$scriptTypePath"; then
+		return 0
+	fi
+	
+	set +f
+	set -- "$scriptTypePath"/*.sh
+	set -f
+	if [ ! -e "$1" ]; then
+		return 0
+	fi
+	
+	# https://fedoraproject.org/wiki/How_to_create_an_RPM_package
+	# $1 is passed to this script as a number
+	# For pre and post, 1 for first install, 2+ for upgrade
+	# For preun and postun, 0 is when last version is removed (1 is for upgrade)
+	# For verify, not used
+	# For pretrans and posttrans, always 0
+	
+	printf '%s\n' "%${rpmScriptType}"
+	local scriptFile
+	for scriptFile in "$@"
+	do
+		if core_path_isReadableNonEmptyFilePath "$scriptFile"; then
+			cat "$scriptFile"
+			printf '\n'
+		fi
+	done
+}
+
+_swaddle_package_rpm_spec_trigger_printIfValid()
+{
+	if [ -z "$dependency" ]; then
+		return 0
+	fi
+	
+	if core_variables_startsWith "$dependency" '#'; then
+		return 0
+	fi
+	
+	if [ $isAfterFirst -eq 1 ]; then
+		printf ', '
+	fi
+	
+	printf '%s' "$dependency"
+}
+
+_swaddle_package_rpm_spec_trigger()
+{
+	local rpmScriptType="$1"
+	local scriptType="$2"
+	local scriptTypePath="$_swaddle_package_scriptsFolderPath"/"$scriptType"
+	
+	if ! core_path_isReadableAndSearchableFolderPath "$scriptTypePath"; then
+		return 0
+	fi
+	
+	set +f
+	set -- "$scriptTypePath"/*.depends
+	set -f
+	if [ ! -e "$1" ]; then
+	
+		set +f
+		set -- "$scriptTypePath"/*.sh
+		set -f
+		if [ ! -e "$1" ]; then
+			core_message WARN "No depends files for trigger '$scriptType' (but sh files are present)"
+			return 0
+		fi
+		
+		return 0
+	fi
+	
+	printf '%s -- ' "$rpmScriptType"
+	local dependency
+	local dependsFile
+	local isAfterFirst=0
+	for dependsFile in "$@"
+	do
+		if core_path_isReadableNonEmptyFilePath "$dependsFile"; then
+			
+			while IFS='' read -r dependency
+			do
+				_swaddle_package_rpm_spec_trigger_printIfValid
+				isAfterFirst=1
+			done <"$dependsFile"
+			if [ -n "$dependency" ]; then
+				_swaddle_package_rpm_spec_trigger_printIfValid
+			fi
+		fi
+	done
+	printf '\n'
+	
+	set +f
+	set -- "$scriptTypePath"/*.sh
+	set -f
+	if [ ! -e "$1" ]; then
+		core_message WARN "No sh files for trigger '$scriptType' (but depends files are present)"
+		return 0
+	fi
+	
+	local scriptFile
+	for scriptFile in "$@"
+	do
+		if core_path_isReadableNonEmptyFilePath "$scriptFile"; then
+			cat "$scriptFile"
+			printf '\n'
+		fi
+	done
+}
+
+core_dependency_requires '*' date
+_swaddle_package_rpm_spec_changelog()
+{
+	local epochSeconds
+	local author
+	local authorEmail
+	local commitHash
+	local subject
+	local changelogDate
+	git log --format='%at%x09%aN%x09%aE%x09%H%x09%s' | while IFS="$(printf '\t')" read -r epochSeconds author authorEmail commitHash subject
+	do
+		changelogDate="$(date -u -d @${epochSeconds} '+%a %b %d %Y')"
+		printf '* %s %s <%s> - %s\n' "$epochSeconds" "$author" "$authorEmail" "$commitHash"
+		printf '- %s\n' "$subject"
+		printf '\n'
+	done
+}
+
+
+swaddle_package_rpm_rpmbuild()
+{
+	:
+	# --sign
+	# --target  "#{architecture}-unknown-#{attributes[:rpm_os]}"  or --target "$(uname -m)"
+	# "--define", "buildroot #{build_path}/BUILD",
+#"--define", "_topdir #{build_path}",
+#"--define", "_sourcedir #{build_path}",
+#"--define", "_rpmdir #{build_path}/RPMS",
+#"--define", "_tmppath #{attributes[:workdir]}"
+}
