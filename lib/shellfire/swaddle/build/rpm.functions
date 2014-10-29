@@ -1,63 +1,48 @@
 # Some rules on the GROUP TAG: https://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/Packagers_Guide/chap-Packagers_Guide-Spec_File_Reference-Preamble.html
 
+swaddle_build_package_rpm_defaultConfiguration()
+{
+	swaddle_build_configuration_default swaddle_rpm \
+		autoDepends 'yes' \
+		user 'root' \
+		group 'root' \
+		defattrfile '-' \
+		defattrdir '-' \
+		digest 'sha512' \
+		compression 'xz' \
+		sign 'no' \
+		autoAddDirectories 'yes' \
+		autoReqProv 'yes' \
+		autoProv 'yes' \
+		ignoreIterationInDependencies 'no' \
+		regexFilterFromProvides '' \
+		regexFilterFromRequires ''
+}
+
 swaddle_build_package_rpm_resetConfiguration()
 {
-	
 	core_variable_array_unset swaddle_rpm_depends
-	
-	
 	core_variable_array_unset swaddle_rpm_provides
 	core_variable_array_unset swaddle_rpm_conflicts
 	core_variable_array_unset swaddle_rpm_replaces
 	
-	unset swaddle_rpm_autoDepends
-	swaddle_rpm_autoDepends='yes'
-	
-	unset swaddle_rpm_category
-	
-	
-	
-	unset swaddle_rpm_user
-	swaddle_rpm_user='root'
-	
-	unset swaddle_rpm_group
-	swaddle_rpm_group='root'
-	
-	unset swaddle_rpm_defattrfile
-	swaddle_rpm_defattrfile='-'
-	
-	unset swaddle_rpm_defattrdir
-	swaddle_rpm_defattrdir='-'
-	
-	unset swaddle_rpm_digest
-	swaddle_rpm_digest='sha512'
-	
-	unset swaddle_rpm_compression
-	swaddle_rpm_compression='xz'
-	
-	unset swaddle_rpm_sign
-	swaddle_rpm_sign='no'
-	
-	unset swaddle_rpm_autoAddDirectories
-	swaddle_rpm_autoAddDirectories='yes'
-	
-	unset swaddle_rpm_autoReqProv
-	swaddle_rpm_autoReqProv='yes'
-	
-	unset swaddle_rpm_autoReq
-	swaddle_rpm_autoReq='yes'
-	
-	unset swaddle_rpm_autoProv
-	swaddle_rpm_autoProv='yes'
-	
-	unset swaddle_rpm_ignoreIterationInDependencies
-	swaddle_rpm_ignoreIterationInDependencies='no'
-	
-	unset swaddle_rpm_regexFilterFromProvides
-	swaddle_rpm_regexFilterFromProvides=''
-	
-	unset swaddle_rpm_regexFilterFromRequires
-	swaddle_rpm_regexFilterFromRequires=''
+	swaddle_build_configuration_reset swaddle_rpm \
+		autoDepends \
+		category \
+		user \
+		group \
+		defattrfile \
+		defattrdir \
+		digest \
+		compression \
+		sign \
+		autoAddDirectories \
+		autoReqProv \
+		autoReq \
+		autoProv \
+		ignoreIterationInDependencies \
+		regexFilterFromProvides \
+		regexFilterFromRequires
 }
 
 swaddle_build_package_rpm_sourceConfiguration()
@@ -69,7 +54,6 @@ swaddle_build_package_rpm_validateConfiguration()
 {
 	swaddle_build_configuration_validateSetAndNotEmpty swaddle_rpm \
 		autoDepends \
-		category \
 		user \
 		group \
 		defattrfile \
@@ -94,6 +78,9 @@ swaddle_build_package_rpm_validateConfiguration()
 	
 	swaddle_build_configuration_validateSetAndCompression swaddle_rpm \
 		compression
+
+	swaddle_build_configuration_validateSetAndValidValue swaddle_rpm category \
+		category
 }
 
 swaddle_build_package_rpm()
@@ -101,12 +88,17 @@ swaddle_build_package_rpm()
 	core_functions_execute _swaddle_build_package_rpm_functions "$@"
 }
 
+core_functions_register _swaddle_build_package_rpm_functions swaddle_build_package_rpm_setSpecFilePath
+swaddle_build_package_rpm_setSpecFilePath()
+{
+	_swaddle_build_package_rpm_specFile="$_swaddle_build_package_temporaryFolderPath"/"$swaddle_package".spec
+}
+
 core_functions_register _swaddle_build_package_rpm_functions swaddle_build_package_rpm_generateSpecFile
 swaddle_build_package_rpm_generateSpecFile()
 {
 	local numberOfPackagesInstalled="\$1"
 	
-	local specFile="$_swaddle_package_workFolderPath"/"$swaddle_package".spec
 	{
 		# Shamelessly based on Jordan Sissel's FPM
 		printf '%s' "
@@ -130,6 +122,12 @@ swaddle_build_package_rpm_generateSpecFile()
 # Compression method is '${swaddle_rpm_compression}'
 # %define _source_payload $(_swaddle_build_package_rpm_compression)
 %define _binary_payload $(_swaddle_build_package_rpm_compression)
+
+# multiple entries
+%filter_from_requires
+
+# multiple entries
+%filter_from_provides
 
 Name: ${swaddle_package}
 Version: ${swaddle_version}
@@ -199,7 +197,7 @@ $(_swaddle_build_package_rpm_trigger triggerpostun trigger-fixerrors)
 %changelog
 $(_swaddle_build_package_rpm_changelog)
 "
-	} >"$specFile"
+	} >"$_swaddle_build_package_rpm_specFile"
 }
 
 _swaddle_build_package_rpm_digestAlgorithm()

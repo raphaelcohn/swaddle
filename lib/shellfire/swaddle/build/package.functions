@@ -18,28 +18,34 @@ swaddle_build_package_createRootFolder()
 	mkdir -m 0755 -p "$_swaddle_build_package_root"
 }
 
+core_functions_register _swaddle_package_functions swaddle_build_package_defaultConfiguration
+swaddle_build_package_defaultConfiguration()
+{
+	core_TODO "Discover version from git"
+	
+	# iteration is bumped by one for RPMs
+	swaddle_build_configuration_default swaddle \
+		architecture 'noarch' \
+		epoch '0' \
+		version '0' \
+		iteration '0'
+	
+	swaddle_build_package_${_swaddle_build_package_kind}_defaultConfiguration
+}
+
 core_functions_register _swaddle_package_functions swaddle_package_resetConfiguration
 swaddle_build_package_resetConfiguration()
 {
-	unset swaddle_architecture
-	swaddle_architecture='noarch'
-	
-	unset swaddle_epoch
-	swaddle_epoch='0'
-	
-	core_TODO "Discover version from git"
-	unset swaddle_version
-	swaddle_version='0'
-	
-	# This is auto-bumped for RPMs
-	unset swaddle_iteration
-	swaddle_iteration='0'
-	
-	unset swaddle_vendor
-	unset swaddle_licence
-	unset swaddle_maintainer
-	unset swaddle_description
-	unset swaddle_url
+	swaddle_build_configuration_reset swaddle \
+		architecture \
+		epoch \
+		version \
+		iteration \
+		vendor \
+		licence \
+		maintainer \
+		description \
+		url
 	
 	swaddle_build_package_${_swaddle_build_package_kind}_resetConfiguration
 }
@@ -54,20 +60,48 @@ swaddle_build_package_sourceConfiguration()
 core_functions_register _swaddle_build_package_functions swaddle_build_package_validateConfiguration
 swaddle_build_package_validateConfiguration()
 {
-	swaddle_build_configuration_validate swaddle \
+	swaddle_build_configuration_validateSetAndNotEmpty swaddle \
 		architecture \
 		epoch \
 		version \
 		iteration \
 		vendor \
-		licence \
 		maintainer \
 		description \
 		url
-	
-	VALIDATE LICENCE matches those in bish-bosh
+
+	swaddle_build_configuration_validateSetAndValidValue swaddle licence \
+		licence
 	
 	swaddle_build_package_${_swaddle_build_package_kind}_validateConfiguration
+}
+
+core_dependency_requires '*' rsync
+core_functions_register _swaddle_build_package_functions swaddle_build_package_synchroniseToPackageRoot
+swaddle_build_package_synchroniseToPackageRoot()
+{
+	# If there are file conflicts (eg same file in multiple structures), first sync source wins
+	set --
+	local folderStructurePath
+	for folderStructurePath in \
+		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/body \
+		"$_swaddle_build_sourcePath"/body \
+		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/skeleton \
+		"$_swaddle_build_sourcePath"/skeleton
+	do
+		if ! core_path_isReadableAndSearchableFolderPath "$folderStructurePath"; then
+			continue
+		fi
+		# Trailing '\' matters to rsync, remember!
+		set -- "$@" "$folderStructurePath"\
+	done
+	
+	if [ $# -eq 0 ]; then
+		core_message WARN "There are no skeleton or body folders to include the package. This is probably not what you want."
+		return 0
+	fi
+	
+	rsync --quiet --archive --acls --xattrs --hard-links --delete --delete-after --delete-excluded --exclude=.gitignore "$@" "$_swaddle_build_package_root"/
 }
 
 core_functions_register _swaddle_build_package_functions swaddle_build_package_kind
