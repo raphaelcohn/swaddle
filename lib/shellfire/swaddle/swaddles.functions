@@ -1,0 +1,48 @@
+swaddles_all()
+{
+	ore_functions_execute _swaddles_functions "$@"
+}
+
+core_dependency_requires '*' mkdir
+core_functions_register _swaddles_functions swaddles_createTemporaryFolder
+swaddles_createTemporaryFolder()
+{
+	if core_variable_isUnset swaddle_temporaryPath; then
+		local TMP_FOLDER
+		core_temporaryFiles_newFolderToRemoveOnExit
+		swaddle_temporaryPath="$TMP_FOLDER"
+	else
+		mkdir -m 0700 -p "$swaddle_temporaryPath" 2>/dev/null || true
+	fi
+}
+
+core_dependency_requires '*' rm mkdir
+core_functions_register _swaddles_functions swaddles_createEmptyFolderSoWeCanLeverageRsyncToRemoveBody
+swaddles_createEmptyFolderSoWeCanLeverageRsyncToRemoveBody()
+{
+	_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath="$swaddle_temporaryPath"/empty
+	rm -rf "$_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath" || core_exitError $core_commandLine_exitCode_CANTCREAT "Can not recreate temporary empty path '$_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath'."
+	mkdir -m 0700 -p "$_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath"
+}
+
+core_dependency_requires '*' mkdir
+core_functions_register _swaddles_functions swaddles_createPackagesFolder
+swaddles_createPackagesFolder()
+{
+	_swaddles_temporaryFolderPath="$swaddle_temporaryPath"/swaddles
+	rm -rf "$_swaddles_temporaryFolderPath"|| core_exitError $core_commandLine_exitCode_CANTCREAT "Can not recreate temporary swaddles path '$_swaddles_temporaryFolderPath'."
+	mkdir -m 0700 -p "$_swaddles_temporaryFolderPath"
+}
+
+core_dependency_requires '*' mkdir
+core_functions_register _swaddles_functions swaddles_createOutputFolder
+swaddles_createOutputFolder()
+{
+	mkdir -m 0700 -p "$swaddle_outputPath" 2>/dev/null || true
+}
+
+core_functions_register _swaddles_functions swaddles_buildSwaddles
+swaddles_buildSwaddles()
+{
+	core_variable_array_iterate swaddle_swaddles swaddle_build_all
+}

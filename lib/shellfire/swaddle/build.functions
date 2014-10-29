@@ -1,0 +1,62 @@
+core_usesIn core functions variable variable/array
+
+swaddle_build_all()
+{
+	local swaddle="$core_variable_array_element"
+	core_functions_execute _swaddle_build_functions "$@"
+}
+
+core_functions_register _swaddle_build_functions swaddle_build_setSwaddleName
+swaddle_build_setSwaddleName()
+{
+	_swaddle_build_swaddleName="$(core_compatibility_basename "$swaddle")"
+}
+
+core_functions_register _swaddle_build_functions swaddle_build_setSourcePath
+swaddle_build_setSourcePath()
+{
+	_swaddle_build_sourcePath="$swaddle_swaddlesPath"/"$swaddle"
+}
+
+core_functions_register _swaddle_build_functions swaddle_build_setPackageKindsSourcePath
+swaddle_build_setPackageKindsSourcePath()
+{
+	_swaddle_build_packageKindsPath="$_swaddle_build_sourcePath"/package-kinds
+	if ! core_path_isReadableAndSearchableFolderPath "$_swaddle_build_packageKindsPath"; then
+		core_message WARN "No package-kinds at path '$_swaddle_build_packageKindsPath' for swaddle '$_swaddle_build_swaddleName"
+	fi
+}
+
+core_dependency_requires '*' rm mkdir
+core_functions_register _swaddle_build_functions swaddle_build_createTemporaryFolder
+swaddle_build_createTemporaryFolder()
+{
+	_swaddle_build_temporaryFolderPath="$_swaddles_temporaryFolderPath"/"$_swaddle_build_swaddleName"
+	rm -rf "$_swaddle_build_temporaryFolderPath" 2>/dev/null || true
+	mkdir -m 0700 -p "$_swaddle_build_temporaryFolderPath"
+}
+
+core_functions_register _swaddle_build_functions swaddle_build_packages
+swaddle_build_packages()
+{
+	local count=0
+	local _swaddle_build_package_kind
+	for _swaddle_build_package_kind in rpm deb tar
+	do
+		if ! core_path_isReadableAndSearchableFolderPath "$_swaddle_build_packageKindsPath"/"$_swaddle_build_package_kind"; then
+			continue
+		fi
+		
+		swaddle_build_package
+		
+		count=$((count+1))
+	done
+	
+	if [ $count -eq 0 ]; then
+		core_message WARN "No package kinds (rpm, deb, tar) in '$_swaddle_build_packageKindsPath' for swaddle '$_swaddle_build_swaddleName"
+	fi
+}
+
+
+
+

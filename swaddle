@@ -3,53 +3,11 @@
 _program()
 {
 	core_usesIn core temporaryFiles variable/array
-	core_usesIn swaddle validate package
-	
-	core_dependency_requires '*' mkdir
-	swaddle_createTemporaryFolder()
-	{
-		if core_variable_isUnset swaddle_temporaryPath; then
-			local TMP_FOLDER
-			core_temporaryFiles_newFolderToRemoveOnExit
-			swaddle_temporaryPath="$TMP_FOLDER"
-		else
-			mkdir -m 0700 -p "$swaddle_temporaryPath"
-		fi
-	}
-	
-	core_dependency_requires '*' rm mkdir
-	swaddle_createEmptyFolderSoWeCanLeverageRsyncToRemoveBody()
-	{
-		swaddle_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath="$swaddle_temporaryPath"/empty
-		rm -rf "$swaddle_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath" 2>/dev/null || true
-		mkdir -m 0700 -p "$swaddle_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath"
-	}
-	
-	core_dependency_requires '*' mkdir
-	swaddle_createPackagesFolder()
-	{
-		swaddle_temporaryPackagesFolderPath="$swaddle_temporaryPath"/packages
-		mkdir -m 0700 -p "$swaddle_temporaryPackagesFolderPath"
-	}
-	
-	core_dependency_requires '*' mkdir
-	swaddle_createOutputFolder()
-	{
-		mkdir -m 0700 -p "$swaddle_outputPath"
-	}
-	
-	swaddle_buildPackages()
-	{
-		core_variable_array_iterate swaddle_packages swaddle_package_build
-	}
+	core_usesIn swaddle validate swaddles
 	
 	swaddle()
 	{
-		swaddle_createTemporaryFolder
-		swaddle_createEmptyFolderSoWeCanLeverageRsyncToRemoveBody
-		swaddle_createPackagesFolder
-		swaddle_createOutputFolder
-		swaddle_buildPackages
+		swaddles_all
 	}
 }
 
@@ -72,21 +30,27 @@ _program_commandLine_parseInitialise()
 
 _program_commandLine_helpMessage()
 {
-	_program_commandLine_helpMessage_usage="[OPTION]... -- [PACKAGE]..."
+	_program_commandLine_helpMessage_usage="[OPTION]... -- [SWADDLE]..."
 	_program_commandLine_helpMessage_description="Builds packages by 'swaddling' them."
 	_program_commandLine_helpMessage_options="
-  -s, --swaddle-path PATH     Path to use when swaddling packages.
+  -s, --swaddles-path PATH    Path to swaddles (package definitions).
                               Defaults to current working directory:-
                               $(pwd)
   -o, --output-path PATH      Path to use when creating packages.
                               Created if it doesn't exist.
                               Defaults to current working directory:-
                               $(pwd)
-  -t, --temporary-path PATH   Path to use when creating packages,
-                              defaults to ${TMPDIR:=/tmp}.
+  -t, --temporary-path PATH   Path to use when creating packages.
                               Override if using very large packages,
                               as we use rsync to reduce cumulative builds.
                               Created if it doesn't exist.
+                              Defaults to:-
+                              ${TMPDIR}"
+    _program_commandLine_helpMessage_optionsSpacing='     '
+	_program_commandLine_helpMessage_configurationKeys="
+  swaddle_swaddlesPath   Equivalent to --swaddles-path
+  swaddle_outputPath     Equivalent to --output-path
+  swaddle_temporaryPath  Equivalent to --temporary-path
 "
 	_program_commandLine_helpMessage_examples="
   ${_program_name} -s /some/path -- some-package
@@ -97,7 +61,7 @@ _program_commandLine_optionExists()
 {
 	case "$optionName" in
 		
-		s|swaddle-path)
+		s|swaddles-path)
 			echo 'yes-argumented'
 		;;
 		
@@ -116,9 +80,9 @@ _program_commandLine_processOptionWithArgument()
 {
 	case "$optionName" in
 		
-		s|swaddle-path)
+		s|swaddles-path)
 			core_validate_folderPathReadableAndSearchable $core_commandLine_exitCode_USAGE 'option' "$optionNameIncludingHyphens" "$optionValue"
-			swaddle_swaddlePath="$optionValue"
+			swaddle_swaddlesPath="$optionValue"
 		;;
 		
 		o|output-path)
@@ -136,22 +100,22 @@ _program_commandLine_processOptionWithArgument()
 
 _program_commandLine_handleNonOptions()
 {
-	core_variable_array_initialise swaddle_packages
+	core_variable_array_initialise swaddle_swaddles
 	
-	local package
-	for package in "$@"
+	local swaddle
+	for swaddle in "$@"
 	do
-		core_variable_array_append swaddle_packages "$package"
+		core_variable_array_append swaddle_swaddles "$swaddle"
 	done
 }
 
 _program_commandLine_validate()
 {
-	if core_variable_isSet swaddle_swaddlePath; then
-		core_validate_folderPathReadableAndSearchable $core_commandLine_exitCode_CONFIG 'configuration setting' 'swaddle_swaddlePath' "$swaddle_swaddlePath"
+	if core_variable_isSet swaddle_swaddlesPath; then
+		core_validate_folderPathReadableAndSearchable $core_commandLine_exitCode_CONFIG 'configuration setting' 'swaddle_swaddlesPath' "$swaddle_swaddlesPath"
 	else
-		core_message INFO "Defaulting --swaddle-path to current working directory"
-		swaddle_swaddlePath="$(pwd)"
+		core_message INFO "Defaulting --swaddles-path to current working directory"
+		swaddle_swaddlesPath="$(pwd)"
 	fi
 	
 	if core_variable_isSet swaddle_outputPath; then
@@ -163,6 +127,32 @@ _program_commandLine_validate()
 	
 	if core_variable_isSet swaddle_temporaryPath; then
 		swaddle_validate_temporaryPath $core_commandLine_exitCode_CONFIG 'configuration setting' 'swaddle_temporaryPath' "$swaddle_temporaryPath"
+	fi
+	
+	local potentialSwaddle
+	if core_variable_array_isEmpty swaddle_swaddles; then
+		pushd "$swaddle_swaddlesPath"
+			
+			set +f
+			for potentialSwaddle in *
+			do
+				set +f
+				if core_path_isReadableAndSearchableFolderPath "$potentialSwaddle"; then
+					core_variable_array_append swaddle_swaddles "$potentialSwaddle"
+				fi
+			done
+			set -f
+			
+		popd
+	else
+		_program_commandLine_validate_swaddles()
+		{
+			potentialSwaddle="$core_variable_array_element"
+			if ! core_path_isReadableAndSearchableFolderPath "$swaddle_swaddlesPath"/"$potentialSwaddle"; then
+				core_exitError $core_commandLine_exitCode_USAGE "The swaddle '$potentialSwaddle' is not a readable, searchable folder in the swaddle path '$swaddle_swaddlesPath'"
+			fi
+		}
+		core_variable_array_iterate swaddle_swaddles _program_commandLine_validate_swaddles
 	fi
 }
 

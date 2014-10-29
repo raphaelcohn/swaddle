@@ -9,10 +9,10 @@ swaddle_package_build()
 core_functions_register _swaddle_package_functions swaddle_package_setPackageSwaddlePath
 swaddle_package_setPackageSwaddlePath()
 {
-	_swaddle_package_swaddlePath="$swaddle_swaddlePath"/"$swaddle_package"
+	_swaddle_package_swaddlePath="$swaddle_swaddlesPath"/"$swaddle_package"
 	
 	if ! core_path_isReadableAndSearchableFolderPath "$_swaddle_package_swaddlePath"; then
-		core_exitError "$core_commandLine_exitCode_USAGE" "Please ensure the package '$swaddle_package' exists as a readable, searchable folder in '$swaddle_swaddlePath'."
+		core_exitError "$core_commandLine_exitCode_USAGE" "Please ensure the package '$swaddle_package' exists as a readable, searchable folder in '$swaddle_swaddlesPath'."
 	fi
 }
 
