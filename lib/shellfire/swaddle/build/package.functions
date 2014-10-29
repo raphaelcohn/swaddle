@@ -10,12 +10,68 @@ swaddle_build_package_createTemporaryFolder()
 	mkdir -m 0700 -p "$_swaddle_build_package_temporaryFolderPath"
 }
 
+core_dependency_requires '*' mkdir
+core_functions_register _swaddle_build_package_functions swaddle_package_createPackageRootFolder
+swaddle_build_package_createRootFolder()
+{
+	_swaddle_build_package_root="$_swaddle_build_package_temporaryFolderPath"/root
+	mkdir -m 0755 -p "$_swaddle_build_package_root"
+}
 
+core_functions_register _swaddle_package_functions swaddle_package_resetConfiguration
+swaddle_build_package_resetConfiguration()
+{
+	unset swaddle_architecture
+	swaddle_architecture='noarch'
+	
+	unset swaddle_epoch
+	swaddle_epoch='0'
+	
+	core_TODO "Discover version from git"
+	unset swaddle_version
+	swaddle_version='0'
+	
+	# This is auto-bumped for RPMs
+	unset swaddle_iteration
+	swaddle_iteration='0'
+	
+	unset swaddle_vendor
+	unset swaddle_licence
+	unset swaddle_maintainer
+	unset swaddle_description
+	unset swaddle_url
+	
+	swaddle_build_package_${_swaddle_build_package_kind}_resetConfiguration
+}
 
+core_functions_register _swaddle_build_package_functions swaddle_build_package_sourceConfiguration
+swaddle_build_package_sourceConfiguration()
+{
+	swaddle_build_configuration_source "$_swaddle_build_sourcePath"
+	swaddle_build_configuration_source "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"
+}
 
+core_functions_register _swaddle_build_package_functions swaddle_build_package_validateConfiguration
+swaddle_build_package_validateConfiguration()
+{
+	swaddle_build_configuration_validate swaddle \
+		architecture \
+		epoch \
+		version \
+		iteration \
+		vendor \
+		licence \
+		maintainer \
+		description \
+		url
+	
+	VALIDATE LICENCE matches those in bish-bosh
+	
+	swaddle_build_package_${_swaddle_build_package_kind}_validateConfiguration
+}
 
-core_functions_register _swaddle_build_package_functions swaddle_build_package_specific
-swaddle_build_package_specific()
+core_functions_register _swaddle_build_package_functions swaddle_build_package_kind
+swaddle_build_package_kind()
 {
 	swaddle_build_package_${_swaddle_build_package_kind}
 }

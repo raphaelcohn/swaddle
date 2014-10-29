@@ -1,8 +1,107 @@
-swaddle_build_package_rpm()
+# Some rules on the GROUP TAG: https://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/Packagers_Guide/chap-Packagers_Guide-Spec_File_Reference-Preamble.html
+
+swaddle_build_package_rpm_resetConfiguration()
 {
-	swaddle_build_package_rpm_generateSpecFile
+	
+	core_variable_array_unset swaddle_rpm_depends
+	
+	
+	core_variable_array_unset swaddle_rpm_provides
+	core_variable_array_unset swaddle_rpm_conflicts
+	core_variable_array_unset swaddle_rpm_replaces
+	
+	unset swaddle_rpm_autoDepends
+	swaddle_rpm_autoDepends='yes'
+	
+	unset swaddle_rpm_category
+	
+	
+	
+	unset swaddle_rpm_user
+	swaddle_rpm_user='root'
+	
+	unset swaddle_rpm_group
+	swaddle_rpm_group='root'
+	
+	unset swaddle_rpm_defattrfile
+	swaddle_rpm_defattrfile='-'
+	
+	unset swaddle_rpm_defattrdir
+	swaddle_rpm_defattrdir='-'
+	
+	unset swaddle_rpm_digest
+	swaddle_rpm_digest='sha512'
+	
+	unset swaddle_rpm_compression
+	swaddle_rpm_compression='xz'
+	
+	unset swaddle_rpm_sign
+	swaddle_rpm_sign='no'
+	
+	unset swaddle_rpm_autoAddDirectories
+	swaddle_rpm_autoAddDirectories='yes'
+	
+	unset swaddle_rpm_autoReqProv
+	swaddle_rpm_autoReqProv='yes'
+	
+	unset swaddle_rpm_autoReq
+	swaddle_rpm_autoReq='yes'
+	
+	unset swaddle_rpm_autoProv
+	swaddle_rpm_autoProv='yes'
+	
+	unset swaddle_rpm_ignoreIterationInDependencies
+	swaddle_rpm_ignoreIterationInDependencies='no'
+	
+	unset swaddle_rpm_regexFilterFromProvides
+	swaddle_rpm_regexFilterFromProvides=''
+	
+	unset swaddle_rpm_regexFilterFromRequires
+	swaddle_rpm_regexFilterFromRequires=''
 }
 
+swaddle_build_package_rpm_sourceConfiguration()
+{
+	swaddle_build_configuration_source "$_swaddle_build_sourcePath"
+}
+
+swaddle_build_package_rpm_validateConfiguration()
+{
+	swaddle_build_configuration_validateSetAndNotEmpty swaddle_rpm \
+		autoDepends \
+		category \
+		user \
+		group \
+		defattrfile \
+		defattrdir \
+		digest \
+		compression
+	
+	swaddle_build_configuration_validateSetAndBoolean swaddle_rpm \
+		sign \
+		autoAddDirectories \
+		autoReqProv \
+		autoReq \
+		autoProv \
+		ignoreIterationInDependencies
+		
+	swaddle_build_configuration_validateSetOnly swaddle_rpm \
+		regexFilterFromProvides \
+		regexFilterFromRequires
+	
+	swaddle_build_configuration_validateSetAndHash swaddle_rpm \
+		digest
+	
+	swaddle_build_configuration_validateSetAndCompression swaddle_rpm \
+		compression
+}
+
+swaddle_build_package_rpm()
+{
+	core_functions_execute _swaddle_build_package_rpm_functions "$@"
+}
+
+core_functions_register _swaddle_build_package_rpm_functions swaddle_build_package_rpm_generateSpecFile
 swaddle_build_package_rpm_generateSpecFile()
 {
 	local numberOfPackagesInstalled="\$1"
@@ -25,12 +124,12 @@ swaddle_build_package_rpm_generateSpecFile()
 #%undefine __check_files
 
 # Digest method is '${swaddle_rpm_digest}'
-# %define _source_filedigest_algorithm $(_swaddle_package_rpm_generateSpecFile_digestAlgorithm)
-%define _binary_filedigest_algorithm $(_swaddle_package_rpm_generateSpecFile_digestAlgorithm)
+# %define _source_filedigest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
+%define _binary_filedigest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
 
 # Compression method is '${swaddle_rpm_compression}'
-# %define _source_payload $(_swaddle_package_rpm_generateSpecFile_compression)
-%define _binary_payload $(_swaddle_package_rpm_generateSpecFile_compression)
+# %define _source_payload $(_swaddle_build_package_rpm_compression)
+%define _binary_payload $(_swaddle_build_package_rpm_compression)
 
 Name: ${swaddle_package}
 Version: ${swaddle_version}
@@ -38,9 +137,9 @@ Version: ${swaddle_version}
 Epoch: ${swaddle_epoch}
 Release: $((swaddle_iteration+1))
 Summary: $(_swaddle_build_package_rpm_summaryDescription)
-AutoReqProv: $(_swaddle_package_rpm_generateSpecFile_yesNo swaddle_rpm_autoReqProv)
-AutoReq: $(_swaddle_package_rpm_generateSpecFile_yesNo swaddle_rpm_autoReq)
-AutoProv: $(_swaddle_package_rpm_generateSpecFile_yesNo swaddle_rpm_autoProv)
+AutoReqProv: $(_swaddle_build_package_rpm_yesNo swaddle_rpm_autoReqProv)
+AutoReq: $(_swaddle_build_package_rpm_yesNo swaddle_rpm_autoReq)
+AutoProv: $(_swaddle_build_package_rpm_yesNo swaddle_rpm_autoProv)
 # BuildRoot is required on old rpmbuild versions (eg CentOS 5, AIX)
 # CentOS 5 is now on life-support and will be dead after 31st March 2017
 BuildRoot: %buildroot
@@ -101,6 +200,71 @@ $(_swaddle_build_package_rpm_trigger triggerpostun trigger-fixerrors)
 $(_swaddle_build_package_rpm_changelog)
 "
 	} >"$specFile"
+}
+
+_swaddle_build_package_rpm_digestAlgorithm()
+{
+	case "$swaddle_rpm_digest" in
+		
+		md5)
+			printf '%s' 1
+		;;
+		
+		sha1)
+			printf '%s' 2
+		;;
+		
+		sha256)
+			printf '%s' 8
+		;;
+		
+		sha384)
+			printf '%s' 9
+		;;
+		
+		sha512)
+			printf '%s' 10
+		;;
+		
+	esac
+}
+
+_swaddle_build_package_rpm_compression()
+{
+	case "$swaddle_rpm_compression" in
+		
+		none)
+			printf '%s' 'w0.gzdio'
+		;;
+		
+		gzip)
+			printf '%s' 'w9.gzdio'
+		;;
+		
+		bzip2)
+			printf '%s' 'w9.bzdio'
+		;;
+		
+		lzma)
+			# Level 7 in Fedora's suggestions
+			printf '%s' 'w9.lzdio'
+		;;
+		
+		xz)
+			# Level 7 in Fedora's suggestions; FPM uses level 2
+			printf '%s' 'w9.xzdio'
+		;;
+		
+	esac
+}
+
+_swaddle_build_package_rpm_yesNo()
+{
+	if core_variable_isTrue "$1"; then
+		printf 'yes'
+	else
+		printf 'no'
+	fi
 }
 
 core_dependency_requires '*' head

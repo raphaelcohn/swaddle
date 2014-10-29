@@ -1,0 +1,131 @@
+swaddle_build_configuration_source()
+{
+	local configurationPath="$1"
+	local configurationFilePath="$configurationPath"/package.conf
+	if core_path_isReadableNonEmptyFilePath "$configurationFilePath"; then
+		. "$configurationFilePath" || core_exitError $core_commandLine_exitCode_DATAERR "Could not source configuration '$configurationFilePath' for swaddle '$_swaddle_build_swaddleName'"
+	fi
+	
+	local configurationFolderPath="$configurationPath"/package.conf.d
+	if core_path_isReadableAndSearchableFolderPath "$configurationFolderPath"; then
+		pushd "$configurationFolderPath"
+			set +f
+			for configurationFilePath in *.conf
+			do
+				set -f
+				if core_path_isReadableNonEmptyFilePath "$configurationFilePath"; then
+					. "$configurationFilePath" || core_exitError $core_commandLine_exitCode_DATAERR "Could not source configuration '$configurationFilePath' for swaddle '$_swaddle_build_swaddleName'"
+				fi
+			done
+			set -f
+		popd
+	fi
+}
+
+# Trailing newlines will be swallowed
+swaddle_build_configuration_settingValue()
+{
+	local core_variable_indirectValue_result
+	core_variable_indirectValue "${prefix}_${configurationSettingName}"
+	printf '%s' "$core_variable_indirectValue"
+}
+
+swaddle_build_configuration_validateSetOnly()
+{
+	local prefix="$1"
+	shift 1
+	
+	local configurationSettingName
+	for configurationSettingName in "$@"
+	do
+		if core_variable_isUnset "${prefix}_${configurationSettingName}"; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting '${prefix}_${configurationSettingName}' has not be specified in configuration for the package '$swaddle_package'"
+		fi
+	done
+}
+
+swaddle_build_configuration_validateSetAndNotEmpty()
+{
+	swaddle_build_configuration_validateSetOnly "$@"
+
+	local prefix="$1"
+	shift 1
+	
+	local configurationSettingName
+	for configurationSettingName in "$@"
+	do
+		if [ -z "$(swaddle_build_configuration_settingValue)" ]; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting '${prefix}_${configurationSettingName}' is empty in configuration for the package '$swaddle_package'"
+		fi
+			
+	done
+}
+
+swaddle_build_configuration_validateSetAndBoolean()
+{
+	swaddle_build_configuration_validateSetOnly "$@"
+
+	local prefix="$1"
+	shift 1
+	
+	local configurationSettingName
+	for configurationSettingName in "$@"
+	do
+		if core_variable_isInvalidBoolean "$(swaddle_build_configuration_settingValue)"; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting '${prefix}_${configurationSettingName}' is not a valid boolean for the package '$swaddle_package'"
+		fi
+	done
+}
+
+swaddle_build_configuration_validateSetAndHash()
+{
+	swaddle_build_configuration_validateSetOnly "$@"
+	
+	local prefix="$1"
+	shift 1
+	
+	local configurationSettingName
+	for configurationSettingName in "$@"
+	do
+		case "$(swaddle_build_configuration_settingValue)" in
+	
+			md5|sha1|sha256|sha384|sha512)
+				:
+			;;
+	
+			*)
+				core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting '${prefix}_${configurationSettingName}' is '$(swaddle_build_configuration_settingValue)' (it must be one of 'md5', 'sha1', 'sha256', 'sha384' or 'sha512')."
+			;;
+			
+		esac
+	done
+}
+
+swaddle_build_configuration_validateSetAndCompression()
+{
+	swaddle_build_configuration_validateSetOnly "$@"
+	
+	local prefix="$1"
+	shift 1
+	
+	local configurationSettingName
+	for configurationSettingName in "$@"
+	do
+		case "$(swaddle_build_configuration_settingValue)" in
+	
+			none|gzip|bzip2|lzma|xz)
+				:
+			;;
+	
+			*)
+				core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting '${prefix}_${configurationSettingName}' is '$(swaddle_build_configuration_settingValue)' (it must be one of 'none', 'gzip', 'bzip2', 'lzma' or 'xz')."
+			;;
+			
+		esac
+	done
+}
+
+
+case "$swaddle_rpm_compression" in
+	
+esac
