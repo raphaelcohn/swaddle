@@ -26,10 +26,25 @@ swaddle_build_package_rpm_resetConfiguration()
 	core_variable_array_unset swaddle_rpm_conflicts
 	core_variable_array_unset swaddle_rpm_replaces
 	
+	
+	
+	
+	
+	
+	TODO: Sort out the regex filters (can be multiples)
+	TODO: Allow rpm build defines?
 	TODO depends et al
 	TODO rpmbuild
 	TODO files list
 	TODO config / directories / special permissions
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	swaddle_build_configuration_reset swaddle_rpm \
 		autoDepends \

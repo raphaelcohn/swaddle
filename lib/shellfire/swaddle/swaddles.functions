@@ -1,6 +1,29 @@
 swaddles_all()
 {
-	ore_functions_execute _swaddles_functions "$@"
+
+	xxxx: need a repository path
+	
+	could just iterate up from swaddle_swaddlesPath looking for a .git
+	
+	# returns non
+	
+	git log -n 0
+	
+	core_functions_execute _swaddles_functions "$@"
+}
+
+swaddles_deduceIfSwaddlesAreInGit()
+{
+	if ! core_compatibility_whichNoOutput git; then
+		_swaddles_canUseGit=0
+		return 0
+	fi
+		
+	if git log -n 0 "$swaddle_swaddlesPath" 2>/dev/null; then
+		_swaddles_canUseGit=1
+	else
+		_swaddles_canUseGit=0
+	fi
 }
 
 core_dependency_requires '*' mkdir
@@ -39,6 +62,89 @@ core_functions_register _swaddles_functions swaddles_createOutputFolder
 swaddles_createOutputFolder()
 {
 	mkdir -m 0700 -p "$swaddle_outputPath" 2>/dev/null || true
+}
+
+core_dependency_requires '*' git awk
+core_functions_register _swaddles_functions swaddles_attemptToDiscoverUrl
+swaddles_attemptToDiscoverUrl()
+{
+	if core_variable_isFalse "$_swaddles_canUseGit"; then
+		return 0
+	fi
+	
+	local fetchUrl
+	pushd "$swaddle_swaddlesPath"
+	
+		fetchUrl="$(git remote show -n origin | awk '$1 ~ /Fetch/ {print $3}')"
+		if [ "$fetchUrl" = 'origin' ]; then
+			return 0
+		fi
+		
+	popd
+	
+	swaddle_build_configuration_default swaddle \
+		url "$fetchUrl"
+}
+
+core_dependency_requires '*' head
+core_functions_register _swaddles_functions swaddles_attemptToDiscoverUrl
+swaddles_attemptToDiscoverLicence()
+{
+	if core_variable_isFalse "$_swaddles_canUseGit"; then
+		return 0
+	fi
+	
+	local currentPath="$swaddle_swaddlesPath"
+	while true
+	do
+		if [ -d "$currentPath"/.git ]; then
+			break
+		fi
+		currentPath="$currentPath"/..
+	done
+	
+	local licenceFilePath="$currentPath"/LICENCE
+	if ! core_path_isReadableNonEmptyFilePath "$licenceFilePath"; then
+		return 0
+	fi
+	
+	local licence
+	case "$(head -n 1 "$licenceFilePath")" in
+		
+		'The MIT License (MIT)')
+			licence='MIT'
+		;;
+		
+		*)
+			return 0
+		;;
+		
+	esac
+	
+	swaddle_build_configuration_default swaddle \
+		licence "$licence"
+}
+
+core_dependency_requires '*' git date awk md5sum
+core_functions_register _swaddles_functions swaddles_attemptToDiscoverVersion
+swaddles_attemptToDiscoverVersion()
+{
+	pushd "$swaddle_swaddlesPath"
+		
+		local iso8601Date="$(git log -n 1 --format='%ci')"
+		local version="$(date -d "$iso8601Date" '+%Y.%m.%d.%H.%M')"
+		
+		swaddle_build_configuration_default swaddle \
+			version "$version"
+
+		local pendingChanges="$(git diff --minimal --no-color --name-status)"
+		if [ -n "$pendingChanges" ]; then
+			
+			# We bump iteration; not a perfect solution, but at least we differentiate
+			swaddle_build_configuration_default swaddle \
+				iteration 1
+		fi
+	popd
 }
 
 core_functions_register _swaddles_functions swaddles_buildSwaddles
