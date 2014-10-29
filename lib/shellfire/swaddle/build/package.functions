@@ -25,7 +25,7 @@ swaddle_build_package_defaultConfiguration()
 	
 	# iteration is bumped by one for RPMs
 	swaddle_build_configuration_default swaddle \
-		architecture 'noarch' \
+		architecture 'all' \
 		epoch '0' \
 		version '0' \
 		iteration '0'
@@ -53,15 +53,14 @@ swaddle_build_package_resetConfiguration()
 core_functions_register _swaddle_build_package_functions swaddle_build_package_sourceConfiguration
 swaddle_build_package_sourceConfiguration()
 {
-	swaddle_build_configuration_source "$_swaddle_build_sourcePath"
-	swaddle_build_configuration_source "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"
+	swaddle_build_configuration_source "$_swaddle_build_sourcePath" package
+	swaddle_build_configuration_source "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind" "$_swaddle_build_package_kind"
 }
 
 core_functions_register _swaddle_build_package_functions swaddle_build_package_validateConfiguration
 swaddle_build_package_validateConfiguration()
 {
 	swaddle_build_configuration_validateSetAndNotEmpty swaddle \
-		architecture \
 		epoch \
 		version \
 		iteration \
@@ -69,6 +68,9 @@ swaddle_build_package_validateConfiguration()
 		maintainer \
 		description \
 		url
+	
+	swaddle_build_configuration_validateSetAndArchitecture swaddle \
+		architecture
 
 	swaddle_build_configuration_validateSetAndValidValue swaddle licence \
 		licence

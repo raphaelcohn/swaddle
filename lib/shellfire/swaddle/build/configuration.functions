@@ -13,7 +13,7 @@ swaddle_build_configuration_default()
 		configurationSettingValue="$2"
 		shift 2
 		
-		defaultName="swaddle_configuration_${prefix}_${configurationSettingName}"
+		defaultName="${_program_namespace}_configuration_${prefix}_${configurationSettingName}"
 		if core_variable_isUnset "$defaultName"; then
 			core_variable_setVariable "$defaultName" "$configurationSettingValue"
 		fi
@@ -35,7 +35,7 @@ swaddle_build_configuration_reset()
 	for configurationSettingName in "$@"
 	do
 		unset "${prefix}_${configurationSettingName}"
-		defaultName="swaddle_configuration_${prefix}_${configurationSettingName}"
+		defaultName="${_program_namespace}_configuration_${prefix}_${configurationSettingName}"
 		if core_variable_isSet "$defaultName"; then
 			core_variable_indirectValue "$defaultName"
 			core_variable_setVariable "${prefix}_${configurationSettingName}" "$core_variable_indirectValue_result"
@@ -46,12 +46,13 @@ swaddle_build_configuration_reset()
 swaddle_build_configuration_source()
 {
 	local configurationPath="$1"
-	local configurationFilePath="$configurationPath"/package.conf
+	local configurationName="$2"
+	local configurationFilePath="$configurationPath"/"$configurationName".conf
 	if core_path_isReadableNonEmptyFilePath "$configurationFilePath"; then
 		. "$configurationFilePath" || core_exitError $core_commandLine_exitCode_DATAERR "Could not source configuration '$configurationFilePath' for swaddle '$_swaddle_build_swaddleName'"
 	fi
 	
-	local configurationFolderPath="$configurationPath"/package.conf.d
+	local configurationFolderPath="$configurationPath"/"$configurationName".conf.d
 	if core_path_isReadableAndSearchableFolderPath "$configurationFolderPath"; then
 		pushd "$configurationFolderPath"
 			set +f
@@ -119,6 +120,31 @@ swaddle_build_configuration_validateSetAndBoolean()
 		if core_variable_isInvalidBoolean "$(swaddle_build_configuration_settingValue)"; then
 			core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting '${prefix}_${configurationSettingName}' is not a valid boolean for the package '$swaddle_package'"
 		fi
+	done
+}
+
+swaddle_build_configuration_validateSetAndArchitecture()
+{
+	swaddle_build_configuration_validateSetOnly "$@"
+	
+	local prefix="$1"
+	shift 1
+	
+	local configurationSettingName
+	for configurationSettingName in "$@"
+	do
+		case "$(swaddle_build_configuration_settingValue)" in
+			
+			# Currently, we only support these
+			all|noarch|x86_64|amd64)
+				:
+			;;
+	
+			*)
+				core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting '${prefix}_${configurationSettingName}' is '$(swaddle_build_configuration_settingValue)' (it must be one of 'all' or 'amd64')."
+			;;
+			
+		esac
 	done
 }
 

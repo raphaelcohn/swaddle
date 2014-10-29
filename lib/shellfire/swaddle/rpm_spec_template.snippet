@@ -1,0 +1,94 @@
+# Disable any distro build-system global settings
+%define __spec_prep_post true
+%define __spec_prep_pre true
+%define __spec_build_post true
+%define __spec_build_pre true
+%define __spec_install_post true
+%define __spec_install_pre true
+%define __spec_clean_post true
+%define __spec_clean_pre true
+
+# Disable checking for unpackaged files
+#%undefine __check_files
+
+# Digest method is '${swaddle_rpm_digest}'
+# %define _source_filedigest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
+%define _binary_filedigest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
+
+# Compression method is '${swaddle_rpm_compression}'
+# %define _source_payload $(_swaddle_build_package_rpm_compression)
+%define _binary_payload $(_swaddle_build_package_rpm_compression)
+
+# multiple entries
+%filter_from_requires
+
+# multiple entries
+%filter_from_provides
+
+Name: ${swaddle_package}
+Version: ${swaddle_version}
+# Epoch is not required
+Epoch: ${swaddle_epoch}
+Release: $((swaddle_iteration+1))
+Summary: $(_swaddle_build_package_rpm_summaryDescription)
+AutoReqProv: $(_swaddle_build_package_rpm_yesNo swaddle_rpm_autoReqProv)
+AutoReq: $(_swaddle_build_package_rpm_yesNo swaddle_rpm_autoReq)
+AutoProv: $(_swaddle_build_package_rpm_yesNo swaddle_rpm_autoProv)
+# BuildRoot is required on old rpmbuild versions (eg CentOS 5, AIX)
+# CentOS 5 is now on life-support and will be dead after 31st March 2017
+BuildRoot: %buildroot
+Prefix: /
+Group: default
+License: ${swaddle_licence}
+Vendor: ${swaddle_vendor}
+URL: ${swaddle_url}
+Packager: ${swaddle_maintainer}
+
+$(_swaddle_build_package_rpm_iterateDependencies Requires  swaddle_rpm_depends)
+$(_swaddle_build_package_rpm_iterateScriptDependencies pre before-install)
+$(_swaddle_build_package_rpm_iterateScriptDependencies post after-install)
+$(_swaddle_build_package_rpm_iterateScriptDependencies preun before-remove)
+$(_swaddle_build_package_rpm_iterateScriptDependencies postun after-remove)
+$(_swaddle_build_package_rpm_iterateScriptDependencies postun after-remove)
+$(_swaddle_build_package_rpm_iterateScriptDependencies verifyscript verify)
+$(_swaddle_build_package_rpm_iterateScriptDependencies pretrans pre-transaction)
+$(_swaddle_build_package_rpm_iterateScriptDependencies posttrans post-transaction)
+$(_swaddle_build_package_rpm_iterateDependencies Provides  swaddle_rpm_provides)
+$(_swaddle_build_package_rpm_iterateDependencies Conflicts swaddle_rpm_conflicts)
+$(_swaddle_build_package_rpm_iterateDependencies Obsoletes swaddle_rpm_replaces)
+
+%description
+$(_swaddle_build_package_rpm_formatDescription)
+
+%prep
+
+%build
+
+%install
+
+%clean
+
+$(_swaddle_build_package_rpm_script pre before-install)
+
+$(_swaddle_build_package_rpm_script post after-install)
+
+$(_swaddle_build_package_rpm_script preun before-remove)
+
+$(_swaddle_build_package_rpm_script postun after-remove)
+
+$(_swaddle_build_package_rpm_script postun after-remove)
+
+$(_swaddle_build_package_rpm_script verifyscript verify)
+
+$(_swaddle_build_package_rpm_script pretrans pre-transaction)
+
+$(_swaddle_build_package_rpm_script posttrans post-transaction)
+
+$(_swaddle_build_package_rpm_trigger triggerin trigger-on)
+
+$(_swaddle_build_package_rpm_trigger triggerun trigger-off)
+
+$(_swaddle_build_package_rpm_trigger triggerpostun trigger-fixerrors)
+
+%changelog
+$(_swaddle_build_package_rpm_changelog)
