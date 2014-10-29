@@ -1,4 +1,3 @@
-
 swaddle_build_package()
 {
 	core_functions_execute _swaddle_build_package_functions "$@"
@@ -10,6 +9,10 @@ swaddle_build_package_createTemporaryFolder()
 	_swaddle_build_package_temporaryFolderPath="$_swaddle_build_temporaryFolderPath"/"$_swaddle_build_package_kind"
 	mkdir -m 0700 -p "$_swaddle_build_package_temporaryFolderPath"
 }
+
+
+
+
 
 core_functions_register _swaddle_build_package_functions swaddle_build_package_specific
 swaddle_build_package_specific()
