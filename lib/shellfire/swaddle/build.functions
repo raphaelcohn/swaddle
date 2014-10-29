@@ -21,9 +21,9 @@ swaddle_build_setSourcePath()
 core_functions_register _swaddle_build_functions swaddle_build_setPackageKindsSourcePath
 swaddle_build_setPackageKindsSourcePath()
 {
-	_swaddle_build_packageKindsPath="$_swaddle_build_sourcePath"/package-kinds
-	if ! core_path_isReadableAndSearchableFolderPath "$_swaddle_build_packageKindsPath"; then
-		core_message WARN "No package-kinds at path '$_swaddle_build_packageKindsPath' for swaddle '$_swaddle_build_swaddleName"
+	_swaddle_build_packagesPath="$_swaddle_build_sourcePath"/packages
+	if ! core_path_isReadableAndSearchableFolderPath "$_swaddle_build_packagesPath"; then
+		core_message WARN "No package-kinds at path '$_swaddle_build_packagesPath' for swaddle '$_swaddle_build_swaddleName"
 	fi
 }
 
@@ -43,7 +43,7 @@ swaddle_build_packages()
 	local _swaddle_build_package_kind
 	for _swaddle_build_package_kind in rpm deb tar
 	do
-		if ! core_path_isReadableAndSearchableFolderPath "$_swaddle_build_packageKindsPath"/"$_swaddle_build_package_kind"; then
+		if ! core_path_isReadableAndSearchableFolderPath "$_swaddle_build_packagesPath"/"$_swaddle_build_package_kind"; then
 			continue
 		fi
 		
@@ -53,7 +53,7 @@ swaddle_build_packages()
 	done
 	
 	if [ $count -eq 0 ]; then
-		core_message WARN "No package kinds (rpm, deb, tar) in '$_swaddle_build_packageKindsPath' for swaddle '$_swaddle_build_swaddleName"
+		core_message WARN "No package kinds (rpm, deb, tar) in '$_swaddle_build_packagesPath' for swaddle '$_swaddle_build_swaddleName"
 	fi
 }
 
