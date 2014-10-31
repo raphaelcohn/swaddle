@@ -64,26 +64,26 @@ swaddles_createOutputFolder()
 	mkdir -m 0700 -p "$swaddle_outputPath" 2>/dev/null || true
 }
 
-core_dependency_requires '*' git awk
-core_functions_register _swaddles_functions swaddles_attemptToDiscoverUrl
-swaddles_attemptToDiscoverUrl()
+core_dependency_requires '*' git date awk md5sum
+core_functions_register _swaddles_functions swaddles_attemptToDiscoverVersion
+swaddles_attemptToDiscoverVersion()
 {
-	if core_variable_isFalse "$_swaddles_canUseGit"; then
-		return 0
-	fi
-	
-	local fetchUrl
 	pushd "$swaddle_swaddlesPath"
-	
-		fetchUrl="$(git remote show -n origin | awk '$1 ~ /Fetch/ {print $3}')"
-		if [ "$fetchUrl" = 'origin' ]; then
-			return 0
-		fi
 		
+		local iso8601Date="$(git log -n 1 --format='%ci')"
+		local version="$(date -d "$iso8601Date" '+%Y.%m.%d.%H.%M')"
+		
+		swaddle_build_configuration_register Value NotEmpty swaddle version "$version"
+
+		local pendingChanges="$(git diff --minimal --no-color --name-status)"
+		if [ -n "$pendingChanges" ]; then
+			
+			# We bump iteration; not a perfect solution, but at least we differentiate
+			swaddle_build_configuration_register Value NotEmpty swaddle iteration '1'
+		else
+			
+		fi
 	popd
-	
-	swaddle_build_configuration_default swaddle \
-		url "$fetchUrl"
 }
 
 core_dependency_requires '*' head
@@ -116,34 +116,65 @@ swaddles_attemptToDiscoverLicence()
 		;;
 		
 		*)
+			core_message NOTICE "Could not determine your licence automatically, please submit a pull request for swaddle"
 			return 0
 		;;
 		
 	esac
-	
-	swaddle_build_configuration_default swaddle \
-		licence "$licence"
+
+	swaddle_build_configuration_register Value Licence swaddle licence "$licence"
 }
 
-core_dependency_requires '*' git date awk md5sum
-core_functions_register _swaddles_functions swaddles_attemptToDiscoverVersion
-swaddles_attemptToDiscoverVersion()
+core_dependency_requires '*' git awk
+core_functions_register _swaddles_functions swaddles_attemptToDiscoverUrl
+swaddles_attemptToDiscoverUrl()
 {
+	if core_variable_isFalse "$_swaddles_canUseGit"; then
+		return 0
+	fi
+	
+	local fetchUrl
+	pushd "$swaddle_swaddlesPath"
+	
+		fetchUrl="$(git remote show -n origin | awk '$1 ~ /Fetch/ {print $3}')"
+		if [ "$fetchUrl" = 'origin' ]; then
+			return 0
+		fi
+		
+	popd
+	
+	swaddle_build_configuration_register Value NotEmpty swaddle url "$fetchUrl"
+}
+
+core_dependency_requires '*' date
+core_functions_register _swaddles_functions swaddles_attemptToDiscoverRpmChangelog
+swaddles_attemptToDiscoverRpmChangelog()
+{
+	if core_variable_isFalse "$_swaddles_canUseGit"; then
+		return 0
+	fi
+	
+	local epochSeconds
+	local author
+	local authorEmail
+	local commitHash
+	local subject
+	local changelogDate
 	pushd "$swaddle_swaddlesPath"
 		
-		local iso8601Date="$(git log -n 1 --format='%ci')"
-		local version="$(date -d "$iso8601Date" '+%Y.%m.%d.%H.%M')"
+		_swaddles_attemptToDiscoverRpmChangelog_internal()
+		{
+			git log --format='%at%x09%aN%x09%aE%x09%H%x09%s' | while IFS="$(printf '\t')" read -r epochSeconds author authorEmail commitHash subject
+			do
+				changelogDate="$(date -u -d @${epochSeconds} '+%a %b %d %Y')"
+				printf '* %s %s <%s> - %s\n' "$epochSeconds" "$author" "$authorEmail" "$commitHash"
+				printf '- %s\n' "$subject"
+				printf '\n'
+			done
+		}
 		
-		swaddle_build_configuration_default swaddle \
-			version "$version"
-
-		local pendingChanges="$(git diff --minimal --no-color --name-status)"
-		if [ -n "$pendingChanges" ]; then
-			
-			# We bump iteration; not a perfect solution, but at least we differentiate
-			swaddle_build_configuration_default swaddle \
-				iteration 1
-		fi
+		swaddle_build_configuration_register Value NotEmpty swaddle_rpm changelog "$(_swaddles_attemptToDiscoverRpmChangelog_internal)"
+		
 	popd
 }
 

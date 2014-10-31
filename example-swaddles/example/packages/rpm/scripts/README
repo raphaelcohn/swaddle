@@ -1,14 +1,14 @@
 This path should contain the following folders, each of which relates to a RPM scriptlet:-
 
-|Folder|RPM Scriptlet|Use of `.depends`|Value of $1| Value of $2|
-|------|-------------|--------|-----------|------------|
-|before-install|pre|Requires|1 is install, 2 or more is upgrade|N/A|
-|after-install|post|Requires|1 is install, 2 or more is upgrade|N/A|
-|before-remove|preun|Requires|1 or more is upgrade, 0 is erase|N/A|
-|after-remove|postun|Requires|1 or more is upgrade, 0 is erase|N/A|
-|verify|verifyscript|Requires|0| N/A|
-|pre-transaction|pretrans|Requires|N/A| N/A|
-|post-transaction|posttrans|Requires|N/A| N/A|
+|Folder|RPM Scriptlet|Value of $1| Value of $2|
+|------|-------------|-----------|------------|
+|before-install|pre|1 is install, 2 or more is upgrade|N/A|
+|after-install|post|1 is install, 2 or more is upgrade|N/A|
+|before-remove|preun|1 or more is upgrade, 0 is erase|N/A|
+|after-remove|postun|1 or more is upgrade, 0 is erase|N/A|
+|verify|verifyscript|0| N/A|
+|pre-transaction|pretrans|N/A| N/A|
+|post-transaction|posttrans|N/A| N/A|
 |trigger-on|triggerin|Trigger Packages|Number of Instances when complete|0 / 1 (if 0, exit 0)|
 |trigger-off|triggerun|Trigger Packages|Number of Instances when complete|0 / 1 (if 0, exit 0)|
 |trigger-fixerrors|triggerpostun|Trigger Packages|Number of Instances when complete|0 / 1 (if 0, exit 0)|

@@ -18,37 +18,33 @@ swaddle_build_package_createRootFolder()
 	mkdir -m 0755 -p "$_swaddle_build_package_root"
 }
 
-core_functions_register _swaddle_package_functions swaddle_build_package_defaultConfiguration
+core_functions_register _swaddle_package_functions swaddle_build_package_registerConfiguration
 core_dependency_requires '*' git awk
-swaddle_build_package_defaultConfiguration()
+swaddle_build_package_registerConfiguration()
 {
-	core_TODO "Discover version from git"
-	
+	swaddle_build_configuration_register Value Architecture swaddle architecture  'all'
+	swaddle_build_configuration_register Value NotEmpty swaddle epoch '0'
+	swaddle_build_configuration_register Value NotEmpty swaddle version '0'
 	# iteration is bumped by one for RPMs
-	swaddle_build_configuration_default swaddle \
-		architecture 'all' \
-		epoch '0' \
-		version '0' \
-		iteration '0'
+	swaddle_build_configuration_register Value NotEmpty swaddle iteration '0'
 	
-	swaddle_build_package_${_swaddle_build_package_kind}_defaultConfiguration
+	swaddle_build_configuration_register Value NotEmpty swaddle vendor
+	swaddle_build_configuration_register Value Licence swaddle licence
+	swaddle_build_configuration_register Value NotEmpty swaddle maintainer
+	swaddle_build_configuration_register Value NotEmpty swaddle description
+	swaddle_build_configuration_register Value NotEmpty swaddle url
+	
+	# If set to '', then no mtime is applied
+	swaddle_build_configuration_register Value NotEmpty swaddle mtime '197001010000.00'
+		
+	swaddle_build_package_${_swaddle_build_package_kind}_registerConfiguration
 }
 
 core_functions_register _swaddle_package_functions swaddle_package_resetConfiguration
 swaddle_build_package_resetConfiguration()
 {
-	swaddle_build_configuration_reset swaddle \
-		architecture \
-		epoch \
-		version \
-		iteration \
-		vendor \
-		licence \
-		maintainer \
-		description \
-		url
-	
-	swaddle_build_package_${_swaddle_build_package_kind}_resetConfiguration
+	swaddle_build_configuration_reset swaddle
+	swaddle_build_configuration_reset swaddle_${_swaddle_build_package_kind}
 }
 
 core_functions_register _swaddle_build_package_functions swaddle_build_package_sourceConfiguration
@@ -61,22 +57,8 @@ swaddle_build_package_sourceConfiguration()
 core_functions_register _swaddle_build_package_functions swaddle_build_package_validateConfiguration
 swaddle_build_package_validateConfiguration()
 {
-	swaddle_build_configuration_validateSetAndNotEmpty swaddle \
-		epoch \
-		version \
-		iteration \
-		vendor \
-		maintainer \
-		description \
-		url
-	
-	swaddle_build_configuration_validateSetAndArchitecture swaddle \
-		architecture
-
-	swaddle_build_configuration_validateSetAndValidValue swaddle licence \
-		licence
-	
-	swaddle_build_package_${_swaddle_build_package_kind}_validateConfiguration
+	swaddle_build_configuration_validate swaddle
+	swaddle_build_configuration_validate swaddle_${_swaddle_build_package_kind}
 }
 
 core_dependency_requires '*' rsync

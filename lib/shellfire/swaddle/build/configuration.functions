@@ -1,46 +1,161 @@
-core_usesIn core variable
-swaddle_build_configuration_default()
+core_usesIn core variable variable/array
+
+_swaddle_build_configuration_configurationNamespace()
 {
-	local prefix="$1"
-	shift 1
-	
-	local configurationSettingName
+	configurationSettingNamespace="${_program_namespace}_build_configuration_namespace_${namespace}"
+}
+
+_swaddle_build_configuration_configurationSettingValue()
+{
+	configurationSettingValue="${_program_namespace}_build_configuration_value_${key}"
+}
+
+_swaddle_build_configuration_configurationSetting()
+{
+	local namespace="$1"
+	local configurationSettingName="$2"
+	local key="${namespace}_${configurationSettingName}"
+	_swaddle_build_configuration_configurationSettingValue
+	configurationSettingValidate="${_program_namespace}_build_configuration_validate_${key}"
+	configurationSettingDefault="${_program_namespace}_build_configuration_default_${key}"
+	configurationSettingIsArray="${_program_namespace}_build_configuration_isArray_${key}"
+}
+
+_swaddle_build_configuration_configurationSettingIsArray()
+{
+	local core_variable_indirectValue_result
+	core_variable_indirectValue "$configurationSettingIsArray"
+	core_variable_isTrue $core_variable_indirectValue
+}
+
+_swaddle_build_configuration_getConfigurationSetting()
+{
+	local namespace="$1"
+	local configurationSettingName="$2"
 	local configurationSettingValue
-	local defaultName
-	while [ $# -gt 1 ]; then
-	do
-		configurationSettingName="$1"
-		configurationSettingValue="$2"
-		shift 2
-		
-		defaultName="${_program_namespace}_configuration_${prefix}_${configurationSettingName}"
-		if core_variable_isUnset "$defaultName"; then
-			core_variable_setVariable "$defaultName" "$configurationSettingValue"
-		fi
-	done
+	_swaddle_build_configuration_configurationSettingValue
+
+	local core_variable_indirectValue_result
+	core_variable_indirectValue "$configurationSettingIsArray"
+	printf '%s' "$core_variable_indirectValue_result"
+}
+
+swaddle_build_configuration_register()
+{
+	local kind="$1"
+	local configurationValidationFunction="swaddle_build_configuration_validate${2}"
+	local namespace="$3"
+	local configurationSettingName="$4"
 	
-	if [ $# -ne 0 ]; then
-		core_exitError $core_commandLine_exitCode_SOFTWARE "Specify matched pairs for defaults"
+	case "$kind" in
+		
+		Array)
+			if [ $# -gt 3 ]; then
+				core_exitError $core_commandLine_exitCode_SOFTWARE "Arrays can not have default values"
+			fi
+		;;
+		
+		Value)
+			:
+		;;
+		
+		*)
+			core_exitError $core_commandLine_exitCode_SOFTWARE "kind '$kind' is unrecognised (must be one of 'Array' or 'Value')"
+		;;
+		
+	esac
+	
+	local configurationSettingNamespace
+	local configurationSettingValue
+	local configurationSettingValidate
+	local configurationSettingDefault
+	local configurationSettingIsArray
+	_swaddle_build_configuration_configurationSetting "$namespace" "$configurationSettingName"
+	
+	if core_variable_isSet "$configurationSettingValidate"; then
+		core_message NOTICE "The configuration setting '$configurationSettingValidate' is already registered"
+		return 0
+	fi
+	
+	core_variable_setVariable "$configurationSettingValidate" "$configurationValidationFunction"
+	
+	core_variable_array_append "$configurationSettingNamespace" "$3"
+	
+	if [ "$kind" = 'Array' ]; then
+		core_variable_setVariable "$configurationSettingIsArray" 'yes'
+	else
+		core_variable_setVariable "$configurationSettingIsArray" 'no'
+	fi
+	
+	if [ $# -eq 3 ]; then
+		return 0
+	fi
+	shift 3
+	
+	IFS=' ' local configurationSettingDefaultValue="$*"
+	
+	if core_variable_isUnset "$configurationSettingDefault"; then
+		$configurationValidationFunction "$configurationSettingDefault"
+		core_variable_setVariable "$configurationSettingDefault" "$configurationSettingDefaultValue"
 	fi
 }
 
 swaddle_build_configuration_reset()
 {
-	local prefix="$1"
+	local namespace="$1"
 	shift 1
+
+	local configurationSettingNamespace
+	_swaddle_build_configuration_configurationNamespace
 	
-	local configurationSettingName
-	local defaultName
-	local core_variable_indirectValue_result
-	for configurationSettingName in "$@"
-	do
-		unset "${prefix}_${configurationSettingName}"
-		defaultName="${_program_namespace}_configuration_${prefix}_${configurationSettingName}"
-		if core_variable_isSet "$defaultName"; then
-			core_variable_indirectValue "$defaultName"
-			core_variable_setVariable "${prefix}_${configurationSettingName}" "$core_variable_indirectValue_result"
+	_swaddle_build_configuration_reset_callback()
+	{
+		local configurationSettingName="$core_variable_array_element"
+		local configurationSettingValue
+		local configurationSettingValidate
+		local configurationSettingDefault
+		local configurationSettingIsArray
+		_swaddle_build_configuration_configurationSetting "$namespace" "$configurationSettingName"
+
+		if _swaddle_build_configuration_configurationSettingIsArray; then
+			core_variable_array_unset "$configurationSettingValue"
+		else
+			core_variable_unset "$configurationSettingValue"
+			
+			if core_variable_isSet "$configurationSettingDefault"; then
+				local core_variable_indirectValue_result
+				core_variable_indirectValue "$configurationSettingDefault"
+				core_variable_setVariable "$configurationSettingValue" "$core_variable_indirectValue_result"
+			fi
 		fi
-	done
+	}
+	core_variable_array_iterate "$configurationSettingNamespace" _swaddle_build_configuration_reset_callback
+}
+
+# eg  configure swaddle architecture amd64
+configure()
+{
+	local namespace="$1"
+	local configurationSettingName="$2"
+	
+	IFS=' ' local value="$*"
+	
+	local namespace="$_swaddle_build_configuration_currentNamespace"
+	
+	local configurationSettingNamespace
+	local configurationSettingValue
+	local configurationSettingValidate
+	local configurationSettingDefault
+	local configurationSettingIsArray
+	_swaddle_build_configuration_configurationSetting "$namespace" "$configurationSettingName"
+	
+	$configurationValidationFunction "$value"
+	
+	if _swaddle_build_configuration_configurationSettingIsArray; then
+		core_variable_array_append "$configurationSettingValue" "$value"
+	else
+		core_variable_setVariable "$configurationSettingValue" "$value"
+	fi
 }
 
 swaddle_build_configuration_source()
@@ -68,173 +183,133 @@ swaddle_build_configuration_source()
 	fi
 }
 
-# Trailing newlines will be swallowed
-swaddle_build_configuration_settingValue()
+swaddle_build_configuration_validate()
 {
-	local core_variable_indirectValue_result
-	core_variable_indirectValue "${prefix}_${configurationSettingName}"
-	printf '%s' "$core_variable_indirectValue"
-}
-
-swaddle_build_configuration_validateSetOnly()
-{
-	local prefix="$1"
-	shift 1
+	local configurationSettingNamespace="$1"
 	
-	local configurationSettingName
-	for configurationSettingName in "$@"
-	do
-		if core_variable_isUnset "${prefix}_${configurationSettingName}"; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting '${prefix}_${configurationSettingName}' has not be specified in configuration for the package '$swaddle_package'"
+	_swaddle_build_configuration_validate_callback()
+	{
+		local configurationSettingName="$core_variable_array_element"
+		local configurationSettingValue
+		local configurationSettingValidate
+		local configurationSettingDefault
+		local configurationSettingIsArray
+		_swaddle_build_configuration_configurationSetting "$namespace" "$configurationSettingName"
+
+		if core_variable_isUnset "$configurationSettingValue"; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The package '$swaddle_package' configuration setting '$configurationSettingName' can not be unset"
 		fi
-	done
+	}
+
+	core_variable_array_iterate "$configurationSettingNamespace" _swaddle_build_configuration_validate_callback
 }
 
-swaddle_build_configuration_validateSetAndNotEmpty()
+swaddle_build_configuration_validateNotEmpty()
 {
-	swaddle_build_configuration_validateSetOnly "$@"
-
-	local prefix="$1"
-	shift 1
-	
-	local configurationSettingName
-	for configurationSettingName in "$@"
-	do
-		if [ -z "$(swaddle_build_configuration_settingValue)" ]; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting '${prefix}_${configurationSettingName}' is empty in configuration for the package '$swaddle_package'"
-		fi
-			
-	done
+	if [ -z "$1" ]; then
+		core_exitError $core_commandLine_exitCode_CONFIG "The package '$swaddle_package' configuration setting '$configurationSettingName' can not be empty"
+	fi
 }
 
-swaddle_build_configuration_validateSetAndBoolean()
+swaddle_build_configuration_validateBoolean()
 {
-	swaddle_build_configuration_validateSetOnly "$@"
-
-	local prefix="$1"
-	shift 1
-	
-	local configurationSettingName
-	for configurationSettingName in "$@"
-	do
-		if core_variable_isInvalidBoolean "$(swaddle_build_configuration_settingValue)"; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting '${prefix}_${configurationSettingName}' is not a valid boolean for the package '$swaddle_package'"
-		fi
-	done
+	if core_variable_isInvalidBoolean "$1"; then
+		core_exitError $core_commandLine_exitCode_CONFIG "The package '$swaddle_package' configuration setting '$configurationSettingName' ('$1') is not a valid boolean"
+	fi
 }
 
-swaddle_build_configuration_validateSetAndArchitecture()
+swaddle_build_configuration_validateArchitecture()
 {
-	swaddle_build_configuration_validateSetOnly "$@"
-	
-	local prefix="$1"
-	shift 1
-	
-	local configurationSettingName
-	for configurationSettingName in "$@"
-	do
-		case "$(swaddle_build_configuration_settingValue)" in
-			
-			# Currently, we only support these
-			all|noarch|x86_64|amd64)
-				:
-			;;
-	
-			*)
-				core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting '${prefix}_${configurationSettingName}' is '$(swaddle_build_configuration_settingValue)' (it must be one of 'all' or 'amd64')."
-			;;
-			
-		esac
-	done
+	case "$1" in
+		
+		# Currently, we only support these
+		all|noarch|x86_64|amd64)
+			:
+		;;
+
+		*)
+			core_exitError $core_commandLine_exitCode_CONFIG "The package '$swaddle_package' configuration setting '$configurationSettingName' ('$1') is not a valid architecture (it must be one of 'all' or 'amd64')."
+		;;
+		
+	esac
 }
 
-swaddle_build_configuration_validateSetAndHash()
+swaddle_build_configuration_validateDigest()
 {
-	swaddle_build_configuration_validateSetOnly "$@"
-	
-	local prefix="$1"
-	shift 1
-	
-	local configurationSettingName
-	for configurationSettingName in "$@"
-	do
-		case "$(swaddle_build_configuration_settingValue)" in
-	
-			md5|sha1|sha256|sha384|sha512)
-				:
-			;;
-	
-			*)
-				core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting '${prefix}_${configurationSettingName}' is '$(swaddle_build_configuration_settingValue)' (it must be one of 'md5', 'sha1', 'sha256', 'sha384' or 'sha512')."
-			;;
-			
-		esac
-	done
+	case "$1" in
+
+		md5|sha1|sha256|sha384|sha512)
+			:
+		;;
+
+		*)
+			core_exitError $core_commandLine_exitCode_CONFIG "The package '$swaddle_package' configuration setting '$configurationSettingName' ('$1') is not a valid digest (it must be one of 'md5', 'sha1', 'sha256', 'sha384' or 'sha512')."
+		;;
+		
+	esac
 }
 
-swaddle_build_configuration_validateSetAndCompression()
+swaddle_build_configuration_validateCompression()
 {
-	swaddle_build_configuration_validateSetOnly "$@"
-	
-	local prefix="$1"
-	shift 1
-	
-	local configurationSettingName
-	for configurationSettingName in "$@"
-	do
-		case "$(swaddle_build_configuration_settingValue)" in
-	
-			none|gzip|bzip2|lzma|xz)
-				:
-			;;
-	
-			*)
-				core_exitError $core_commandLine_exitCode_CONFIG "The package configuration setting '${prefix}_${configurationSettingName}' is '$(swaddle_build_configuration_settingValue)' (it must be one of 'none', 'gzip', 'bzip2', 'lzma' or 'xz')."
-			;;
-			
-		esac
-	done
+	case "$1" in
+
+		none|gzip|bzip2|lzma|xz)
+			:
+		;;
+
+		*)
+			core_exitError $core_commandLine_exitCode_CONFIG "The package '$swaddle_package' configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'none', 'gzip', 'bzip2', 'lzma' or 'xz')."
+		;;
+		
+	esac
 }
 
 # Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
 core_snippet_embed raw swaddle_licence
+swaddle_build_configuration_validateLicence()
+{
+	_swaddle_build_configuration_validateValue licence "$1"
+}
 
+# Some rules on the GROUP TAG: https://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/Packagers_Guide/chap-Packagers_Guide-Spec_File_Reference-Preamble.html
 # Derived from /usr/share/doc/rpm-4.8.0/ on Centos 6.5
 core_snippet_embed raw swaddle_rpm_category
-
-swaddle_build_configuration_validateSetAndValidValue()
+swaddle_build_configuration_validateRpmGroup()
 {
-	local prefix="$1"
-	local valueKind="$2"
-	shift 2
+	_swaddle_build_configuration_validateValue rpm_group "$1"
 	
-	swaddle_build_configuration_validateSetOnly "$prefix" "$@"
+	if core_variable_endsWith "$_swaddle_build_swaddleName" '-doc'; then
+		if [ "$1" != 'Documentation' ]; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The package '$swaddle_package' configuration setting '$configurationSettingName' ('$1') ends in '-doc' so its rpm_group must be 'Documentation', not '$1'."
+		fi
+	fi
+}
+
+_swaddle_build_configuration_validateValue()
+{
+	local valueKind="$1"
+	local configurationSettingValue="$2"
 	
-	local snipptName="${prefix}_${valueKind}"
+	local snipptName="${namespace}_${valueKind}"
 	
 	local TMP_FILE
 	core_temporaryFiles_newFileToRemoveOnExit
 	core_snippet_retrieve "$snippetName" no "$TMP_FILE"
 	local validValuesFilePath="$TMP_FILE"
-	
-	local configurationSettingName
+
 	local validValue
-	for configurationSettingName in "$@"
+	local found=0
+	while IFS='' read -r validValue
 	do
-		local configurationSettingValue="$(swaddle_build_configuration_settingValue)"
-		local found=0
-		while IFS='' read -r validValue
-		do
-			if [ "$configurationSettingValue" = "$validValue" ]; then
-				found=1
-				break
-			fi
-		done <"$validValuesFilePath"
-		
-		if [ $found -eq 0 ]; then
-			core_message WARN "The package configuration setting '${prefix}_${configurationSettingName}' is an invalid $valueKind: '$configurationSettingValue'."
+		if [ "$configurationSettingValue" = "$validValue" ]; then
+			found=1
+			break
 		fi
-	done
+	done <"$validValuesFilePath"
+	
+	if [ $found -eq 0 ]; then
+		core_message WARN "The package '$swaddle_package' configuration setting '$configurationSettingName' ('$configurationSettingValue') is not a valid $valueKind."
+	fi
 	
 	rm "$validValuesFilePath"
 }

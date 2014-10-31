@@ -1,0 +1,98 @@
+# Disable any distro build-system global settings
+%define __spec_prep_post true
+%define __spec_prep_pre true
+%define __spec_build_post true
+%define __spec_build_pre true
+%define __spec_install_post true
+%define __spec_install_pre true
+%define __spec_clean_post true
+%define __spec_clean_pre true
+
+# Disable checking for unpackaged files
+#%undefine __check_files
+
+# Digest method is '${swaddle_rpm_digest}'
+# %define _source_filedigest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
+%define _binary_filedigest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
+
+# Compression method is '${swaddle_rpm_compression}'
+# %define _source_payload $(_swaddle_build_package_rpm_compression)
+%define _binary_payload $(_swaddle_build_package_rpm_compression)
+
+$(_swaddle_build_package_rpm_filterFrom requires regexFilterFromProvides)
+$(_swaddle_build_package_rpm_filterFrom provides regexFilterFromRequires)
+$(_swaddle_build_package_rpm_filterSetup regexFilterFromProvides regexFilterFromRequires)
+
+Name: ${_swaddle_build_swaddleName}
+Version: $(_swaddle_build_configuration_getConfigurationSetting swaddle version)
+# Epoch is not required
+Epoch: $(_swaddle_build_configuration_getConfigurationSetting swaddle epoch)
+Release: $((swaddle_iteration+1))
+Summary: $(_swaddle_build_package_rpm_summaryDescription)
+AutoReqProv: $(_swaddle_build_package_rpm_yesNo autoReqProv)
+AutoReq: $(_swaddle_build_package_rpm_yesNo autoReq)
+AutoProv: $(_swaddle_build_package_rpm_yesNo autoProv)
+# BuildRoot is required on old rpmbuild versions (eg CentOS 5, AIX)
+# CentOS 5 is now on life-support and will be dead after 31st March 2017
+BuildRoot: %buildroot
+Prefix: /
+Group: $(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm group)
+License: $(_swaddle_build_configuration_getConfigurationSetting swaddle licence)
+Vendor: $(_swaddle_build_configuration_getConfigurationSetting swaddle vendor)
+URL: $(_swaddle_build_configuration_getConfigurationSetting swaddle url)
+Packager: $(_swaddle_build_configuration_getConfigurationSetting swaddle maintainer)
+
+$(_swaddle_build_package_rpm_iterateDependencies Requires depends)
+$(_swaddle_build_package_rpm_iterateDependencies Requires(pre) depends_before_install)
+$(_swaddle_build_package_rpm_iterateDependencies Requires(post) depends_after_install)
+$(_swaddle_build_package_rpm_iterateDependencies Requires(preun) depends_before_remove)
+$(_swaddle_build_package_rpm_iterateDependencies Requires(postun) depends_after_remove)
+$(_swaddle_build_package_rpm_iterateDependencies Requires(postun) depends_after_remove)
+$(_swaddle_build_package_rpm_iterateDependencies Requires(verifyscript) depends_verify)
+$(_swaddle_build_package_rpm_iterateDependencies Requires(pretrans) depends_pre_transaction)
+$(_swaddle_build_package_rpm_iterateDependencies Requires(posttrans) depends_post_transaction)
+$(_swaddle_build_package_rpm_iterateDependencies Provides provides)
+$(_swaddle_build_package_rpm_iterateDependencies Conflicts conflicts)
+$(_swaddle_build_package_rpm_iterateDependencies Obsoletes replaces)
+
+%description
+$(_swaddle_build_package_rpm_formatDescription)
+
+%prep
+
+%build
+
+%install
+
+%clean
+
+$(_swaddle_build_package_rpm_script pre before-install)
+
+$(_swaddle_build_package_rpm_script post after-install)
+
+$(_swaddle_build_package_rpm_script preun before-remove)
+
+$(_swaddle_build_package_rpm_script postun after-remove)
+
+$(_swaddle_build_package_rpm_script postun after-remove)
+
+$(_swaddle_build_package_rpm_script verifyscript verify)
+
+$(_swaddle_build_package_rpm_script pretrans pre-transaction)
+
+$(_swaddle_build_package_rpm_script posttrans post-transaction)
+
+$(_swaddle_build_package_rpm_trigger triggerin trigger-on)
+
+$(_swaddle_build_package_rpm_trigger triggerun trigger-off)
+
+$(_swaddle_build_package_rpm_trigger triggerpostun trigger-fixerrors)
+
+%files
+%defattr($(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm defattrfile),$(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm user),$(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm group),$(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm defattrdir))
+
+$(_swaddle_build_package_rpm_files)
+
+%changelog
+$(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm description)
+

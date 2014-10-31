@@ -23,7 +23,7 @@ swaddle_build_setPackageKindsSourcePath()
 {
 	_swaddle_build_packagesPath="$_swaddle_build_sourcePath"/packages
 	if ! core_path_isReadableAndSearchableFolderPath "$_swaddle_build_packagesPath"; then
-		core_message WARN "No package-kinds at path '$_swaddle_build_packagesPath' for swaddle '$_swaddle_build_swaddleName"
+		core_message WARN "No packages at path '$_swaddle_build_packagesPath' for swaddle '$_swaddle_build_swaddleName"
 	fi
 }
 
@@ -56,7 +56,3 @@ swaddle_build_packages()
 		core_message WARN "No package kinds (rpm, deb, tar) in '$_swaddle_build_packagesPath' for swaddle '$_swaddle_build_swaddleName"
 	fi
 }
-
-
-
-
