@@ -161,7 +161,7 @@ swaddles_attemptToDiscoverRpmChangelog()
 			git log --format='%at%x09%aN%x09%aE%x09%H%x09%s' | while IFS="$(printf '\t')" read -r epochSeconds author authorEmail commitHash subject
 			do
 				changelogDate="$(date -u -d @${epochSeconds} '+%a %b %d %Y')"
-				printf '* %s %s <%s> - %s\n' "$epochSeconds" "$author" "$authorEmail" "$commitHash"
+				printf '* %s %s <%s> - %s\n' "$changelogDate" "$author" "$authorEmail" "$commitHash"
 				printf '%s %s\n' '-' "$subject"
 				printf '\n'
 			done
