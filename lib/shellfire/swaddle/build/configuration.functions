@@ -198,7 +198,7 @@ swaddle_build_configuration_validate()
 		_swaddle_build_configuration_configurationSetting "$configurationSettingNamespace" "$configurationSettingName"
 
 		if core_variable_isUnset "$configurationSettingValue"; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The package '$swaddle_package' configuration setting '$configurationSettingName' can not be unset"
+			core_exitError $core_commandLine_exitCode_CONFIG "The package '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' can not be unset"
 		fi
 	}
 
@@ -208,14 +208,14 @@ swaddle_build_configuration_validate()
 swaddle_build_configuration_validateNotEmpty()
 {
 	if [ -z "$1" ]; then
-		core_exitError $core_commandLine_exitCode_CONFIG "The package '$swaddle_package' configuration setting '$configurationSettingName' can not be empty"
+		core_exitError $core_commandLine_exitCode_CONFIG "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' can not be empty"
 	fi
 }
 
 swaddle_build_configuration_validateBoolean()
 {
 	if core_variable_isInvalidBoolean "$1"; then
-		core_exitError $core_commandLine_exitCode_CONFIG "The package '$swaddle_package' configuration setting '$configurationSettingName' ('$1') is not a valid boolean"
+		core_exitError $core_commandLine_exitCode_CONFIG "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' ('$1') is not a valid boolean"
 	fi
 }
 
@@ -229,7 +229,7 @@ swaddle_build_configuration_validateArchitecture()
 		;;
 
 		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The package '$swaddle_package' configuration setting '$configurationSettingName' ('$1') is not a valid architecture (it must be one of 'all' or 'amd64')."
+			core_exitError $core_commandLine_exitCode_CONFIG "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' ('$1') is not a valid architecture (it must be one of 'all' or 'amd64')."
 		;;
 		
 	esac
@@ -244,7 +244,7 @@ swaddle_build_configuration_validateDigest()
 		;;
 
 		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The package '$swaddle_package' configuration setting '$configurationSettingName' ('$1') is not a valid digest (it must be one of 'md5', 'sha1', 'sha256', 'sha384' or 'sha512')."
+			core_exitError $core_commandLine_exitCode_CONFIG "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' ('$1') is not a valid digest (it must be one of 'md5', 'sha1', 'sha256', 'sha384' or 'sha512')."
 		;;
 		
 	esac
@@ -259,7 +259,7 @@ swaddle_build_configuration_validateCompression()
 		;;
 
 		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The package '$swaddle_package' configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'none', 'gzip', 'bzip2', 'lzma' or 'xz')."
+			core_exitError $core_commandLine_exitCode_CONFIG "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'none', 'gzip', 'bzip2', 'lzma' or 'xz')."
 		;;
 		
 	esac
@@ -281,7 +281,7 @@ swaddle_build_configuration_validateRpmGroup()
 	
 	if core_variable_endsWith "$_swaddle_build_swaddleName" '-doc'; then
 		if [ "$1" != 'Documentation' ]; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The package '$swaddle_package' configuration setting '$configurationSettingName' ('$1') ends in '-doc' so its rpm_group must be 'Documentation', not '$1'."
+			core_exitError $core_commandLine_exitCode_CONFIG "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' ('$1') ends in '-doc' so its rpm_group must be 'Documentation', not '$1'."
 		fi
 	fi
 }
@@ -309,7 +309,7 @@ _swaddle_build_configuration_validateValue()
 	done <"$validValuesFilePath"
 	
 	if [ $found -eq 0 ]; then
-		core_message WARN "The package '$swaddle_package' configuration setting '$configurationSettingName' ('$configurationSettingValue') is not a valid $valueKind."
+		core_message WARN "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' ('$configurationSettingValue') is not a valid $valueKind."
 	fi
 	
 	rm "$validValuesFilePath"
