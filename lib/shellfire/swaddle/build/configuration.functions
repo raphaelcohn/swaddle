@@ -26,7 +26,7 @@ _swaddle_build_configuration_configurationSettingIsArray()
 {
 	local core_variable_indirectValue_result
 	core_variable_indirectValue "$configurationSettingIsArray"
-	core_variable_isTrue $core_variable_indirectValue
+	core_variable_isTrue "$core_variable_indirectValue_result"
 }
 
 _swaddle_build_configuration_getConfigurationSetting()
@@ -66,14 +66,12 @@ swaddle_build_configuration_register()
 		
 	esac
 	
-	set -x
 	local configurationSettingNamespace
 	local configurationSettingValue
 	local configurationSettingValidate
 	local configurationSettingDefault
 	local configurationSettingIsArray
 	_swaddle_build_configuration_configurationSetting "$namespace" "$configurationSettingName"
-	set +x
 	
 	if core_variable_isSet "$configurationSettingValidate"; then
 		core_message NOTICE "The configuration setting '$configurationSettingValidate' is already registered"
@@ -82,7 +80,7 @@ swaddle_build_configuration_register()
 	
 	core_variable_setVariable "$configurationSettingValidate" "$configurationValidationFunction"
 	
-	core_variable_array_append "$configurationSettingNamespace" "$3"
+	core_variable_array_append "$configurationSettingNamespace" "$configurationSettingName"
 	
 	if [ "$kind" = 'Array' ]; then
 		core_variable_setVariable "$configurationSettingIsArray" 'yes'
@@ -106,7 +104,6 @@ swaddle_build_configuration_register()
 swaddle_build_configuration_reset()
 {
 	local namespace="$1"
-	shift 1
 
 	local configurationSettingNamespace
 	_swaddle_build_configuration_configurationNamespace
@@ -136,14 +133,17 @@ swaddle_build_configuration_reset()
 }
 
 # eg  configure swaddle architecture amd64
+# eg  configure swaddle description <<EOF stuff EOF
 configure()
 {
 	local namespace="$1"
 	local configurationSettingName="$2"
-	
-	IFS=' ' local value="$*"
-	
-	local namespace="$_swaddle_build_configuration_currentNamespace"
+	shift 2
+	if [ $# -ne 0 ]; then
+		IFS=' ' local value="$*"
+	else
+		local value="$(cat)"
+	fi
 	
 	local configurationSettingNamespace
 	local configurationSettingValue
@@ -152,7 +152,10 @@ configure()
 	local configurationSettingIsArray
 	_swaddle_build_configuration_configurationSetting "$namespace" "$configurationSettingName"
 	
-	$configurationValidationFunction "$value"
+	local validateFunction
+	local core_variable_indirectValue_result
+	core_variable_indirectValue "$configurationSettingValidate"
+	$core_variable_indirectValue_result "$value"
 	
 	if _swaddle_build_configuration_configurationSettingIsArray; then
 		core_variable_array_append "$configurationSettingValue" "$value"
@@ -206,14 +209,6 @@ swaddle_build_configuration_validate()
 	
 	local configurationSettingNamespace
 	_swaddle_build_configuration_configurationNamespace
-	xxx()
-	{
-		echo $core_variable_array_element
-	}
-	
-	core_variable_array_iterate "$configurationSettingNamespace" xxx
-	exit 90
-	
 	core_variable_array_iterate "$configurationSettingNamespace" _swaddle_build_configuration_validate_callback
 }
 
@@ -303,7 +298,7 @@ _swaddle_build_configuration_validateValue()
 	local valueKind="$1"
 	local configurationSettingValue="$2"
 	
-	local snipptName="${namespace}_${valueKind}"
+	local snippetName="${namespace}_${valueKind}"
 	
 	local TMP_FILE
 	core_temporaryFiles_newFileToRemoveOnExit
