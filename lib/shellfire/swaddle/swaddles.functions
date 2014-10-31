@@ -1,14 +1,5 @@
 swaddles_all()
 {
-
-	xxxx: need a repository path
-	
-	could just iterate up from swaddle_swaddlesPath looking for a .git
-	
-	# returns non
-	
-	git log -n 0
-	
 	core_functions_execute _swaddles_functions "$@"
 }
 
