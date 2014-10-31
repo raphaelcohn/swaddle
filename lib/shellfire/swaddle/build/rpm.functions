@@ -60,8 +60,11 @@ core_functions_register _swaddle_build_package_rpm_functions swaddle_package_rpm
 swaddle_package_rpm_rpmbuild()
 {
 	# Could this be outputFolder?
-	mkdir -m 0700 -p "$_swaddle_build_package_temporaryFolderPath"/RPMS
-	mkdir -m 0700 -p "$_swaddle_build_package_temporaryFolderPath"/temp
+	local rpmbuildParentOutputFolderPath="$_swaddle_build_package_temporaryFolderPath"/rpms-by-arch
+	mkdir -m 0700 -p "$rpmbuildParentOutputFolderPath"
+	
+	local rpmbuildTemporaryScriptsPath="$_swaddle_build_package_temporaryFolderPath"/rpmbuild.tmp
+	mkdir -m 0700 -p "$rpmbuildTemporaryScriptsPath"
 	
 	local options
 	local options_initialised
@@ -89,17 +92,26 @@ swaddle_package_rpm_rpmbuild()
 		core_variable_array_append options --sign
 	fi
 	
+	local architecture="$(_swaddle_build_package_rpm_architecture)"
 	core_variable_array_append options \
-		--target "$(_swaddle_build_package_rpm_architecture)" \
+		--target "$architecture" \
 		--define "buildroot $_swaddle_build_package_root" \
 		--define "_topdir $_swaddle_build_package_temporaryFolderPath" \
 		--define "_sourcedir $_swaddle_build_package_temporaryFolderPath" \
-		--define "_rpmdir $_swaddle_build_package_temporaryFolderPath/RPMS" \
-		--define "_tmppath $_swaddle_build_package_temporaryFolderPath/temp"
+		--define "_rpmdir $rpmbuildParentOutputFolderPath" \
+		--define "_tmppath $rpmbuildTemporaryScriptsPath"
 	
 	core_variable_array_append options "$_swaddle_build_package_rpm_specFile"
 	
-	core_variable_array_passToFunctionAsArguments options rpmbuild
+	if [ "$(core_init_verbosity)" -gt 0 ]; then
+		core_variable_array_passToFunctionAsArguments options rpmbuild
+	else
+		core_variable_array_passToFunctionAsArguments options rpmbuild 1>/dev/null 2>/dev/null
+	fi
+	
+	set +f
+	mv "$rpmbuildParentOutputFolderPath"/"$architecture"/*.rpm "$swaddle_outputPath"
+	set -f
 }
 
 _swaddle_build_package_rpm_architecture()
