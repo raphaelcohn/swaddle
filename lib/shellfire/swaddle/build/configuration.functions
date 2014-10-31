@@ -186,7 +186,7 @@ swaddle_build_configuration_source()
 
 swaddle_build_configuration_validate()
 {
-	local configurationSettingNamespace="$1"
+	local namespace="$1"
 	
 	_swaddle_build_configuration_validate_callback()
 	{
@@ -195,13 +195,15 @@ swaddle_build_configuration_validate()
 		local configurationSettingValidate
 		local configurationSettingDefault
 		local configurationSettingIsArray
-		_swaddle_build_configuration_configurationSetting "$configurationSettingNamespace" "$configurationSettingName"
+		_swaddle_build_configuration_configurationSetting "$namespace" "$configurationSettingName"
 
 		if core_variable_isUnset "$configurationSettingValue"; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The package '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' can not be unset"
+			core_exitError $core_commandLine_exitCode_CONFIG "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' can not be unset"
 		fi
 	}
-
+	
+	local configurationSettingNamespace
+	_swaddle_build_configuration_configurationNamespace
 	core_variable_array_iterate "$configurationSettingNamespace" _swaddle_build_configuration_validate_callback
 }
 
