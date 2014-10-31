@@ -490,7 +490,7 @@ _swaddle_build_package_rpm_files_recurse()
 	local relativePath="$2"
 	
 	set +f
-	local $objectPath
+	local objectPath
 	local basename
 	for objectPath in "$currentFolderPath"/*
 	do
