@@ -273,7 +273,7 @@ swaddle_build_configuration_validateLicence()
 
 # Some rules on the GROUP TAG: https://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/Packagers_Guide/chap-Packagers_Guide-Spec_File_Reference-Preamble.html
 # Derived from /usr/share/doc/rpm-4.8.0/ on Centos 6.5
-core_snippet_embed raw swaddle_rpm_category
+core_snippet_embed raw swaddle_rpm_group
 swaddle_build_configuration_validateRpmGroup()
 {
 	_swaddle_build_configuration_validateValue rpm_group "$1"
