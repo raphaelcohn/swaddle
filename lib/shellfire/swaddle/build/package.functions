@@ -85,7 +85,9 @@ swaddle_build_package_synchroniseToPackageRoot()
 		return 0
 	fi
 	
+	set -x
 	rsync --quiet --archive --acls --xattrs --hard-links --delete --delete-after --delete-excluded --exclude=.gitignore "$@" "$_swaddle_build_package_root"/
+	set +x
 }
 
 core_functions_register _swaddle_build_package_functions swaddle_build_package_kind
