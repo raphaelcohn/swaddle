@@ -464,7 +464,7 @@ _swaddle_build_package_rpm_files_write()
 	fi
 	
 	if [ -n "$mtime" ]; then
-		touch -a -m -t "$mtime"
+		touch -a -m -t "$mtime" "$objectPath"
 	fi
 	
 	printf '%%attr(%s, %s, %s) ' "$mode" "$user" "$group"
@@ -500,7 +500,7 @@ _swaddle_build_package_rpm_files_recurse()
 		fi
 		
 		basename="$(core_compatibility_basename "$objectPath")"
-		if core_variable_endsWidth "$basename" ".swaddle-settings"; then
+		if core_variable_endsWith "$basename" ".swaddle-settings"; then
 			core_exitError $core_commandLine_exitCode_CONFIG "swaddle-settings without matching parent '$objectPath'"
 		fi
 	
