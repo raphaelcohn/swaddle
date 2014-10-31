@@ -1,10 +1,11 @@
-core_usesIn swaddle/build configuration build
+core_usesIn swaddle build build/configuration
 
 swaddles_all()
 {
 	core_functions_execute _swaddles_functions "$@"
 }
 
+core_functions_register _swaddles_functions swaddles_deduceIfSwaddlesAreInGit
 swaddles_deduceIfSwaddlesAreInGit()
 {
 	if ! core_compatibility_whichNoOutput git; then
@@ -67,7 +68,7 @@ swaddles_attemptToDiscoverVersion()
 		local version="$(date -d "$iso8601Date" '+%Y.%m.%d.%H.%M')"
 		
 		swaddle_build_configuration_register Value NotEmpty swaddle version "$version"
-
+		
 		local pendingChanges="$(git diff --minimal --no-color --name-status)"
 		if [ -n "$pendingChanges" ]; then
 			# We bump iteration; not a perfect solution, but at least we differentiate

@@ -15,6 +15,7 @@ _swaddle_build_configuration_configurationSetting()
 	local namespace="$1"
 	local configurationSettingName="$2"
 	local key="${namespace}_${configurationSettingName}"
+	_swaddle_build_configuration_configurationNamespace
 	_swaddle_build_configuration_configurationSettingValue
 	configurationSettingValidate="${_program_namespace}_build_configuration_validate_${key}"
 	configurationSettingDefault="${_program_namespace}_build_configuration_default_${key}"

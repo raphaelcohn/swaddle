@@ -1,4 +1,5 @@
 core_usesIn core functions variable variable/array
+core_usesIn swaddle/build package
 
 swaddle_build_all()
 {
