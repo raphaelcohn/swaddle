@@ -89,8 +89,6 @@ swaddle_package_rpm_rpmbuild()
 		core_variable_array_append options --sign
 	fi
 	
-	echo FAIL
-	exit 66
 	core_variable_array_append options \
 		--target "$(_swaddle_build_package_rpm_architecture)" \
 		--define "buildroot $_swaddle_build_package_root" \
