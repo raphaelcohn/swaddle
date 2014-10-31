@@ -89,6 +89,8 @@ swaddle_package_rpm_rpmbuild()
 		core_variable_array_append options --sign
 	fi
 	
+	echo FAIL
+	exit 66
 	core_variable_array_append options \
 		--target "$(_swaddle_build_package_rpm_architecture)" \
 		--define "buildroot $_swaddle_build_package_root" \
@@ -194,6 +196,7 @@ _swaddle_build_package_rpm_filterFrom()
 		local regex="$core_variable_array_element"
 		printf '%s %s\n' "$tagName" "$regex"
 	}
+	
 	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_rpm_filterFrom_callback
 }
 
