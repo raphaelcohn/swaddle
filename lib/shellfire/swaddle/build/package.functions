@@ -53,7 +53,7 @@ core_functions_register _swaddle_build_package_functions swaddle_build_package_s
 swaddle_build_package_sourceConfiguration()
 {
 	swaddle_build_configuration_source "$_swaddle_build_sourcePath" package
-	swaddle_build_configuration_source "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind" "$_swaddle_build_package_kind"
+	swaddle_build_configuration_source "$_swaddle_build_sourcePath"/packages/"$_swaddle_build_package_kind" "$_swaddle_build_package_kind"
 }
 
 core_functions_register _swaddle_build_package_functions swaddle_build_package_validateConfiguration
@@ -70,7 +70,11 @@ swaddle_build_package_synchroniseToPackageRoot()
 	# If there are file conflicts (eg same file in multiple structures), first sync source wins
 	set --
 	local folderStructurePath
-	for folderStructurePath in "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/body "$_swaddle_build_sourcePath"/body "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/skeleton "$_swaddle_build_sourcePath"/skeleton
+	for folderStructurePath in \
+		"$_swaddle_build_sourcePath"/packages/"$_swaddle_build_package_kind"/body \
+		"$_swaddle_build_sourcePath"/packages/"$_swaddle_build_package_kind"/skeleton \
+		"$_swaddle_build_sourcePath"/body \
+		"$_swaddle_build_sourcePath"/skeleton
 	do
 		if ! core_path_isReadableAndSearchableFolderPath "$folderStructurePath"; then
 			continue

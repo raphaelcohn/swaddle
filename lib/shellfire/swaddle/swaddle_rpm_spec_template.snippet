@@ -11,11 +11,11 @@
 # Disable checking for unpackaged files
 #%undefine __check_files
 
-# Digest method is '${swaddle_rpm_digest}'
+# Digest method is '$(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm digest)'
 # %define _source_filedigest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
 %define _binary_filedigest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
 
-# Compression method is '${swaddle_rpm_compression}'
+# Compression method is '$(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm compression)'
 # %define _source_payload $(_swaddle_build_package_rpm_compression)
 %define _binary_payload $(_swaddle_build_package_rpm_compression)
 

@@ -45,14 +45,14 @@ swaddle_build_package_rpm()
 core_functions_register _swaddle_build_package_rpm_functions swaddle_build_package_rpm_setSpecFilePath
 swaddle_build_package_rpm_setSpecFilePath()
 {
-	_swaddle_build_package_rpm_specFile="$_swaddle_build_package_temporaryFolderPath"/"$swaddle_package".spec
+	_swaddle_build_package_rpm_specFile="$_swaddle_build_package_temporaryFolderPath"/"$_swaddle_build_swaddleName".spec
 }
 
 core_functions_register _swaddle_build_package_rpm_functions swaddle_build_package_rpm_generateSpecFile
 core_snippet_embed raw swaddle_rpm_spec_template
 swaddle_build_package_rpm_generateSpecFile()
 {
-	core_snippet_retrieveAndSourceAsHereDoc rpm_spec_template >"$_swaddle_build_package_rpm_specFile"
+	core_snippet_retrieveAndSourceAsHereDoc swaddle_rpm_spec_template >"$_swaddle_build_package_rpm_specFile"
 }
 
 core_dependency_requires '*' rpmbuild
