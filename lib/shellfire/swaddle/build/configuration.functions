@@ -38,10 +38,10 @@ _swaddle_build_configuration_getConfigurationSetting()
 	local configurationSettingValidate
 	local configurationSettingDefault
 	local configurationSettingIsArray
-	_swaddle_build_configuration_configurationSetting
+	_swaddle_build_configuration_configurationSetting "$namespace" "$configurationSettingName"
 
 	local core_variable_indirectValue_result
-	core_variable_indirectValue "$configurationSettingIsArray"
+	core_variable_indirectValue "$configurationSettingValue"
 	printf '%s' "$core_variable_indirectValue_result"
 }
 

@@ -60,8 +60,8 @@ core_functions_register _swaddle_build_package_rpm_functions swaddle_package_rpm
 swaddle_package_rpm_rpmbuild()
 {
 	# Could this be outputFolder?
-	mdkir -m 0700 -p "$_swaddle_build_package_temporaryFolderPath"/RPMS
-	mdkir -m 0700 -p "$_swaddle_build_package_temporaryFolderPath"/temp
+	mkdir -m 0700 -p "$_swaddle_build_package_temporaryFolderPath"/RPMS
+	mkdir -m 0700 -p "$_swaddle_build_package_temporaryFolderPath"/temp
 	
 	local options
 	local options_initialised
@@ -187,7 +187,7 @@ _swaddle_build_package_rpm_filterFrom()
 
 	local namespace='swaddle_rpm'
 	local configurationSettingValue
-	_swaddle_build_configuration_configurationSettingValue
+	_swaddle_build_configuration_configurationSettingValue "$namespace" "$configurationSettingName"
 	
 	_swaddle_build_package_rpm_filterFrom_callback()
 	{
@@ -205,7 +205,7 @@ _swaddle_build_package_rpm_filterSetup()
 	local doSetup=0
 	for configurationSettingName in "$@"
 	do
-		_swaddle_build_configuration_configurationSettingValue
+		_swaddle_build_configuration_configurationSettingValue "$namespace" "$configurationSettingName"
 		if ! core_variable_array_isEmpty "$configurationSettingValue"; then
 			doSetup=1
 			break
@@ -271,7 +271,7 @@ _swaddle_build_package_rpm_script()
 {
 	local rpmScriptType="$1"
 	local scriptType="$2"
-	local scriptTypePath="$_swaddle_package_scriptsFolderPath"/"$scriptType"
+	local scriptTypePath="$_swaddle_build_packagesPath"/"$_swaddle_build_package_kind"/scripts/"$scriptType"
 	
 	core_TODO 'Templated scripts, scripts in other repositories and shellshock scripts'
 	
@@ -325,7 +325,7 @@ _swaddle_build_package_rpm_trigger()
 {
 	local rpmScriptType="$1"
 	local scriptType="$2"
-	local scriptTypePath="$_swaddle_package_scriptsFolderPath"/"$scriptType"
+	local scriptTypePath="$_swaddle_build_packagesPath"/"$_swaddle_build_package_kind"/scripts/"$scriptType"
 	
 	if ! core_path_isReadableAndSearchableFolderPath "$scriptTypePath"; then
 		return 0
