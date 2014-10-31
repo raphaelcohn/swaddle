@@ -20,7 +20,7 @@ swaddle_build_package_createRootFolder()
 	mkdir -m 0755 -p "$_swaddle_build_package_root"
 }
 
-core_functions_register _swaddle_package_functions swaddle_build_package_registerConfiguration
+core_functions_register _swaddle_build_package_functions swaddle_build_package_registerConfiguration
 core_dependency_requires '*' git awk
 swaddle_build_package_registerConfiguration()
 {
@@ -42,7 +42,7 @@ swaddle_build_package_registerConfiguration()
 	swaddle_build_package_${_swaddle_build_package_kind}_registerConfiguration
 }
 
-core_functions_register _swaddle_package_functions swaddle_package_resetConfiguration
+core_functions_register _swaddle_build_package_functions swaddle_build_package_resetConfiguration
 swaddle_build_package_resetConfiguration()
 {
 	swaddle_build_configuration_reset swaddle

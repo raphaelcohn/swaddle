@@ -51,7 +51,7 @@ swaddle_build_configuration_register()
 	case "$kind" in
 		
 		Array)
-			if [ $# -gt 3 ]; then
+			if [ $# -gt 4 ]; then
 				core_exitError $core_commandLine_exitCode_SOFTWARE "Arrays can not have default values"
 			fi
 		;;
@@ -88,15 +88,15 @@ swaddle_build_configuration_register()
 		core_variable_setVariable "$configurationSettingIsArray" 'no'
 	fi
 	
-	if [ $# -eq 3 ]; then
+	if [ $# -eq 4 ]; then
 		return 0
 	fi
-	shift 3
+	shift 4
 	
 	IFS=' ' local configurationSettingDefaultValue="$*"
 	
 	if core_variable_isUnset "$configurationSettingDefault"; then
-		$configurationValidationFunction "$configurationSettingDefault"
+		$configurationValidationFunction "$configurationSettingDefaultValue"
 		core_variable_setVariable "$configurationSettingDefault" "$configurationSettingDefaultValue"
 	fi
 }
@@ -196,7 +196,7 @@ swaddle_build_configuration_validate()
 		local configurationSettingDefault
 		local configurationSettingIsArray
 		_swaddle_build_configuration_configurationSetting "$namespace" "$configurationSettingName"
-
+		
 		if core_variable_isUnset "$configurationSettingValue"; then
 			core_exitError $core_commandLine_exitCode_CONFIG "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' can not be unset"
 		fi
@@ -204,6 +204,14 @@ swaddle_build_configuration_validate()
 	
 	local configurationSettingNamespace
 	_swaddle_build_configuration_configurationNamespace
+	xxx()
+	{
+		echo $core_variable_array_element
+	}
+	
+	core_variable_array_iterate "$configurationSettingNamespace" xxx
+	exit 90
+	
 	core_variable_array_iterate "$configurationSettingNamespace" _swaddle_build_configuration_validate_callback
 }
 
