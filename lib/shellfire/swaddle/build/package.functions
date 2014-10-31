@@ -1,3 +1,5 @@
+core_usesIn swaddle/build configuration rpm
+
 swaddle_build_package()
 {
 	core_functions_execute _swaddle_build_package_functions "$@"

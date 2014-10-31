@@ -1,3 +1,5 @@
+core_usesIn swaddle/build configuration build
+
 swaddles_all()
 {
 	core_functions_execute _swaddles_functions "$@"
