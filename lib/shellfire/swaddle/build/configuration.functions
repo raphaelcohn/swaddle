@@ -7,6 +7,7 @@ _swaddle_build_configuration_configurationNamespace()
 
 _swaddle_build_configuration_configurationSettingValue()
 {
+	local key="${namespace}_${configurationSettingName}"
 	configurationSettingValue="${_program_namespace}_build_configuration_value_${key}"
 }
 
@@ -34,7 +35,10 @@ _swaddle_build_configuration_getConfigurationSetting()
 	local namespace="$1"
 	local configurationSettingName="$2"
 	local configurationSettingValue
-	_swaddle_build_configuration_configurationSettingValue
+	local configurationSettingValidate
+	local configurationSettingDefault
+	local configurationSettingIsArray
+	_swaddle_build_configuration_configurationSetting
 
 	local core_variable_indirectValue_result
 	core_variable_indirectValue "$configurationSettingIsArray"

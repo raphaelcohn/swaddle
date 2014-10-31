@@ -27,7 +27,7 @@ Name: ${_swaddle_build_swaddleName}
 Version: $(_swaddle_build_configuration_getConfigurationSetting swaddle version)
 # Epoch is not required
 Epoch: $(_swaddle_build_configuration_getConfigurationSetting swaddle epoch)
-Release: $((swaddle_iteration+1))
+Release: $(_swaddle_build_package_rpm_release)
 Summary: $(_swaddle_build_package_rpm_summaryDescription)
 AutoReqProv: $(_swaddle_build_package_rpm_yesNo autoReqProv)
 AutoReq: $(_swaddle_build_package_rpm_yesNo autoReq)

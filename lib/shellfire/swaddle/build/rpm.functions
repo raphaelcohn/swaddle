@@ -228,6 +228,12 @@ _swaddle_build_package_rpm_yesNo()
 	fi
 }
 
+_swaddle_build_package_rpm_release()
+{
+	local iteration="$(_swaddle_build_configuration_getConfigurationSetting swaddle iteration)"
+	printf '%s' $((iteration+1))
+}
+
 core_dependency_requires '*' head
 _swaddle_build_package_rpm_summaryDescription()
 {
