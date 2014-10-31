@@ -66,12 +66,14 @@ swaddle_build_configuration_register()
 		
 	esac
 	
+	set -x
 	local configurationSettingNamespace
 	local configurationSettingValue
 	local configurationSettingValidate
 	local configurationSettingDefault
 	local configurationSettingIsArray
 	_swaddle_build_configuration_configurationSetting "$namespace" "$configurationSettingName"
+	set +x
 	
 	if core_variable_isSet "$configurationSettingValidate"; then
 		core_message NOTICE "The configuration setting '$configurationSettingValidate' is already registered"
