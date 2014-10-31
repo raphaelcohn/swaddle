@@ -1,8 +1,0 @@
-# The following special types are supported
-#user=someone
-#group=somegroup
-#mode=0500
-#mtime=CCYYMMDDhhmm.SS
-#special=package-owned-directory
-#special=config-file,noreplace
-#special=config-file,replace
