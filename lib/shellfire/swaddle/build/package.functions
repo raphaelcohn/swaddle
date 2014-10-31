@@ -13,7 +13,7 @@ swaddle_build_package_createTemporaryFolder()
 }
 
 core_dependency_requires '*' mkdir
-core_functions_register _swaddle_build_package_functions swaddle_package_createPackageRootFolder
+core_functions_register _swaddle_build_package_functions swaddle_build_package_createRootFolder
 swaddle_build_package_createRootFolder()
 {
 	_swaddle_build_package_root="$_swaddle_build_package_temporaryFolderPath"/root
@@ -70,17 +70,14 @@ swaddle_build_package_synchroniseToPackageRoot()
 	# If there are file conflicts (eg same file in multiple structures), first sync source wins
 	set --
 	local folderStructurePath
-	for folderStructurePath in \
-		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/body \
-		"$_swaddle_build_sourcePath"/body \
-		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/skeleton \
-		"$_swaddle_build_sourcePath"/skeleton
+	for folderStructurePath in "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/body "$_swaddle_build_sourcePath"/body "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/skeleton "$_swaddle_build_sourcePath"/skeleton
 	do
 		if ! core_path_isReadableAndSearchableFolderPath "$folderStructurePath"; then
 			continue
 		fi
+		
 		# Trailing '\' matters to rsync, remember!
-		set -- "$@" "$folderStructurePath"\
+		set -- "$@" "$folderStructurePath"/
 	done
 	
 	if [ $# -eq 0 ]; then

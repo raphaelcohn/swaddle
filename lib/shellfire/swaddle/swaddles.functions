@@ -162,7 +162,7 @@ swaddles_attemptToDiscoverRpmChangelog()
 			do
 				changelogDate="$(date -u -d @${epochSeconds} '+%a %b %d %Y')"
 				printf '* %s %s <%s> - %s\n' "$epochSeconds" "$author" "$authorEmail" "$commitHash"
-				printf '- %s\n' "$subject"
+				printf '%s %s\n' '-' "$subject"
 				printf '\n'
 			done
 		}
