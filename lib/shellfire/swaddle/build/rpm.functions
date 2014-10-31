@@ -16,9 +16,9 @@ swaddle_build_package_rpm_registerConfiguration()
 	swaddle_build_configuration_register Value Boolean swaddle_rpm autoDepends 'yes'
 	swaddle_build_configuration_register Value NotEmpty swaddle_rpm user 'root'
 	swaddle_build_configuration_register Value NotEmpty swaddle_rpm group 'root'
-	# Was '-
+	# Was '-'
 	swaddle_build_configuration_register Value NotEmpty swaddle_rpm defattrfile '0644'
-	# Was '-
+	# Was '-'
 	swaddle_build_configuration_register Value NotEmpty swaddle_rpm defattrdir '0755'
 	swaddle_build_configuration_register Value Digest swaddle_rpm digest 'sha512'
 	swaddle_build_configuration_register Value Compression swaddle_rpm compression 'xz'
@@ -87,6 +87,7 @@ swaddle_package_rpm_rpmbuild()
 	
 	if core_variable_isTrue "$(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm sign)"; then
 		core_variable_array_append options --sign
+	fi
 	
 	core_variable_array_append options \
 		--target "$(_swaddle_build_package_rpm_architecture)" \
