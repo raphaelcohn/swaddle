@@ -292,7 +292,7 @@ swaddle_build_configuration_validateLicence()
 core_snippet_embed raw swaddle_rpm_group
 swaddle_build_configuration_validateRpmGroup()
 {
-	_swaddle_build_configuration_validateValue rpm_group "$1"
+	_swaddle_build_configuration_validateValue group "$1"
 	
 	if core_variable_endsWith "$_swaddle_build_swaddleName" '-doc'; then
 		if [ "$1" != 'Documentation' ]; then

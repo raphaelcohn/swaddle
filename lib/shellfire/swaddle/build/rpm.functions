@@ -22,7 +22,7 @@ swaddle_build_package_rpm_registerConfiguration()
 	swaddle_build_configuration_register Value NotEmpty swaddle_rpm defattrdir '0755'
 	swaddle_build_configuration_register Value Digest swaddle_rpm digest 'sha512'
 	swaddle_build_configuration_register Value Compression swaddle_rpm compression 'xz'
-	swaddle_build_configuration_register Value RpmGroup swaddle_rpm compression 'xz'
+	swaddle_build_configuration_register Value RpmGroup swaddle_rpm category 'Applications/System'
 	swaddle_build_configuration_register Value Boolean swaddle_rpm sign 'no'
 	swaddle_build_configuration_register Value Boolean swaddle_rpm autoAddDirectories 'yes'
 	swaddle_build_configuration_register Value Boolean swaddle_rpm autoReqProv 'yes'
@@ -217,6 +217,7 @@ _swaddle_build_package_rpm_filterSetup()
 		return 0
 	fi
 	
+	echo $doSetup
 	printf '%s\n' '%filter_setup'
 }
 
@@ -470,7 +471,12 @@ _swaddle_build_package_rpm_files_write()
 	local fileName="$(core_compatibility_basename "$objectPath")"
 	local rpmPath="$relativePath"/"$fileName"
 	
-	printf '"%s"' "$rpmPath" | sed -e 's;\[;\[\[\];g' -e 's;\*;\[\*\];g' -e 's;\?;\[\?\];g' -e 's;\%;\[\%\];g'
+	if [ "$kind" = 'folder' ]; then
+		local adjustedRpmPath="$rpmPath"/
+	else
+		local adjustedRpmPath="$rpmPath"
+	fi
+	printf '"%s"\n' "$adjustedRpmPath" | sed -e 's;\[;\[\[\];g' -e 's;\*;\[\*\];g' -e 's;\?;\[\?\];g' -e 's;\%;\[\%\];g'
 	
 	if [ "$kind" = 'folder' ]; then
 		_swaddle_build_package_rpm_files_recurse "$objectPath" "$rpmPath"
@@ -479,7 +485,7 @@ _swaddle_build_package_rpm_files_write()
 
 _swaddle_build_package_rpm_files()
 {
-	_swaddle_build_package_rpm_files_recurse "$_swaddle_build_package_root" /
+	_swaddle_build_package_rpm_files_recurse "$_swaddle_build_package_root" ''
 }
 
 _swaddle_build_package_rpm_files_recurse()

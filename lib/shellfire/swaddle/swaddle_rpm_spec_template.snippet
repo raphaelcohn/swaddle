@@ -25,7 +25,6 @@ $(_swaddle_build_package_rpm_filterSetup regexFilterFromProvides regexFilterFrom
 
 Name: ${_swaddle_build_swaddleName}
 Version: $(_swaddle_build_configuration_getConfigurationSetting swaddle version)
-# Epoch is not required
 Epoch: $(_swaddle_build_configuration_getConfigurationSetting swaddle epoch)
 Release: $(_swaddle_build_package_rpm_release)
 Summary: $(_swaddle_build_package_rpm_summaryDescription)
@@ -36,7 +35,7 @@ AutoProv: $(_swaddle_build_package_rpm_yesNo autoProv)
 # CentOS 5 is now on life-support and will be dead after 31st March 2017
 BuildRoot: %buildroot
 Prefix: /
-Group: $(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm group)
+Group: $(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm category)
 License: $(_swaddle_build_configuration_getConfigurationSetting swaddle licence)
 Vendor: $(_swaddle_build_configuration_getConfigurationSetting swaddle vendor)
 URL: $(_swaddle_build_configuration_getConfigurationSetting swaddle url)
