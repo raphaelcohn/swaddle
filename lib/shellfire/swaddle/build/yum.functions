@@ -1,0 +1,640 @@
+core_dependency_requires '*' mkdir
+swaddle_build_repository_yum()
+{
+	local rpmsFolderName="$1"
+	
+	local distributionArchitecture="$2"
+	case "$distributionArchitecture" in
+		
+		all|noarch)
+			core_exitError $core_commandLine_exitCode_SOFTWARE "The distributionArchitecture '$distributionArchitecture' must be real, not 'all' or 'noarch'."
+		;;
+		
+	esac
+	
+	# eg centos
+	local distributionName="$3"
+	
+	# eg 6.5
+	local distributionVersion="$4"
+	
+	# eg to match http://mirror.centos.org/centos/6.5/os/x86_64/
+	local repositoryOutputRelativeFolderPath="$distributionName"/"$distributionVersion"/os/"$distributionArchitecture"
+	local repositoryOutputPath="$swaddle_outputPath"/yum/"$repositoryOutputRelativeFolderPath"
+	mkdir -m 0755 -p "$repositoryOutputPath"
+	
+	local repodataPath="$repositoryOutputPath"/repodata
+	mkdir -m 0755 -p "$repodataPath"
+	
+	local packagesPath="$repositoryOutputPath"/Packages
+	mkdir -m 0755 -p "$packagesPath"
+	
+	
+	local rpmsFolderPath="$swaddle_outputPath"/"$rpmsFolderName"
+	swaddle_build_repository_yum_primary
+	swaddle_build_repository_yum_other
+	swaddle_build_repository_yum_filelists
+	swaddle_build_repository_yum_comps 'All Packages'
+}
+
+core_dependency_requires '*' rpm sha256sum stat ln
+swaddle_build_repository_yum_primary()
+{
+	local rpmName
+	local rpmArchitecture
+	local rpmEpoch
+	local rpmVersion
+	local rpmRelease
+	local rpmSummary
+	local rpmPackager
+	local rpmUrl
+	local rpmBuildTime
+	local rpmPackageSize
+	local rpmInstalledSize
+	local rpmArchiveSize
+	local rpmLicense
+	local rpmVendor
+	local rpmGroup
+	local rpmBuildHost
+	local rpmSourceRpm
+	local rpmHeaderRangeStart
+	local rpmHeaderRangeEnd
+	
+	local rpmSha56Sum
+	local rpmTimestamp
+	local rpmDescription
+	local rpmFileName
+	{
+		xml_version10
+
+		set +f
+		set -- "$rpmsFolderPath"/*.noarch.rpm "$rpmsFolderPath"/*."$distributionArchitecture".rpm
+		set -f
+		
+		if [ ! -e "$1" ]; then
+			set --
+		fi
+		
+		xml_open metadata xmlns "http://linux.duke.edu/metadata/common" xmlns:rpm "http://linux.duke.edu/metadata/rpm" packages "$#"
+			local rpmFilePath
+			for rpmFilePath in "$@"
+			do
+				IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease rpmSummary rpmPackager rpmUrl rpmBuildTime rpmPackageSize rpmInstalledSize rpmArchiveSize rpmLicense rpmVendor rpmGroup rpmBuildHost rpmSourceRpm rpmHeaderRangeStart rpmHeaderRangeEnd <<-EOF
+					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}\t%{SUMMARY}\t%{PACKAGER}\t%{URL}\t${BUILDTIME}\t%{PACKAGESIZE}\t%{SIZE}\t%{ARCHIVESIZE}\t%{LICENSE}\t%{VENDOR}\t%{GROUP}\t%{BUILDHOST}\t%{SOURCERPM}\t%{HEADERSTARTOFF}\t%{HEADERENDOFF}')
+				EOF
+				
+				rpmSha56Sum="$(sha256sum "$rpmFilePath")"
+				rpmTimestamp="$(gstat -c '%Y' "$rpmFilePath")"
+				rpmDescription="$(rpm --query --package "$rpmFilePath" --queryformat '%{DESCRIPTON}')"
+				rpmFileName="$(core_compatibility_basename "$rpmFilePath")"
+				
+				xml_open package type 'rpm'
+					xml_leaf name "$rpmName"
+					xml_leaf arch "$rpmArchitecture"
+					xml_leaf version epoch "$rpmEpoch" ver "$rpmVersion" rel "$rpmRelease"
+					xml_leaf checksum type 'sha256' pkgid 'YES' "$rpmSha56Sum"
+					xml_leaf summary "$rpmSummary"
+					xml_leaf description "$rpmDescription"
+					xml_leaf packager "$rpmPackager"
+					xml_leaf url "$rpmUrl"
+					xml_leaf time file "$rpmTimestamp" build "$rpmBuildTime"
+					xml_leaf size package "$rpmPackageSize" installed "$rpmInstalledSize" archive "$rpmArchiveSize"
+					xml_leaf location "Packages/$rpmFileName"
+					xml_open format
+						xml_leaf rpm:license "$rpmLicense"
+						xml_leaf rpm:vendor "$rpmVendor"
+						xml_leaf rpm:group "$rpmGroup"
+						xml_leaf rpm:buildhost "$rpmBuildHost"
+						xml_leaf rpm:sourcerpm "$rpmSourceRpm"
+						xml_leaf rpm:header-range start "$rpmHeaderRangeStart" end "$rpmHeaderRangeEnd"
+						
+						# Section provides/requires/etc should only be present if there is at least 1 entry
+						xml_open rpm:provides
+							swaddle_build_repository_yum_primaryRpmEntries '[%{PROVIDES}\t%{PROVIDEVERSION}\t%{PROVIDEFLAGS:depflags}\n]'
+						xml_close rpm:provides
+						
+						xml_open rpm:requires
+							swaddle_build_repository_yum_primaryRpmEntries '[%{REQUIRENAME}\t%{REQUIREVERSION}\t%{REQUIREFLAGS:depflags}\n]'
+						xml_close rpm:requires
+						
+						xml_open rpm:conflicts
+							swaddle_build_repository_yum_primaryRpmEntries '[%{CONFLICTS}\t%{CONFLICTVERSION}\t%{CONFLICTFLAGS:depflags}\n]'
+						xml_close rpm:conflicts
+						
+						xml_open rpm:obsoletes
+							swaddle_build_repository_yum_primaryRpmEntries '[%{OBSOLETES}\t%{OBSOLETEVERSION}\t%{OBSOLETEFLAGS:depflags}\n]'
+						xml_close rpm:obsoletes
+						
+						# Not all files are included in this listing, why?
+						swaddle_build_repository_yum_files
+						
+						# Move the package into position
+						ln "$rpmFilePath" "$packagesPath"/"$rpmFileName"
+						
+					xml_close format
+				xml_close package
+			done
+		xml_close metadata
+	} >"$repodataPath"/primary.xml
+	
+}
+
+core_dependency_requires '*' rpm
+swaddle_build_repository_yum_primaryRpmEntries()
+{
+	local querystring="$1"
+	
+	local entryName
+	local entryEpochVersionRelease
+	local entryFlags
+	local entryFlagsConverted
+	
+	local lastEntryName
+	local lastEntryEpochVersionRelease
+	local lastEntryFlags
+	local lastEntryCount
+	lastEntryName=''
+	lastEntryEpochVersionRelease=''
+	lastEntryFlags=''
+	lastEntryCount=0
+	
+	local entryEpoch
+	local entryRemainder
+	local entryVersion
+	local entryRelease
+	rpm --query --package "$rpmFilePath" --queryformat "$querystring" 2>/dev/null | while IFS="$(printf '\t')" read -r entryName entryEpochVersionRelease entryFlags
+	do
+		set -- rpm:entry name "$entryName"
+		
+		# This revolting mess is to handle that things like /bin/sh can appear up to 4 times, but are recorded as a duplicate in the XML only on the second occurrence. Weird.
+		if [ "$lastEntryName" = "$entryName" ]; then
+			if [ $lastEntryCount -eq 1 ]; then
+				continue
+			fi
+			if [ "$lastEntryEpochVersionRelease" = "$entryEpochVersionRelease" ]; then
+				if [ "$lastEntryFlags" = "$entryFlags" ]; then
+					if [ $lastEntryCount -eq 0 ]; then
+						set -- "$@" pre 1
+						xml_leaf "$@"
+						continue
+					else
+						lastEntryCount=1
+					fi
+				else
+					lastEntryCount=0
+				fi
+			else
+				lastEntryCount=0
+			fi
+		else
+			lastEntryCount=0
+		fi
+		
+		
+		if [ -n "$entryConstraint" ]; then
+			case "$entryConstant" in
+				
+				'<')
+					entryFlagsConverted=LT
+				;;
+				
+				'>')
+					entryFlagsConverted=GT
+				;;
+				
+				'>=')
+					entryFlagsConverted=GE
+				;;
+				
+				'<=')
+					entryFlagsConverted=LE
+				;;
+				
+				'=')
+					entryFlagsConverted=EQ
+				;;
+				
+				'!=')
+					entryFlagsConverted=NE
+				;;
+				
+				*)
+					core_exitError $core_commandLine_exitCode_SOFTWARE "Unknown entry constraint '$entryConstraint'"
+				;;
+				
+			esac
+			
+			# Parse the entryEpochVersionRelease
+			
+			IFS=':' read -r entryEpoch entryRemainder <<-EOF
+				$entryEpochVersionRelease
+			EOF
+			
+			# Problems due to leading ':' and bash / sh's bizarre splitting rules
+			if [ -z "$entryRemainder" ]; then
+				entryRemainder="$entryEpoch"
+				entryEpoch='0'
+			# prefixed by ':' not '0:'
+			elif [ -z "$entryEpoch" ]; then
+				entryEpoch='0'
+			fi
+			
+			IFS='-' read -r entryVersion entryRelease <<-EOF
+				$entryRemainder
+			EOF
+			
+			set -- "$@" flags "$entryFlags" epoch "$entryEpoch" ver "$entryVersion"
+			
+			if [ -n "$entryRelease" ]; then
+				set -- "$@" rel "$entryRelease"
+			fi
+		fi
+		
+		xml_leaf "$@"
+		
+		lastEntryName="$entryName"
+		lastEntryEpochVersionRelease="$entryEpochVersionRelease"
+		lastEntryFlags="$entryFlags"
+	done
+}
+
+core_dependency_requires '*' rpm
+swaddle_build_repository_yum_files()
+{
+	# We're supposed to sort directories last
+	local filePath
+	local fileClass
+	rpm --query --package "$rpmFilePath" --queryformat '[%{FILENAMES}\t%{FILECLASS}\n]' 2>/dev/null | while IFS="$(printf '\t')" read -r filePath fileClass
+	do
+		set -- file
+		
+		if [ "$fileClass" ='directory' ]; then
+			set -- "$@" type dir
+		fi
+		
+		xml_leaf "$@"
+	done
+}
+
+core_dependency_requires '*' rpm sha256sum tr
+swaddle_build_repository_yum_other()
+{
+	local rpmName
+	local rpmArchitecture
+	local rpmEpoch
+	local rpmVersion
+	local rpmRelease
+	
+	local rpmSha56Sum
+	
+	local rpmChangelogAuthor
+	local rpmChangelogDate
+	local rpmChangelogEntryRaw
+	local rpmChangelogEntry
+	
+	{
+		xml_version10
+
+		set +f
+		set -- "$rpmsFolderPath"/*.noarch.rpm "$rpmsFolderPath"/*."$distributionArchitecture".rpm
+		set -f
+		
+		if [ ! -e "$1" ]; then
+			set --
+		fi
+		
+		xml_open otherdata xmlns "http://linux.duke.edu/metadata/common" packages "$#"
+
+			local rpmFilePath
+			for rpmFilePath in "$@"
+			do
+				IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease <<-EOF
+					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}')
+				EOF
+				
+				rpmSha56Sum="$(sha256sum "$rpmFilePath")"
+				
+				xml_open package pkgid "$rpmSha56Sum" name "$rpmName" arch "$rpmArchitecture"
+					xml_leaf version epoch "$rpmEpoch" ver "$rpmVersion" rel "$rpmRelease"
+					
+					# changelog text can have embedded line feeds, hence the 'tr' and strange '\r' at the end of the query 
+					rpm --query --package "$rpmFilePath" --queryformat '[%{CHANGELOGNAME}\t%{CHANGELOGTIME}\t%{CHANGELOGTEXT}\r]' | tr '\r\n' '\n\r' | while IFS="$(printf '\t')" read -r rpmChangelogAuthor rpmChangelogDate rpmChangelogEntryRaw
+					do
+						# Should use a CDATA entry, but yum doesn't...
+						local rpmChangelogEntry="$(printf '%s' "$rpmChangelogEntryRaw" | tr '\r' '\n')"
+						xml_leaf changelog author "$rpmChangelogAuthor" date "$rpmChangelogDate" "$rpmChangelogEntry"
+					done
+				
+				xml_close package
+			
+		xml_close otherdata
+	} >"$repodataPath"/other.xml
+}
+
+core_dependency_requires '*' rpm sha256sum
+swaddle_build_repository_yum_filelists()
+{
+	local rpmName
+	local rpmArchitecture
+	local rpmEpoch
+	local rpmVersion
+	local rpmRelease
+	
+	local rpmSha56Sum
+	
+	{
+		xml_version10
+
+		set +f
+		set -- "$rpmsFolderPath"/*.noarch.rpm "$rpmsFolderPath"/*."$distributionArchitecture".rpm
+		set -f
+		
+		if [ ! -e "$1" ]; then
+			set --
+		fi
+		
+		xml_open filelists xmlns "http://linux.duke.edu/metadata/common" packages "$#"
+
+			local rpmFilePath
+			for rpmFilePath in "$@"
+			do
+				IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease <<-EOF
+					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}')
+				EOF
+				
+				rpmSha56Sum="$(sha256sum "$rpmFilePath")"
+				
+				xml_open package pkgid "$rpmSha56Sum" name "$rpmName" arch "$rpmArchitecture"
+					xml_leaf version epoch "$rpmEpoch" ver "$rpmVersion" rel "$rpmRelease"
+
+					swaddle_build_repository_yum_files
+				
+				xml_close package
+			
+		xml_close filelists
+	} >"$repodataPath"/filelists.xml
+}
+
+
+swaddle_build_repository_yum_comps()
+{
+	local groupName="$1"
+	local groupId="$(printf '%s' "$groupName" | tr 'ABCEDFGHIJKLMNOPQRSTUVWXYZ ' 'abcdefghijklmnopqrstuvwxyz-' )"
+	local categoryName="$groupName"
+	local categoryId="$(printf '%s' "$categoryName" | tr 'ABCEDFGHIJKLMNOPQRSTUVWXYZ ' 'abcdefghijklmnopqrstuvwxyz-' )"
+	
+	{
+		xml_version10
+		printf '%s' '<!DOCTYPE comps PUBLIC "-//CentOS//DTD Comps info//EN" "comps.dtd">'
+		xml_open comps
+			# instead of group, there is also category, which is composed of grouplist and group
+			xml_open group
+				
+				xml_leaf id "$groupId"
+				xml_leaf name "$groupName"
+				xml_leaf description "All available packages for '$groupName'"
+				xml_leaf default false
+				xml_leaf uservisible false
+				
+				xml_open packagelist
+
+					set +f
+					set -- "$rpmsFolderPath"/*.noarch.rpm "$rpmsFolderPath"/*."$distributionArchitecture".rpm
+					set -f
+		
+					if [ ! -e "$1" ]; then
+						set --
+					fi
+				
+					local rpmFilePath
+					local rpmName
+					for rpmFilePath in "$@"
+					do
+						IFS="$(printf '\t')" read -r rpmName <<-EOF
+							$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}')
+						EOF
+						xml_leaf packagereq type 'optional' "$rpmName"
+				
+				xml_close packagelist
+			xml_close group
+			
+			xml_open category
+				xml_leaf id "$categoryId"
+				xml_leaf name "$categoryName"
+				xml_leaf description "All available groups for '$categoryName'"
+				
+				xml_open grouplist
+				
+					xml_leaf groupid "$groupId"
+				
+				xml_close grouplist
+			
+			xml_close category
+		xml_close comps
+	} >"$repodataPath"/other.xml
+}
+
+xml_version10()
+{
+	printf '%s' "<?xml version='1.0' encoding='UTF-8'?>"
+}
+
+xml_open()
+{
+	local nodeName="$1"
+	shift 1
+	
+	printf '<%s' "$nodeName"
+	
+	local attributeName
+	local attributeValue
+	while [ $# -gt 1 ]
+	do
+		attributeName="$1"
+		attributeValue="$2"
+		shift 2
+		
+		printf " %s='" "$attributeName"
+		xml_escape_attributeValue "$attributeValue"
+		printf "'"
+	done
+	printf '>'
+}
+
+xml_close()
+{
+	printf '</%s>' "$1"
+}
+
+xml_leaf()
+{
+	local nodeName="$1"
+	shift 1
+	
+	printf '<%s' "$nodeName"
+	
+	local attributeName
+	local attributeValue
+	while [ $# -gt 1 ]
+	do
+		attributeName="$1"
+		attributeValue="$2"
+		shift 2
+		
+		printf " %s='" "$attributeName"
+		xml_escape_attributeValue "$attributeValue"
+		printf "'"
+	done
+	
+	if [ $# -eq 1 ]; then
+		printf '>'
+		xml_escape_value "$1"
+		printf '</%s>' "$nodeName"
+	else
+		printf '/>'
+	fi
+}
+
+core_dependency_requires '*' sed
+xml_escape_attributeValue()
+{
+	local value="$1"
+	
+	if [ "$value" != "${value%*<*}" ]; then
+		# We do all replacements as capturing the value again causes line feeds to be lost
+		printf '%s' "$value" | sed -e 's/</&lt;/g' -e 's/>/&gt;/g' -e 's/&/&amp;/g' -e "s/'/&apos;/g"
+		return 0
+	fi
+	
+	if [ "$value" != "${value%*>*}" ]; then
+		printf '%s' "$value" | sed -e 's/>/&gt;/g' -e 's/&/&amp;/g' -e "s/'/&apos;/g"
+		return 0
+	fi
+	
+	if [ "$value" != "${value%*&*}" ]; then
+		printf '%s' "$value" | sed -e 's/&/&amp;/g' -e "s/'/&apos;/g"
+		return 0
+	fi
+	
+	if [ "$value" != "${value%*\'*}" ]; then
+		printf '%s' "$value" | sed -e "s/'/&apos;/g"
+		return 0
+	fi
+	
+	printf '%s'
+}
+
+core_dependency_requires '*' sed
+xml_escape_value()
+{
+	local value="$1"
+	
+	if [ "$value" != "${value%*<*}" ]; then
+		# We do all replacements as capturing the value again causes line feeds to be lost
+		printf '%s' "$value" | sed -e 's/</&lt;/g' -e 's/>/&gt;/g' -e 's/&/&amp;/g'
+		return 0
+	fi
+	
+	if [ "$value" != "${value%*>*}" ]; then
+		printf '%s' "$value" | sed -e 's/>/&gt;/g' -e 's/&/&amp;/g'
+		return 0
+	fi
+	
+	if [ "$value" != "${value%*&*}" ]; then
+		printf '%s' "$value" | sed -e 's/&/&amp;/g'
+		return 0
+	fi
+	
+	printf '%s'
+}
+
+
+http://mirror.centos.org/centos/6.5/os/x86_64/
+
+
+http://mirror.centos.org/
+	centos  distro-name
+		6.5  version
+			os
+				x86_64  arch (i386 / x86_64; map noarch to both, but there is no i386 anymore)
+					repodata
+						HASH-primary.xml.gz        RPM package entries as XML-ification of RPM data; but since it includes auto-generated requires, could be nasty to produce
+						HASH-primary.sqlite.bz2
+						HASH-ARCH-comps.xml        Yum groups of packages
+						HASH-ARCH-comps.xml.gz     Yum groups of packages
+						HASH-filelists.sqlite.bz2  Package (some sort of hash as id), version details, file and folders list
+						HASH-filelists.xml.gz
+						HASH-other.xml.gz          Contains a changelog
+						HASH-other.sqlite.bz2
+						...
+						repomd.xml
+
+Example repomd.xml from http://mirror.centos.org/centos/7/os/x86_64/repodata/repomd.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<repomd xmlns="http://linux.duke.edu/metadata/repo" xmlns:rpm="http://linux.duke.edu/metadata/rpm">
+ <revision>1404489580</revision>
+<data type="group">
+  <checksum type="sha256">2bc0054a9f0f4cd3d2806d983edbe3d0dfc484d9f275d12be79eb67a040ba942</checksum>
+  <location href="repodata/2bc0054a9f0f4cd3d2806d983edbe3d0dfc484d9f275d12be79eb67a040ba942-c7-x86_64-comps.xml"/>
+  <timestamp>1404489667</timestamp>
+  <size>725755</size>
+</data>
+<data type="filelists">
+  <checksum type="sha256">7a90ec1358cb1d9cab4c84793f9b96602fb49e7db90a6b8f5ddc441cb2a918c6</checksum>
+  <open-checksum type="sha256">666203ca03f9babfc6308fd20fc4763eb0fe239e094ae7e6525ab38e7a5db813</open-checksum>
+  <location href="repodata/7a90ec1358cb1d9cab4c84793f9b96602fb49e7db90a6b8f5ddc441cb2a918c6-filelists.xml.gz"/>
+  <timestamp>1404489647</timestamp>
+  <size>6024471</size>
+  <open-size>82718246</open-size>
+</data>
+<data type="group_gz">
+  <checksum type="sha256">4b9ac2454536a901fecbc1a5ad080b0efd74680c6e1f4b28fb2c7ff419872418</checksum>
+  <open-checksum type="sha256">2bc0054a9f0f4cd3d2806d983edbe3d0dfc484d9f275d12be79eb67a040ba942</open-checksum>
+  <location href="repodata/4b9ac2454536a901fecbc1a5ad080b0efd74680c6e1f4b28fb2c7ff419872418-c7-x86_64-comps.xml.gz"/>
+  <timestamp>1404489667</timestamp>
+  <size>160516</size>
+</data>
+<data type="primary">
+  <checksum type="sha256">1a7dd0d315b39ad504f54ea88676ab502a48064cb2d875ae3ae29431e175861c</checksum>
+  <open-checksum type="sha256">1fe8a030cb1eeb59b8a9d5b2e01c251739f33f6ef41ba6a5f83eb4d27ec425dd</open-checksum>
+  <location href="repodata/1a7dd0d315b39ad504f54ea88676ab502a48064cb2d875ae3ae29431e175861c-primary.xml.gz"/>
+  <timestamp>1404489647</timestamp>
+  <size>2466737</size>
+  <open-size>22626226</open-size>
+</data>
+<data type="primary_db">
+  <checksum type="sha256">efa521576f53587de26616ea1e45f902993abcd9d67e707b8993b5f29bd15956</checksum>
+  <open-checksum type="sha256">eed9832e36c179f4a2ea66e85f031ed82c3b932db5a316bd6e84be722a610201</open-checksum>
+  <location href="repodata/efa521576f53587de26616ea1e45f902993abcd9d67e707b8993b5f29bd15956-primary.sqlite.bz2"/>
+  <timestamp>1404489667</timestamp>
+  <database_version>10</database_version>
+  <size>5161398</size>
+  <open-size>25005056</open-size>
+</data>
+<data type="other_db">
+  <checksum type="sha256">fdef8b31072b60b0cad9c0c63977ff9c5fb5080f3ecdb47bff0ec0b7bf9b7855</checksum>
+  <open-checksum type="sha256">73ceec174d08bfcadbe7d1d5f884a45bba30c0f75023025ec139dab090bb9201</open-checksum>
+  <location href="repodata/fdef8b31072b60b0cad9c0c63977ff9c5fb5080f3ecdb47bff0ec0b7bf9b7855-other.sqlite.bz2"/>
+  <timestamp>1404489651</timestamp>
+  <database_version>10</database_version>
+  <size>2198161</size>
+  <open-size>14725120</open-size>
+</data>
+<data type="other">
+  <checksum type="sha256">ea8bacdf833619ea843887b0673a569633dc9853462219b50578d8247a1cf6c0</checksum>
+  <open-checksum type="sha256">fa0645d042c9c3027c0248612b41811999a5ee4fdb8cdd6bc7c4a74b8b549f55</open-checksum>
+  <location href="repodata/ea8bacdf833619ea843887b0673a569633dc9853462219b50578d8247a1cf6c0-other.xml.gz"/>
+  <timestamp>1404489647</timestamp>
+  <size>1305746</size>
+  <open-size>16261479</open-size>
+</data>
+<data type="filelists_db">
+  <checksum type="sha256">3cda64d1c161dd0fead8398a62ef9c691e78ee02fe56d04566f850c94929f61f</checksum>
+  <open-checksum type="sha256">5ba74705f01268bfed586009bc81793c6300e7c68553068cee10e8949d1ec10f</open-checksum>
+  <location href="repodata/3cda64d1c161dd0fead8398a62ef9c691e78ee02fe56d04566f850c94929f61f-filelists.sqlite.bz2"/>
+  <timestamp>1404489661</timestamp>
+  <database_version>10</database_version>
+  <size>6048365</size>
+  <open-size>38068224</open-size>
+</data>
+</repomd>
