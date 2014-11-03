@@ -37,10 +37,45 @@ swaddle_build_package_registerConfiguration()
 	configure_register Value NotEmpty swaddle description
 	configure_register Value NotEmpty swaddle url
 	
-	# If set to '', then no mtime is applied
 	configure_register Value NotEmpty swaddle mtime '197001010000.00'
-		
+	
+	# Passed body / skeleton / rpm.body / rpm.skeleton etc path
+	# Could be git-cache-meta, etc
+	# Is run under fakeroot
+	# Can be on path, absolute or even a bash function (if sourced in configuration itself)
+	# Can also be used to create a body or its contents
+	# Can be used to fix up mtimes. Default implementation sets mtime to mtime setting, 1970-01-01 00:00.00
+	configure_register Value NotEmpty swaddle fix_permissions 'swaddle_build_package_defaultFixPermissions'
+	
 	swaddle_build_package_${_swaddle_build_package_kind}_registerConfiguration
+}
+
+core_dependency_requires '*' touch
+swaddle_build_package_defaultFixPermissions()
+{
+	_swaddle_build_package_defaultFixPermissions_recurse()
+	{
+		local filePath="$1"
+		if [ -e "$filePath" ]; then
+			touch -a -m -c -h -t "$mtime" "$filePath"
+			
+			if [ -L "$filePath" ]; then
+				return 0
+			fi
+			
+			if [ -d "$filePath" ]; then
+				local subPath
+				for subPath in "$filePath"/*
+				do
+					_swaddle_build_package_defaultFixPermissions_recurse "$subPath"
+				done
+			fi
+		fi
+	}
+
+	local pathToBodyOrSkeleton="$1"
+	local mtime="$(configure_getConfigurationSetting swaddle fix_permissions)"
+	_swaddle_build_package_defaultFixPermissions_recurse "$pathToBodyOrSkeleton"
 }
 
 core_functions_register _swaddle_build_package_functions swaddle_build_package_resetConfiguration
@@ -64,19 +99,36 @@ swaddle_build_package_validateConfiguration()
 	configure_validate swaddle_${_swaddle_build_package_kind}
 }
 
-core_dependency_requires '*' rsync
+core_dependency_requires '*' rsync sort fakeroot
 core_functions_register _swaddle_build_package_functions swaddle_build_package_synchroniseToPackageRoot
 swaddle_build_package_synchroniseToPackageRoot()
 {
+	_swaddle_build_package_destinationFakerootFilePath="$_swaddle_build_package_root".fakeroot
+	local destinationFakerootTemporaryFilePath="$_swaddle_build_package_root".fakeroot.tmp
+	rm -f "$destinationFakerootTemporaryFilePath"
+
+	local fixPermissionsBinaryOrFunction="$(configure_getConfigurationSetting swaddle fix_permissions)"
+	
 	# If there are file conflicts (eg same file in multiple structures), first sync source wins
 	set --
 	local folderStructurePath
+	local fakerootEnvironmentFilePath
 	for folderStructurePath in \
 		"$_swaddle_build_sourcePath"/packages/"$_swaddle_build_package_kind"/body \
 		"$_swaddle_build_sourcePath"/packages/"$_swaddle_build_package_kind"/skeleton \
 		"$_swaddle_build_sourcePath"/body \
 		"$_swaddle_build_sourcePath"/skeleton
 	do
+		fakerootEnvironmentFilePath="$folderStructurePath".fakeroot
+		if [ -f "$fakerootEnvironmentFilePath" ]; then
+			cat "$fakerootEnvironmentFilePath" >>"$destinationFakerootTemporaryFilePath"
+		fi
+		
+		# We do this before checking the path exists, so they can create it, too
+		if [ -n "$fixPermissionsBinaryOrFunction" ]; then
+			swaddle_build_package_fakeroot $fixPermissionsBinaryOrFunction "$folderStructurePath"
+		fi
+		
 		if ! core_path_isReadableAndSearchableFolderPath "$folderStructurePath"; then
 			continue
 		fi
@@ -87,10 +139,34 @@ swaddle_build_package_synchroniseToPackageRoot()
 	
 	if [ $# -eq 0 ]; then
 		core_message WARN "There are no skeleton or body folders to include the package. This is probably not what you want."
+		
+		# Ensure the package root is completely clean
+		rm -rf "$_swaddle_build_package_root"
+		mkdir -m 0755 -p "$_swaddle_build_package_root"
 		return 0
 	fi
+
+	if [ -f "$destinationFakerootFilePath" ]; then
+		cat "$destinationFakerootFilePath" >>"$destinationFakerootTemporaryFilePath"
+	fi
+	sort -u "$destinationFakerootTemporaryFilePath" >"$destinationFakerootFilePath"
+	rm "$destinationFakerootTemporaryFilePath"
 	
-	rsync --quiet --archive --acls --xattrs --hard-links --delete --delete-after --delete-excluded --exclude=.gitignore "$@" "$_swaddle_build_package_root"/
+	# gets around user, group, mode, but not mtime / atime
+	swaddle_build_package_fakeroot "$_swaddle_build_package_destinationFakerootFilePath" "$_swaddle_build_package_destinationFakerootFilePath" rsync --quiet --archive --acls --xattrs --hard-links --delete --delete-after --delete-excluded --exclude=.gitignore "$@" "$_swaddle_build_package_root"/
+}
+
+swaddle_build_package_fakeroot()
+{
+	local fakerootEnvironmentInputPath="$1"
+	local fakerootEnvironmentOutputPath="$2"
+	shift 2
+	
+	if [ -f "$fakerootEnvironmentInputPath" ]; then
+		fakeroot --unknown-is-real -i "$fakerootEnvironmentInputPath" -s "$fakerootEnvironmentOutputPath" -- "$@"
+	else
+		fakeroot --unknown-is-real -s "$fakerootEnvironmentOutputPath" -- "$@"
+	fi	
 }
 
 core_functions_register _swaddle_build_package_functions swaddle_build_package_kind

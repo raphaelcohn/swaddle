@@ -19,8 +19,8 @@ swaddle_build_setSourcePath()
 	_swaddle_build_sourcePath="$swaddle_swaddlesPath"/"$swaddle"
 }
 
-core_functions_register _swaddle_build_functions swaddle_build_setPackageKindsSourcePath
-swaddle_build_setPackageKindsSourcePath()
+core_functions_register _swaddle_build_functions swaddle_build_setPackagesSourcePath
+swaddle_build_setPackagesSourcePath()
 {
 	_swaddle_build_packagesPath="$_swaddle_build_sourcePath"/packages
 	if ! core_path_isReadableAndSearchableFolderPath "$_swaddle_build_packagesPath"; then

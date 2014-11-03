@@ -1,10 +1,8 @@
+core_usesIn core/variable array
+
 swaddle_build_package_rpm_registerConfiguration()
 {
 	configure_register Array NotEmpty swaddle_rpm depends
-	configure_register Array NotEmpty swaddle_rpm provides
-	configure_register Array NotEmpty swaddle_rpm conflicts
-	configure_register Array NotEmpty swaddle_rpm replaces
-	
 	configure_register Array NotEmpty swaddle_rpm depends_before_install
 	configure_register Array NotEmpty swaddle_rpm depends_after_install
 	configure_register Array NotEmpty swaddle_rpm depends_before_remove
@@ -12,34 +10,97 @@ swaddle_build_package_rpm_registerConfiguration()
 	configure_register Array NotEmpty swaddle_rpm depends_pre_transaction
 	configure_register Array NotEmpty swaddle_rpm depends_post_transaction
 	configure_register Array NotEmpty swaddle_rpm depends_verify
-
+	configure_register Array NotEmpty swaddle_rpm provides
+	configure_register Array NotEmpty swaddle_rpm conflicts
+	configure_register Array NotEmpty swaddle_rpm replaces
+	# See https://fedoraproject.org/wiki/Packaging:AutoProvidesAndRequiresFiltering
 	configure_register Value Boolean swaddle_rpm autoDepends 'yes'
-	configure_register Value NotEmpty swaddle_rpm user 'root'
-	configure_register Value NotEmpty swaddle_rpm group 'root'
-	# Was '-'
-	configure_register Value NotEmpty swaddle_rpm defattrfile '0644'
-	# Was '-'
-	configure_register Value NotEmpty swaddle_rpm defattrdir '0755'
+	configure_register Array NotEmpty swaddle_rpm regexFilterFromProvides
+	configure_register Array NotEmpty swaddle_rpm regexFilterFromRequires
+		
+	configure_register Array NotEmpty swaddle_rpm unreplaceableConfigFiles
+	configure_register Array NotEmpty swaddle_rpm replaceableConfigFiles
+	configure_register Array NotEmpty swaddle_rpm packageFolderPaths
+
 	configure_register Value Digest swaddle_rpm digest 'sha512'
 	configure_register Value Compression swaddle_rpm compression 'xz'
 	configure_register Value RpmGroup swaddle_rpm category 'Applications/System'
 	configure_register Value Boolean swaddle_rpm sign 'yes'
-	configure_register Value Boolean swaddle_rpm autoAddDirectories 'yes'
 	configure_register Value Boolean swaddle_rpm autoReqProv 'yes'
 	configure_register Value Boolean swaddle_rpm autoReq 'yes'
 	configure_register Value Boolean swaddle_rpm autoProv 'yes'
-	configure_register Value Boolean swaddle_rpm ignoreIterationInDependencies 'yes'
 	
-	# See https://fedoraproject.org/wiki/Packaging:AutoProvidesAndRequiresFiltering
-	configure_register Array NotEmpty swaddle_rpm regexFilterFromProvides
-	configure_register Array NotEmpty swaddle_rpm regexFilterFromRequires
 	
 	configure_register Value NotEmpty swaddle_rpm changelog
 }
 
 swaddle_build_package_rpm()
 {
+	# Validate that config files and package folder paths are all valid
+	
 	core_functions_execute _swaddle_build_package_rpm_functions "$@"
+}
+
+core_functions_register _swaddle_build_package_rpm_functions swaddle_build_package_rpm_validateConfigFiles
+swaddle_build_package_rpm_validateConfigFiles()
+{
+	_swaddle_build_package_rpm_validateConfigFiles_callback()
+	{
+		local configFile="$core_variable_array_element"
+		if core_variable_doesNotStartWith "$configFile" '/'; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The $what file '$configFile' does not start with a '/'"
+		fi
+		if core_variable_endsWith "$configFile" '/'; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The $what file '$configFile' ends with a '/'"
+		fi
+		local absoluteConfigFilePath="$_swaddle_build_package_root"/"$configFile"
+		if [ -L "$absoluteConfigFilePath" ]; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The $what file '$configFile' is a symlink"
+		fi
+		if [ ! -f "$absoluteConfigFilePath" ]; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The $what file '$configFile' does not exist or is not a file"
+		fi
+	}
+	
+	local what
+	local configurationSettingValue
+	
+	what="unreplaceableConfigFiles"
+	_configure_configurationSettingValue 'swaddle_rpm' "$what"
+	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_rpm_validateConfigFiles_callback
+
+	what="replaceableConfigFiles"
+	_configure_configurationSettingValue 'swaddle_rpm' "$what"
+	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_rpm_validateConfigFiles_callback
+}
+
+core_functions_register _swaddle_build_package_rpm_functions swaddle_build_package_rpm_validatePackageFolders
+swaddle_build_package_rpm_validatePackageFolders()
+{
+	_swaddle_build_package_rpm_validatePackageFolders_callback()
+	{
+		local packageFolder="$core_variable_array_element"
+		if core_variable_doesNotStartWith "$packageFolder" '/'; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The $what folder '$packageFolder' does not start with a '/'"
+		fi
+		if core_variable_endsWith "$packageFolder" '/'; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The $what folder '$packageFolder' ends with a '/'"
+		fi
+		local absoluteConfigFolderPath="$_swaddle_build_package_root"/"$configFile"
+		if [ -L "$absoluteConfigFolderPath" ]; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The $what folder '$packageFolder' is a symlink"
+		fi
+		if [ ! -d "$absoluteConfigFolderPath" ]; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The $what file '$packageFolder' does not exist or is not a file"
+		fi
+	}
+	
+	local what
+	local configurationSettingValue
+	
+	what="packageFolderPaths"
+	_configure_configurationSettingValue 'swaddle_rpm' "$what"
+	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_rpm_validatePackageFolders_callback
 }
 
 core_functions_register _swaddle_build_package_rpm_functions swaddle_build_package_rpm_setSpecFilePath
@@ -88,7 +149,7 @@ swaddle_package_rpm_rpmbuild()
 		
 	esac
 	
-	if core_variable_isTrue "$(_configure_getConfigurationSetting swaddle_rpm sign)"; then
+	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_rpm sign)"; then
 		core_variable_array_append options --sign
 	fi
 	
@@ -119,7 +180,8 @@ swaddle_package_rpm_rpmbuild()
 
 _swaddle_build_package_rpm_architecture()
 {
-	case "$(_configure_getConfigurationSetting swaddle architecture)" in
+	local architecture="$(configure_getConfigurationSetting swaddle architecture)"
+	case "$architecture" in
 		
 		all|noarch)
 			printf '%s' 'noarch'
@@ -129,11 +191,8 @@ _swaddle_build_package_rpm_architecture()
 			printf '%s' 'x86_64'
 		;;
 		
-		# We don't bother with native / uname -m; it's wrong on the Mac (well, mine, as I run a 32-bit kernel on 64-bit machine) and AIX
-		# bash's HOSTTYPE is useful but not available under sh
-		
 		*)
-			printf '%s' "$swaddle_architecture"
+			printf '%s' "$architecture"
 		;;
 		
 	esac
@@ -141,7 +200,7 @@ _swaddle_build_package_rpm_architecture()
 
 _swaddle_build_package_rpm_digestAlgorithm()
 {
-	case "$(_configure_getConfigurationSetting swaddle_rpm digest)" in
+	case "$(configure_getConfigurationSetting swaddle_rpm digest)" in
 		
 		md5)
 			printf '%s' 1
@@ -168,7 +227,7 @@ _swaddle_build_package_rpm_digestAlgorithm()
 
 _swaddle_build_package_rpm_compression()
 {
-	case "$(_configure_getConfigurationSetting swaddle_rpm compression)" in
+	case "$(configure_getConfigurationSetting swaddle_rpm compression)" in
 		
 		none)
 			printf '%s' 'w0.gzdio'
@@ -238,7 +297,7 @@ _swaddle_build_package_rpm_filterSetup()
 
 _swaddle_build_package_rpm_yesNo()
 {
-	if core_variable_isTrue "$(_configure_getConfigurationSetting swaddle_rpm "$1")"; then
+	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_rpm "$1")"; then
 		printf 'yes'
 	else
 		printf 'no'
@@ -247,14 +306,14 @@ _swaddle_build_package_rpm_yesNo()
 
 _swaddle_build_package_rpm_release()
 {
-	local iteration="$(_configure_getConfigurationSetting swaddle iteration)"
+	local iteration="$(configure_getConfigurationSetting swaddle iteration)"
 	printf '%s' $((iteration+1))
 }
 
 core_dependency_requires '*' head
 _swaddle_build_package_rpm_summaryDescription()
 {
-	printf '%s' "$(_configure_getConfigurationSetting swaddle description)" | head -n 1
+	printf '%s' "$(configure_getConfigurationSetting swaddle description)" | head -n 1
 }
 
 _swaddle_build_package_rpm_iterateDependencies()
@@ -279,7 +338,7 @@ core_dependency_requires '*' sed
 _swaddle_build_package_rpm_formatDescription()
 {
 	sed -e 's/^\w*$/ \./g' <<EOF
-$(_configure_getConfigurationSetting swaddle description)
+$(configure_getConfigurationSetting swaddle description)
 EOF
 }
 
@@ -290,14 +349,12 @@ _swaddle_build_package_rpm_script()
 	local scriptType="$2"
 	local scriptTypePath="$_swaddle_build_packagesPath"/"$_swaddle_build_package_kind"/scripts/"$scriptType"
 	
-	core_TODO 'Templated scripts, scripts in other repositories and shellshock scripts'
-	
 	if ! core_path_isReadableAndSearchableFolderPath "$scriptTypePath"; then
 		return 0
 	fi
 	
 	set +f
-	set -- "$scriptTypePath"/*.sh
+	set -- "$scriptTypePath"/*
 	set -f
 	if [ ! -e "$1" ]; then
 		return 0
@@ -402,100 +459,80 @@ _swaddle_build_package_rpm_trigger()
 	done
 }
 
-core_dependency_requires '*' stat id rm sed
-_swaddle_build_package_rpm_files_write()
+_swaddle_build_package_rpm_files_computeRpmPath()
 {
-	local kind="$1"
-	
+	local fileName="$(core_compatibility_basename "$objectPath")"
+	rpmPath="$relativePath"/"$fileName"
+}
+
+_swaddle_build_package_rpm_files_writeAttr()
+{
 	local potentiallyShortMode
 	local mode
 	local user
 	local group
-	
 	IFS=' ' read -r potentiallyShortMode user group <<-EOF
 		$(stat -c '%a %U %G' "$objectPath")
 	EOF
-	
 	if [ ${#potentiallyShortMode} -eq 3 ]; then
 		mode="0${potentiallyShortMode}"
 	else
 		mode="$potentiallyShortMode"
 	fi
-	unset potentiallyShortMode
-	
-	# Allows 'current user' to be 'root'
-	if [ "$(id -un)" = "$user" ]; then
-		user="$(_configure_getConfigurationSetting swaddle_rpm user)"
-	fi
-	
-	# Allows 'current group' to be 'root'
-	if [ "$(id -gn)" = "$group" ]; then
-		group="$(_configure_getConfigurationSetting swaddle_rpm group)"
-	fi
-	
-	local settingsFilePath="$objectPath".swaddle-settings
-	
-	local mtime="$(_configure_getConfigurationSetting swaddle mtime)"
-	local special=''
-	# Can override isOwnedDirectory, mode, user, group
-	if core_path_isReadableNonEmptyFilePath "$settingsFilePath"; then
-		. "$settingsFilePath"
-		rm -f "$settingsFilePath" || true
-		
-		case "$special" in
-			
-			package-owned-directory)
-				if [ "$kind" != 'folder' ]; then
-					core_exitError $core_commandLine_exitCode_CONFIG "The special setting '$special' is invalid for anything but folders"
-				fi
-				printf '%%dir '
-			;;
-			
-			config-file,noreplace)
-				if [ ! -f "$objectPath" ]; then
-					core_exitError $core_commandLine_exitCode_CONFIG "The special setting '$special' is invalid for anything but files"
-				fi
-				printf '%%config(noreplace) '
-			;;
-			
-			config-file,replace)
-				if [ ! -f "$objectPath" ]; then
-					core_exitError $core_commandLine_exitCode_CONFIG "The special setting '$special' is invalid for anything but files"
-				fi
-				printf '%%config '
-			;;
-			
-			'')
-				:
-			;;
-			
-			*)
-				core_exitError $core_commandLine_exitCode_CONFIG "The special setting '$special' is unrecognised"
-			;;
-			
-		esac
-		
-	fi
-	
-	if [ -n "$mtime" ]; then
-		touch -a -m -t "$mtime" "$objectPath"
-	fi
-	
 	printf '%%attr(%s, %s, %s) ' "$mode" "$user" "$group"
-	
-	local fileName="$(core_compatibility_basename "$objectPath")"
-	local rpmPath="$relativePath"/"$fileName"
-	
-	if [ "$kind" = 'folder' ]; then
-		local adjustedRpmPath="$rpmPath"/
-	else
-		local adjustedRpmPath="$rpmPath"
-	fi
+}
+
+_swaddle_build_package_rpm_files_writeAdjustedPath()
+{
+	local trailingSlashIfAny="$1"
+	local adjustedRpmPath="${rpmPath}${trailingSlashIfAny}"
 	printf '"%s"\n' "$adjustedRpmPath" | sed -e 's;\[;\[\[\];g' -e 's;\*;\[\*\];g' -e 's;\?;\[\?\];g' -e 's;\%;\[\%\];g'
-	
-	if [ "$kind" = 'folder' ]; then
-		_swaddle_build_package_rpm_files_recurse "$objectPath" "$rpmPath"
+}
+
+_swaddle_build_package_rpm_files_isSpecial()
+{
+	[ "$core_variable_array_element" = "$rpmPath" ]
+}
+
+_swaddle_build_package_rpm_files_writeFolder()
+{
+	local rpmPath
+	_swaddle_build_package_rpm_files_computeRpmPath
+
+	local configurationSettingValue
+	_configure_configurationSettingValue 'swaddle_rpm' 'packageFolderPaths'
+	if core_variable_array_iterateShortcut "$configurationSettingValue" _swaddle_build_package_rpm_files_isSpecial; then
+		printf '%%dir '
 	fi
+	
+	_swaddle_build_package_rpm_files_writeAttr
+	_swaddle_build_package_rpm_files_writeAdjustedPath '/'
+	
+	_swaddle_build_package_rpm_files_recurse "$objectPath" "$rpmPath"
+}
+
+core_dependency_requires '*' stat rm sed
+_swaddle_build_package_rpm_files_writeFile()
+{
+	local rpmPath
+	_swaddle_build_package_rpm_files_computeRpmPath
+
+	local configurationSettingValue
+	_configure_configurationSettingValue 'swaddle_rpm' 'unreplaceableConfigFiles'
+	local configFileCount=0
+	if core_variable_array_iterateShortcut "$configurationSettingValue" _swaddle_build_package_rpm_files_isSpecial; then
+		printf '%%config(noreplace) '
+		configFileCount=1
+	fi
+	_configure_configurationSettingValue 'swaddle_rpm' 'replaceableConfigFiles'
+	if core_variable_array_iterateShortcut "$configurationSettingValue" _swaddle_build_package_rpm_files_isSpecial; then
+		if [ $configFileCount -eq 1 ]; then
+			core_exitError $core_commandLine_exitCode_CONFIG "Config file '$rpmPath' specified in both 'unreplaceableConfigFiles' and 'replaceableConfigFiles'"
+		printf '%%config '
+	fi
+	
+	_swaddle_build_package_rpm_files_writeAttr
+	_swaddle_build_package_rpm_files_writeAdjustedPath ''
 }
 
 _swaddle_build_package_rpm_files()
@@ -524,11 +561,11 @@ _swaddle_build_package_rpm_files_recurse()
 		fi
 	
 		if [ -L "$objectPath" ]; then
-			_swaddle_build_package_rpm_files_write file
+			_swaddle_build_package_rpm_files_writeFile
 		elif [ -d "$objectPath" ]; then
-			_swaddle_build_package_rpm_files_write folder
+			_swaddle_build_package_rpm_files_writeFolder
 		else
-			_swaddle_build_package_rpm_files_write file
+			_swaddle_build_package_rpm_files_writeFile
 		fi
 	
 	done

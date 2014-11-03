@@ -4,9 +4,9 @@ core_dependency_requires '*' mkdir date
 swaddle_repository_yum()
 {
 	local rpmsFolderName="$1"
-	local distributionName="$(_configure_getConfigurationSetting swaddles_yum distributionName)"
-	local distributionVersion="$(_configure_getConfigurationSetting swaddles_yum distributionVersion)"
-	local repositoryName="$(_configure_getConfigurationSetting swaddles name)"
+	local distributionName="$(configure_getConfigurationSetting swaddles_yum distributionName)"
+	local distributionVersion="$(configure_getConfigurationSetting swaddles_yum distributionVersion)"
+	local repositoryName="$(configure_getConfigurationSetting swaddles name)"
 	local distributionArchitecture="$2"
 	
 	case "$distributionArchitecture" in
@@ -55,7 +55,7 @@ swaddle_repository_yum_repoFiles()
 	
 	swaddle_repository_yum_repoFile_gpgEnabled()
 	{
-		if core_variable_isTrue "$(_configure_getConfigurationSetting swaddle_rpm sign)"; then
+		if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_rpm sign)"; then
 			printf '1'
 		else
 			printf '0'
@@ -79,7 +79,7 @@ swaddle_repository_yum_repoFiles()
 		${mirrorHostPath}${repositoryOutputRelativeFolderPath}
 	EOF
 	
-	gpg --home "$(_configure_getConfigurationSetting swaddle keyring)" --armor --export "$(_configure_getConfigurationSetting swaddle signer)" >"$repositoryOutputPath"/RPM-GPG-KEY-${distributionName}-${distributionVersion}
+	gpg --home "$(configure_getConfigurationSetting swaddle keyring)" --armor --export "$(configure_getConfigurationSetting swaddle signer)" >"$repositoryOutputPath"/RPM-GPG-KEY-${distributionName}-${distributionVersion}
 	
 	# OpenSUSE likes the key to be here
 	ln "$repositoryOutputPath"/RPM-GPG-KEY-${distributionName}-${distributionVersion} "$repositoryOutputPath"/repomd.xml.key

@@ -30,7 +30,7 @@ _configure_configurationSettingIsArray()
 	core_variable_isTrue "$core_variable_indirectValue_result"
 }
 
-_configure_getConfigurationSetting()
+configure_getConfigurationSetting()
 {
 	local namespace="$1"
 	local configurationSettingName="$2"

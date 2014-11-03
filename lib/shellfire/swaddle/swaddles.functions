@@ -34,15 +34,6 @@ swaddle_swaddles_createTemporaryFolder()
 	fi
 }
 
-core_dependency_requires '*' rm mkdir
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createEmptyFolderSoWeCanLeverageRsyncToRemoveBody
-swaddle_swaddles_createEmptyFolderSoWeCanLeverageRsyncToRemoveBody()
-{
-	_swaddle_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath="$swaddle_temporaryPath"/empty
-	rm -rf "$_swaddle_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath" || core_exitError $core_commandLine_exitCode_CANTCREAT "Can not recreate temporary empty path '$_swaddle_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath'."
-	mkdir -m 0700 -p "$_swaddle_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath"
-}
-
 core_dependency_requires '*' mkdir
 core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createPackagesFolder
 swaddle_swaddles_createPackagesFolder()
@@ -236,10 +227,10 @@ swaddle_swaddles_buildYumRepositories()
 		
 	else
 		
-		case "$(_configure_getConfigurationSetting swaddle_swaddles_yum distributionName)" in
+		case "$(configure_getConfigurationSetting swaddle_swaddles_yum distributionName)" in
 			
 			centos|rhel)			
-				case "$(_configure_getConfigurationSetting swaddle_swaddles_yum distributionVersion)" in
+				case "$(configure_getConfigurationSetting swaddle_swaddles_yum distributionVersion)" in
 		
 					1|1.*|2|2.*)
 						core_message WARN "Building ancient versions isn't supported"

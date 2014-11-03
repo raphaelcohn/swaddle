@@ -10,18 +10,18 @@
 
 # RPM sign stuff
 %_signature gpg
-%_gpg_path $(_configure_getConfigurationSetting swaddle keyring)
-%_gpg_name $(_configure_getConfigurationSetting swaddle signer)
+%_gpg_path $(configure_getConfigurationSetting swaddle keyring)
+%_gpg_name $(configure_getConfigurationSetting swaddle signer)
 #%_gpgbin /usr/bin/gpg
 
 # Disable checking for unpackaged files
 #%undefine __check_files
 
-# Digest method is '$(_configure_getConfigurationSetting swaddle_rpm digest)'
+# Digest method is '$(configure_getConfigurationSetting swaddle_rpm digest)'
 # %define _source_filedigest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
 %define _binary_filedigest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
 
-# Compression method is '$(_configure_getConfigurationSetting swaddle_rpm compression)'
+# Compression method is '$(configure_getConfigurationSetting swaddle_rpm compression)'
 # %define _source_payload $(_swaddle_build_package_rpm_compression)
 %define _binary_payload $(_swaddle_build_package_rpm_compression)
 
@@ -30,8 +30,8 @@ $(_swaddle_build_package_rpm_filterFrom provides regexFilterFromRequires)
 $(_swaddle_build_package_rpm_filterSetup regexFilterFromProvides regexFilterFromRequires)
 
 Name: ${_swaddle_build_swaddleName}
-Version: $(_configure_getConfigurationSetting swaddle version)
-Epoch: $(_configure_getConfigurationSetting swaddle epoch)
+Version: $(configure_getConfigurationSetting swaddle version)
+Epoch: $(configure_getConfigurationSetting swaddle epoch)
 Release: $(_swaddle_build_package_rpm_release)
 Summary: $(_swaddle_build_package_rpm_summaryDescription)
 AutoReqProv: $(_swaddle_build_package_rpm_yesNo autoReqProv)
@@ -41,11 +41,11 @@ AutoProv: $(_swaddle_build_package_rpm_yesNo autoProv)
 # CentOS 5 is now on life-support and will be dead after 31st March 2017
 BuildRoot: %buildroot
 Prefix: /
-Group: $(_configure_getConfigurationSetting swaddle_rpm category)
-License: $(_configure_getConfigurationSetting swaddle licence)
-Vendor: $(_configure_getConfigurationSetting swaddle vendor)
-URL: $(_configure_getConfigurationSetting swaddle url)
-Packager: $(_configure_getConfigurationSetting swaddle maintainer)
+Group: $(configure_getConfigurationSetting swaddle_rpm category)
+License: $(configure_getConfigurationSetting swaddle licence)
+Vendor: $(configure_getConfigurationSetting swaddle vendor)
+URL: $(configure_getConfigurationSetting swaddle url)
+Packager: $(configure_getConfigurationSetting swaddle maintainer)
 
 $(_swaddle_build_package_rpm_iterateDependencies Requires depends)
 $(_swaddle_build_package_rpm_iterateDependencies 'Requires(pre)' depends_before_install)
@@ -94,10 +94,10 @@ $(_swaddle_build_package_rpm_trigger triggerun trigger-off)
 $(_swaddle_build_package_rpm_trigger triggerpostun trigger-fixerrors)
 
 %files
-%defattr($(_configure_getConfigurationSetting swaddle_rpm defattrfile),$(_configure_getConfigurationSetting swaddle_rpm user),$(_configure_getConfigurationSetting swaddle_rpm group),$(_configure_getConfigurationSetting swaddle_rpm defattrdir))
+%defattr(0644,root,root,0755)
 
 $(_swaddle_build_package_rpm_files)
 
 %changelog
-$(_configure_getConfigurationSetting swaddle_rpm changelog)
+$(configure_getConfigurationSetting swaddle_rpm changelog)
 

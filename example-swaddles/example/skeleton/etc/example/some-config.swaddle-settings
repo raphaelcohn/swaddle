@@ -1,7 +1,0 @@
-#user=someone
-#group=somegroup
-mode=0500
-mtime=198001020304.44
-#special=package-owned-directory
-special=config-file,noreplace
-#special=config-file,replace
