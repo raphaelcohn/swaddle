@@ -1,40 +1,40 @@
 swaddle_build_package_rpm_registerConfiguration()
 {
-	swaddle_build_configuration_register Array NotEmpty swaddle_rpm depends
-	swaddle_build_configuration_register Array NotEmpty swaddle_rpm provides
-	swaddle_build_configuration_register Array NotEmpty swaddle_rpm conflicts
-	swaddle_build_configuration_register Array NotEmpty swaddle_rpm replaces
+	configure_register Array NotEmpty swaddle_rpm depends
+	configure_register Array NotEmpty swaddle_rpm provides
+	configure_register Array NotEmpty swaddle_rpm conflicts
+	configure_register Array NotEmpty swaddle_rpm replaces
 	
-	swaddle_build_configuration_register Array NotEmpty swaddle_rpm depends_before_install
-	swaddle_build_configuration_register Array NotEmpty swaddle_rpm depends_after_install
-	swaddle_build_configuration_register Array NotEmpty swaddle_rpm depends_before_remove
-	swaddle_build_configuration_register Array NotEmpty swaddle_rpm depends_after_remove
-	swaddle_build_configuration_register Array NotEmpty swaddle_rpm depends_pre_transaction
-	swaddle_build_configuration_register Array NotEmpty swaddle_rpm depends_post_transaction
-	swaddle_build_configuration_register Array NotEmpty swaddle_rpm depends_verify
+	configure_register Array NotEmpty swaddle_rpm depends_before_install
+	configure_register Array NotEmpty swaddle_rpm depends_after_install
+	configure_register Array NotEmpty swaddle_rpm depends_before_remove
+	configure_register Array NotEmpty swaddle_rpm depends_after_remove
+	configure_register Array NotEmpty swaddle_rpm depends_pre_transaction
+	configure_register Array NotEmpty swaddle_rpm depends_post_transaction
+	configure_register Array NotEmpty swaddle_rpm depends_verify
 
-	swaddle_build_configuration_register Value Boolean swaddle_rpm autoDepends 'yes'
-	swaddle_build_configuration_register Value NotEmpty swaddle_rpm user 'root'
-	swaddle_build_configuration_register Value NotEmpty swaddle_rpm group 'root'
+	configure_register Value Boolean swaddle_rpm autoDepends 'yes'
+	configure_register Value NotEmpty swaddle_rpm user 'root'
+	configure_register Value NotEmpty swaddle_rpm group 'root'
 	# Was '-'
-	swaddle_build_configuration_register Value NotEmpty swaddle_rpm defattrfile '0644'
+	configure_register Value NotEmpty swaddle_rpm defattrfile '0644'
 	# Was '-'
-	swaddle_build_configuration_register Value NotEmpty swaddle_rpm defattrdir '0755'
-	swaddle_build_configuration_register Value Digest swaddle_rpm digest 'sha512'
-	swaddle_build_configuration_register Value Compression swaddle_rpm compression 'xz'
-	swaddle_build_configuration_register Value RpmGroup swaddle_rpm category 'Applications/System'
-	swaddle_build_configuration_register Value Boolean swaddle_rpm sign 'no'
-	swaddle_build_configuration_register Value Boolean swaddle_rpm autoAddDirectories 'yes'
-	swaddle_build_configuration_register Value Boolean swaddle_rpm autoReqProv 'yes'
-	swaddle_build_configuration_register Value Boolean swaddle_rpm autoReq 'yes'
-	swaddle_build_configuration_register Value Boolean swaddle_rpm autoProv 'yes'
-	swaddle_build_configuration_register Value Boolean swaddle_rpm ignoreIterationInDependencies 'yes'
+	configure_register Value NotEmpty swaddle_rpm defattrdir '0755'
+	configure_register Value Digest swaddle_rpm digest 'sha512'
+	configure_register Value Compression swaddle_rpm compression 'xz'
+	configure_register Value RpmGroup swaddle_rpm category 'Applications/System'
+	configure_register Value Boolean swaddle_rpm sign 'yes'
+	configure_register Value Boolean swaddle_rpm autoAddDirectories 'yes'
+	configure_register Value Boolean swaddle_rpm autoReqProv 'yes'
+	configure_register Value Boolean swaddle_rpm autoReq 'yes'
+	configure_register Value Boolean swaddle_rpm autoProv 'yes'
+	configure_register Value Boolean swaddle_rpm ignoreIterationInDependencies 'yes'
 	
 	# See https://fedoraproject.org/wiki/Packaging:AutoProvidesAndRequiresFiltering
-	swaddle_build_configuration_register Array NotEmpty swaddle_rpm regexFilterFromProvides
-	swaddle_build_configuration_register Array NotEmpty swaddle_rpm regexFilterFromRequires
+	configure_register Array NotEmpty swaddle_rpm regexFilterFromProvides
+	configure_register Array NotEmpty swaddle_rpm regexFilterFromRequires
 	
-	swaddle_build_configuration_register Value NotEmpty swaddle_rpm changelog
+	configure_register Value NotEmpty swaddle_rpm changelog
 }
 
 swaddle_build_package_rpm()
@@ -88,7 +88,7 @@ swaddle_package_rpm_rpmbuild()
 		
 	esac
 	
-	if core_variable_isTrue "$(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm sign)"; then
+	if core_variable_isTrue "$(_configure_getConfigurationSetting swaddle_rpm sign)"; then
 		core_variable_array_append options --sign
 	fi
 	
@@ -109,14 +109,17 @@ swaddle_package_rpm_rpmbuild()
 		core_variable_array_passToFunctionAsArguments options rpmbuild 1>/dev/null 2>/dev/null
 	fi
 	
+	local rpmOutputPath="$swaddle_outputPath"/packages/rpm
+	mkdir -m 0755 -p "$rpmOutputPath"
+	
 	set +f
-	mv "$rpmbuildParentOutputFolderPath"/"$architecture"/*.rpm "$swaddle_outputPath"
+	mv "$rpmbuildParentOutputFolderPath"/"$architecture"/*.rpm "$rpmOutputPath"
 	set -f
 }
 
 _swaddle_build_package_rpm_architecture()
 {
-	case "$(_swaddle_build_configuration_getConfigurationSetting swaddle architecture)" in
+	case "$(_configure_getConfigurationSetting swaddle architecture)" in
 		
 		all|noarch)
 			printf '%s' 'noarch'
@@ -138,7 +141,7 @@ _swaddle_build_package_rpm_architecture()
 
 _swaddle_build_package_rpm_digestAlgorithm()
 {
-	case "$(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm digest)" in
+	case "$(_configure_getConfigurationSetting swaddle_rpm digest)" in
 		
 		md5)
 			printf '%s' 1
@@ -165,7 +168,7 @@ _swaddle_build_package_rpm_digestAlgorithm()
 
 _swaddle_build_package_rpm_compression()
 {
-	case "$(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm compression)" in
+	case "$(_configure_getConfigurationSetting swaddle_rpm compression)" in
 		
 		none)
 			printf '%s' 'w0.gzdio'
@@ -199,7 +202,7 @@ _swaddle_build_package_rpm_filterFrom()
 
 	local namespace='swaddle_rpm'
 	local configurationSettingValue
-	_swaddle_build_configuration_configurationSettingValue "$namespace" "$configurationSettingName"
+	_configure_configurationSettingValue "$namespace" "$configurationSettingName"
 	
 	_swaddle_build_package_rpm_filterFrom_callback()
 	{
@@ -218,7 +221,7 @@ _swaddle_build_package_rpm_filterSetup()
 	local doSetup=0
 	for configurationSettingName in "$@"
 	do
-		_swaddle_build_configuration_configurationSettingValue "$namespace" "$configurationSettingName"
+		_configure_configurationSettingValue "$namespace" "$configurationSettingName"
 		if ! core_variable_array_isEmpty "$configurationSettingValue"; then
 			doSetup=1
 			break
@@ -235,7 +238,7 @@ _swaddle_build_package_rpm_filterSetup()
 
 _swaddle_build_package_rpm_yesNo()
 {
-	if core_variable_isTrue "$(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm "$1")"; then
+	if core_variable_isTrue "$(_configure_getConfigurationSetting swaddle_rpm "$1")"; then
 		printf 'yes'
 	else
 		printf 'no'
@@ -244,14 +247,14 @@ _swaddle_build_package_rpm_yesNo()
 
 _swaddle_build_package_rpm_release()
 {
-	local iteration="$(_swaddle_build_configuration_getConfigurationSetting swaddle iteration)"
+	local iteration="$(_configure_getConfigurationSetting swaddle iteration)"
 	printf '%s' $((iteration+1))
 }
 
 core_dependency_requires '*' head
 _swaddle_build_package_rpm_summaryDescription()
 {
-	printf '%s' "$(_swaddle_build_configuration_getConfigurationSetting swaddle description)" | head -n 1
+	printf '%s' "$(_configure_getConfigurationSetting swaddle description)" | head -n 1
 }
 
 _swaddle_build_package_rpm_iterateDependencies()
@@ -261,7 +264,7 @@ _swaddle_build_package_rpm_iterateDependencies()
 
 	local namespace='swaddle_rpm'
 	local configurationSettingValue
-	_swaddle_build_configuration_configurationSettingValue
+	_configure_configurationSettingValue
 	
 	_swaddle_build_package_rpm_iterateDependencies_callback()
 	{
@@ -276,7 +279,7 @@ core_dependency_requires '*' sed
 _swaddle_build_package_rpm_formatDescription()
 {
 	sed -e 's/^\w*$/ \./g' <<EOF
-$(_swaddle_build_configuration_getConfigurationSetting swaddle description)
+$(_configure_getConfigurationSetting swaddle description)
 EOF
 }
 
@@ -422,17 +425,17 @@ _swaddle_build_package_rpm_files_write()
 	
 	# Allows 'current user' to be 'root'
 	if [ "$(id -un)" = "$user" ]; then
-		user="$(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm user)"
+		user="$(_configure_getConfigurationSetting swaddle_rpm user)"
 	fi
 	
 	# Allows 'current group' to be 'root'
 	if [ "$(id -gn)" = "$group" ]; then
-		group="$(_swaddle_build_configuration_getConfigurationSetting swaddle_rpm group)"
+		group="$(_configure_getConfigurationSetting swaddle_rpm group)"
 	fi
 	
 	local settingsFilePath="$objectPath".swaddle-settings
 	
-	local mtime="$(_swaddle_build_configuration_getConfigurationSetting swaddle mtime)"
+	local mtime="$(_configure_getConfigurationSetting swaddle mtime)"
 	local special=''
 	# Can override isOwnedDirectory, mode, user, group
 	if core_path_isReadableNonEmptyFilePath "$settingsFilePath"; then

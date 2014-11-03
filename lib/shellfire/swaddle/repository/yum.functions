@@ -1,9 +1,14 @@
-core_dependency_requires '*' mkdir
-swaddle_build_repository_yum()
+# eg swaddle_repository_yum "$rpmsFolderName" centos 6.5 swaddle* x86_64
+# * could be the name of the swaddles path
+core_dependency_requires '*' mkdir date
+swaddle_repository_yum()
 {
 	local rpmsFolderName="$1"
-	
+	local distributionName="$(_configure_getConfigurationSetting swaddles_yum distributionName)"
+	local distributionVersion="$(_configure_getConfigurationSetting swaddles_yum distributionVersion)"
+	local repositoryName="$(_configure_getConfigurationSetting swaddles name)"
 	local distributionArchitecture="$2"
+	
 	case "$distributionArchitecture" in
 		
 		all|noarch)
@@ -12,15 +17,12 @@ swaddle_build_repository_yum()
 		
 	esac
 	
-	# eg centos
-	local distributionName="$3"
-	
-	# eg 6.5
-	local distributionVersion="$4"
+	local rpmsFolderPath="$swaddle_outputPath"/"$rpmsFolderName"
 	
 	# eg to match http://mirror.centos.org/centos/6.5/os/x86_64/
-	local repositoryOutputRelativeFolderPath="$distributionName"/"$distributionVersion"/os/"$distributionArchitecture"
-	local repositoryOutputPath="$swaddle_outputPath"/yum/"$repositoryOutputRelativeFolderPath"
+	local repositoryOutputRelativeFolderPath="$distributionName"/"$distributionVersion"/"$repositoryName"/"$distributionArchitecture"
+	local repositoryRootOutputPath="$swaddle_outputPath"/yum
+	local repositoryOutputPath="$repositoryRootOutputPath"/"$repositoryOutputRelativeFolderPath"
 	mkdir -m 0755 -p "$repositoryOutputPath"
 	
 	local repodataPath="$repositoryOutputPath"/repodata
@@ -30,15 +32,160 @@ swaddle_build_repository_yum()
 	mkdir -m 0755 -p "$packagesPath"
 	
 	
-	local rpmsFolderPath="$swaddle_outputPath"/"$rpmsFolderName"
-	swaddle_build_repository_yum_primary
-	swaddle_build_repository_yum_other
-	swaddle_build_repository_yum_filelists
-	swaddle_build_repository_yum_comps 'All Packages'
+	swaddle_repository_yum_primary
+	swaddle_repository_yum_other
+	swaddle_repository_yum_filelists
+	swaddle_repository_yum_comps "$repositoryName"
+	swaddle_repository_yum_repodata
+	
+	swaddle_repository_yum_repoFiles
+}
+
+# This ought to go into a $repositoryName-release.VERSION.rpm
+# Along with the GPG, which needs copying into position
+# And a simple install script would be nice
+# http://blog.teamtreehouse.com/using-github-pages-to-host-your-website
+swaddle_repository_yum_repoFiles()
+{
+	# eg http://mirror.centos.org/ or http://mirror1.hs-esslingen.de/repoforge/
+	local mirrorHostPath="$1"
+	if core_variable_doesNotEndWith "$mirrorHostPath" /; then
+		mirrorHostPath="$mirrorHostPath"/
+	fi
+	
+	swaddle_repository_yum_repoFile_gpgEnabled()
+	{
+		if core_variable_isTrue "$(_configure_getConfigurationSetting swaddle_rpm sign)"; then
+			printf '1'
+		else
+			printf '0'
+		fi
+	}
+	
+	# Strictly speaking, we're supposed to use TitleCase for distribution name, but CentOS is so inconsistent what does it matter?
+	cat >"$repositoryOutputPath"/${distributionName}-${repositoryName}.repo <<-EOF
+		[${repositoryName}]
+		name=${distributionName}-${distributionVersion} - ${repositoryName}
+		baseurl=${mirrorHostPath}${repositoryOutputRelativeFolderPath}
+		mirrorlist=${mirrorHostPath}${repositoryOutputRelativeFolderPath}/${repositoryName}.mirrors
+		#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-${distributionName}-${distributionVersion}
+		gpkgkey=${mirrorHostPath}${repositoryOutputRelativeFolderPath}/RPM-GPG-KEY-${distributionName}-${distributionVersion}
+		gpgcheck=$(swaddle_repository_yum_repoFile_gpgEnabled)
+		enabled=1
+		protect=0
+	EOF
+	
+	cat >"$repositoryOutputPath"/"${repositoryName}".mirrors <<-EOF
+		${mirrorHostPath}${repositoryOutputRelativeFolderPath}
+	EOF
+	
+	gpg --home "$(_configure_getConfigurationSetting swaddle keyring)" --armor --export "$(_configure_getConfigurationSetting swaddle signer)" >"$repositoryOutputPath"/RPM-GPG-KEY-${distributionName}-${distributionVersion}
+	
+	# OpenSUSE likes the key to be here
+	ln "$repositoryOutputPath"/RPM-GPG-KEY-${distributionName}-${distributionVersion} "$repositoryOutputPath"/repomd.xml.key
+	
+	# OpenSUSE likes a signature on repomd.xml
+	# http://download.opensuse.org/distribution/13.1/repo/oss/suse/repodata/
+	gpg --home ~/.gnupg --default-key 'Raphael Cohn (Package Signing Key) <raphael.cohn@stormmq.com>' --armor --sign "$repositoryOutputPath"/repomd.xml
+	
+	# OpenSuse doesn't use 'Packages', but puts each package kind in a different arch folder, then includes ALL OF THEM in the primary, etc.
+	# Interesting design. If it works with yum...
+}
+
+swaddle_repository_yum_repodata()
+{
+	local timestampAsEpochSeconds=$(date +%s)
+	local timestampForTouch=$(date -d @${timestampAsEpochSeconds} +'%Y%m%d%H%M.%S')
+	{
+		core_dependency_requires '*' gzip stat sha256sum
+		swaddle_repository_yum_repodataCompressedFile()
+		{
+			local fileName="$1"
+			local dataType="$fileName"
+		
+			local filePath="$repodataPath"/"$fileName".xml
+			local digest="$(sha256sum "$filePath")"
+			local size="$(stat -c '%s' "$filePath")"
+		
+			gzip -9 "$filePath"
+			local digestGz="$(sha256sum "$filePath".gz)"
+			local sizeGz="$(stat -c '%s' "$filePath".gz)"
+		
+			local newFileName="$digestGz"-"$fileName".xml.gz
+			mv "$filePath" "$repodataPath"/"$newFileName"
+			touch -t "$timestampForTouch" "$repodataPath"/"$newFileName"
+		
+			xml_open data type "$dataType"
+		
+				xml_leaf checksum type sha256 "$digestGz"
+				xml_leaf open-checksum type sha256 "$digest"
+				xml_leaf location href repodata/"$newFileName"
+				xml_leaf timestamp "$timestampAsEpochSeconds"
+				xml_leaf size $sizeGz
+				xml_lead open-size $size
+		
+			xml_close data
+		}
+		
+		# What a mess - the XML is completely inconsistent
+		core_dependency_requires '*' gzip stat sha256sum
+		swaddle_repository_yum_repodataBothFile()
+		{
+			local fileName="$1"
+			local dataType="$2"
+			
+			local filePath="$repodataPath"/"$fileName".xml
+			local digest="$(sha256sum "$filePath")"
+			local size="$(stat -c '%s' "$filePath")"
+			local digestFilePath="$digest"-"$distributionArchitecture"-"$fileName".xml
+			mv "$filePath" "$digestFilePath"
+			touch -t "$timestampForTouch" "$digestFilePath"
+		
+			# Note 'group' not 'groups'
+			xml_open data type "$dataType"
+		
+				xml_leaf checksum type sha256 "$digest"
+				xml_leaf location href repodata/"$digestFilePath"
+				xml_leaf timestamp "$timestampAsEpochSeconds"
+				xml_leaf size $size
+		
+			xml_close data
+		
+			gzip -9 -c "$digestFilePath" >"$digestFilePath".gz
+			local digestGz="$(sha256sum "$digestFilePath".gz)"
+			local sizeGz="$(stat -c '%s' "$digestFilePath".gz)"
+			touch -t "$timestampForTouch" "$digestFilePath".gz
+		
+			xml_open data type "$dataType"_gz
+		
+				xml_leaf checksum type sha256 "$digestGz"
+				xml_leaf open-checksum type sha256 "$digest"
+				xml_leaf location href repodata/"$digestFilePath".gz
+				xml_leaf timestamp "$timestampAsEpochSeconds"
+				xml_lead size $sizeGz
+		
+			xml_close data
+		}
+	
+		xml_version10
+		
+		xml_open repomd xmlns "http://linux.duke.edu/metadata/repo" xmlns:rpm "http://linux.duke.edu/metadata/rpm"
+			
+		# need timestamp as epoch, too...
+			xml_leaf revision "$timestampAsEpochSeconds"
+		
+			swaddle_repository_yum_repodataCompressedFile filelists
+			swaddle_repository_yum_repodataCompressedFile other
+			swaddle_repository_yum_repodataBothFile comps group
+			
+		xml_close repomd
+		
+	} >"$repodataPath"/repomd.xml
+	touch -t "$touchTimestamp" "$repodataPath"/repomd.xml
 }
 
 core_dependency_requires '*' rpm sha256sum stat ln
-swaddle_build_repository_yum_primary()
+swaddle_repository_yum_primary()
 {
 	local rpmName
 	local rpmArchitecture
@@ -110,23 +257,23 @@ swaddle_build_repository_yum_primary()
 						
 						# Section provides/requires/etc should only be present if there is at least 1 entry
 						xml_open rpm:provides
-							swaddle_build_repository_yum_primaryRpmEntries '[%{PROVIDES}\t%{PROVIDEVERSION}\t%{PROVIDEFLAGS:depflags}\n]'
+							swaddle_repository_yum_primaryRpmEntries '[%{PROVIDES}\t%{PROVIDEVERSION}\t%{PROVIDEFLAGS:depflags}\n]'
 						xml_close rpm:provides
 						
 						xml_open rpm:requires
-							swaddle_build_repository_yum_primaryRpmEntries '[%{REQUIRENAME}\t%{REQUIREVERSION}\t%{REQUIREFLAGS:depflags}\n]'
+							swaddle_repository_yum_primaryRpmEntries '[%{REQUIRENAME}\t%{REQUIREVERSION}\t%{REQUIREFLAGS:depflags}\n]'
 						xml_close rpm:requires
 						
 						xml_open rpm:conflicts
-							swaddle_build_repository_yum_primaryRpmEntries '[%{CONFLICTS}\t%{CONFLICTVERSION}\t%{CONFLICTFLAGS:depflags}\n]'
+							swaddle_repository_yum_primaryRpmEntries '[%{CONFLICTS}\t%{CONFLICTVERSION}\t%{CONFLICTFLAGS:depflags}\n]'
 						xml_close rpm:conflicts
 						
 						xml_open rpm:obsoletes
-							swaddle_build_repository_yum_primaryRpmEntries '[%{OBSOLETES}\t%{OBSOLETEVERSION}\t%{OBSOLETEFLAGS:depflags}\n]'
+							swaddle_repository_yum_primaryRpmEntries '[%{OBSOLETES}\t%{OBSOLETEVERSION}\t%{OBSOLETEFLAGS:depflags}\n]'
 						xml_close rpm:obsoletes
 						
 						# Not all files are included in this listing, why?
-						swaddle_build_repository_yum_files
+						swaddle_repository_yum_files
 						
 						# Move the package into position
 						ln "$rpmFilePath" "$packagesPath"/"$rpmFileName"
@@ -140,7 +287,7 @@ swaddle_build_repository_yum_primary()
 }
 
 core_dependency_requires '*' rpm
-swaddle_build_repository_yum_primaryRpmEntries()
+swaddle_repository_yum_primaryRpmEntries()
 {
 	local querystring="$1"
 	
@@ -259,7 +406,7 @@ swaddle_build_repository_yum_primaryRpmEntries()
 }
 
 core_dependency_requires '*' rpm
-swaddle_build_repository_yum_files()
+swaddle_repository_yum_files()
 {
 	# We're supposed to sort directories last
 	local filePath
@@ -277,7 +424,7 @@ swaddle_build_repository_yum_files()
 }
 
 core_dependency_requires '*' rpm sha256sum tr
-swaddle_build_repository_yum_other()
+swaddle_repository_yum_other()
 {
 	local rpmName
 	local rpmArchitecture
@@ -332,7 +479,7 @@ swaddle_build_repository_yum_other()
 }
 
 core_dependency_requires '*' rpm sha256sum
-swaddle_build_repository_yum_filelists()
+swaddle_repository_yum_filelists()
 {
 	local rpmName
 	local rpmArchitecture
@@ -367,7 +514,7 @@ swaddle_build_repository_yum_filelists()
 				xml_open package pkgid "$rpmSha56Sum" name "$rpmName" arch "$rpmArchitecture"
 					xml_leaf version epoch "$rpmEpoch" ver "$rpmVersion" rel "$rpmRelease"
 
-					swaddle_build_repository_yum_files
+					swaddle_repository_yum_files
 				
 				xml_close package
 			
@@ -375,8 +522,7 @@ swaddle_build_repository_yum_filelists()
 	} >"$repodataPath"/filelists.xml
 }
 
-
-swaddle_build_repository_yum_comps()
+swaddle_repository_yum_comps()
 {
 	local groupName="$1"
 	local groupId="$(printf '%s' "$groupName" | tr 'ABCEDFGHIJKLMNOPQRSTUVWXYZ ' 'abcdefghijklmnopqrstuvwxyz-' )"

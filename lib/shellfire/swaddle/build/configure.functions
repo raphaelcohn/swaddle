@@ -1,36 +1,36 @@
 core_usesIn core variable variable/array
 
-_swaddle_build_configuration_configurationNamespace()
+_configure_configurationNamespace()
 {
 	configurationSettingNamespace="${_program_namespace}_build_configuration_namespace_${namespace}"
 }
 
-_swaddle_build_configuration_configurationSettingValue()
+_configure_configurationSettingValue()
 {
 	local key="${namespace}_${configurationSettingName}"
 	configurationSettingValue="${_program_namespace}_build_configuration_value_${key}"
 }
 
-_swaddle_build_configuration_configurationSetting()
+_configure_configurationSetting()
 {
 	local namespace="$1"
 	local configurationSettingName="$2"
 	local key="${namespace}_${configurationSettingName}"
-	_swaddle_build_configuration_configurationNamespace
-	_swaddle_build_configuration_configurationSettingValue
+	_configure_configurationNamespace
+	_configure_configurationSettingValue
 	configurationSettingValidate="${_program_namespace}_build_configuration_validate_${key}"
 	configurationSettingDefault="${_program_namespace}_build_configuration_default_${key}"
 	configurationSettingIsArray="${_program_namespace}_build_configuration_isArray_${key}"
 }
 
-_swaddle_build_configuration_configurationSettingIsArray()
+_configure_configurationSettingIsArray()
 {
 	local core_variable_indirectValue_result
 	core_variable_indirectValue "$configurationSettingIsArray"
 	core_variable_isTrue "$core_variable_indirectValue_result"
 }
 
-_swaddle_build_configuration_getConfigurationSetting()
+_configure_getConfigurationSetting()
 {
 	local namespace="$1"
 	local configurationSettingName="$2"
@@ -38,17 +38,17 @@ _swaddle_build_configuration_getConfigurationSetting()
 	local configurationSettingValidate
 	local configurationSettingDefault
 	local configurationSettingIsArray
-	_swaddle_build_configuration_configurationSetting "$namespace" "$configurationSettingName"
+	_configure_configurationSetting "$namespace" "$configurationSettingName"
 
 	local core_variable_indirectValue_result
 	core_variable_indirectValue "$configurationSettingValue"
 	printf '%s' "$core_variable_indirectValue_result"
 }
 
-swaddle_build_configuration_register()
+configure_register()
 {
 	local kind="$1"
-	local configurationValidationFunction="swaddle_build_configuration_validate${2}"
+	local configurationValidationFunction="configure_validate${2}"
 	local namespace="$3"
 	local configurationSettingName="$4"
 	
@@ -75,7 +75,7 @@ swaddle_build_configuration_register()
 	local configurationSettingValidate
 	local configurationSettingDefault
 	local configurationSettingIsArray
-	_swaddle_build_configuration_configurationSetting "$namespace" "$configurationSettingName"
+	_configure_configurationSetting "$namespace" "$configurationSettingName"
 	
 	if core_variable_isSet "$configurationSettingValidate"; then
 		core_message NOTICE "The configuration setting '$configurationSettingValidate' is already registered"
@@ -105,23 +105,23 @@ swaddle_build_configuration_register()
 	fi
 }
 
-swaddle_build_configuration_reset()
+configure_reset()
 {
 	local namespace="$1"
 
 	local configurationSettingNamespace
-	_swaddle_build_configuration_configurationNamespace
+	_configure_configurationNamespace
 	
-	_swaddle_build_configuration_reset_callback()
+	_configure_reset_callback()
 	{
 		local configurationSettingName="$core_variable_array_element"
 		local configurationSettingValue
 		local configurationSettingValidate
 		local configurationSettingDefault
 		local configurationSettingIsArray
-		_swaddle_build_configuration_configurationSetting "$namespace" "$configurationSettingName"
+		_configure_configurationSetting "$namespace" "$configurationSettingName"
 
-		if _swaddle_build_configuration_configurationSettingIsArray; then
+		if _configure_configurationSettingIsArray; then
 			core_variable_array_unset "$configurationSettingValue"
 			core_variable_array_initialise "$configurationSettingValue"
 		else
@@ -134,7 +134,7 @@ swaddle_build_configuration_reset()
 			fi
 		fi
 	}
-	core_variable_array_iterate "$configurationSettingNamespace" _swaddle_build_configuration_reset_callback
+	core_variable_array_iterate "$configurationSettingNamespace" _configure_reset_callback
 }
 
 # eg  configure swaddle architecture amd64
@@ -155,21 +155,21 @@ configure()
 	local configurationSettingValidate
 	local configurationSettingDefault
 	local configurationSettingIsArray
-	_swaddle_build_configuration_configurationSetting "$namespace" "$configurationSettingName"
+	_configure_configurationSetting "$namespace" "$configurationSettingName"
 	
 	local validateFunction
 	local core_variable_indirectValue_result
 	core_variable_indirectValue "$configurationSettingValidate"
 	$core_variable_indirectValue_result "$value"
 	
-	if _swaddle_build_configuration_configurationSettingIsArray; then
+	if _configure_configurationSettingIsArray; then
 		core_variable_array_append "$configurationSettingValue" "$value"
 	else
 		core_variable_setVariable "$configurationSettingValue" "$value"
 	fi
 }
 
-swaddle_build_configuration_source()
+configure_source()
 {
 	local configurationPath="$1"
 	local configurationName="$2"
@@ -194,47 +194,54 @@ swaddle_build_configuration_source()
 	fi
 }
 
-swaddle_build_configuration_validate()
+configure_validate()
 {
 	local namespace="$1"
 	
-	_swaddle_build_configuration_validate_callback()
+	_configure_validate_callback()
 	{
 		local configurationSettingName="$core_variable_array_element"
 		local configurationSettingValue
 		local configurationSettingValidate
 		local configurationSettingDefault
 		local configurationSettingIsArray
-		_swaddle_build_configuration_configurationSetting "$namespace" "$configurationSettingName"
+		_configure_configurationSetting "$namespace" "$configurationSettingName"
 	
-		if _swaddle_build_configuration_configurationSettingIsArray; then
+		if _configure_configurationSettingIsArray; then
 			continue
 		fi
 		if core_variable_isUnset "$configurationSettingValue"; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The swaddle '$_swaddle_build_swaddleName' configuration setting '$namespace $configurationSettingName' can not be unset"
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$namespace $configurationSettingName' can not be unset"
 		fi
 	}
 	
 	local configurationSettingNamespace
-	_swaddle_build_configuration_configurationNamespace
-	core_variable_array_iterate "$configurationSettingNamespace" _swaddle_build_configuration_validate_callback
+	_configure_configurationNamespace
+	core_variable_array_iterate "$configurationSettingNamespace" _configure_validate_callback
 }
 
-swaddle_build_configuration_validateNotEmpty()
+configure_validateNotEmpty()
 {
 	if [ -z "$1" ]; then
-		core_exitError $core_commandLine_exitCode_CONFIG "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' can not be empty"
+		core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' can not be empty"
 	fi
 }
 
-swaddle_build_configuration_validateBoolean()
+configure_validateBoolean()
 {
 	if core_variable_isInvalidBoolean "$1"; then
-		core_exitError $core_commandLine_exitCode_CONFIG "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' ('$1') is not a valid boolean"
+		core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid boolean"
 	fi
 }
 
-swaddle_build_configuration_validateArchitecture()
+configure_validateReadableSearchableFolderPath()
+{
+	if ! core_path_isReadableAndSearchableFolderPath "$1"; then
+		core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a readable, searchable folder path"
+	fi
+}
+
+configure_validateArchitecture()
 {
 	case "$1" in
 		
@@ -244,13 +251,13 @@ swaddle_build_configuration_validateArchitecture()
 		;;
 
 		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' ('$1') is not a valid architecture (it must be one of 'all' or 'amd64')."
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid architecture (it must be one of 'all' or 'amd64')."
 		;;
 		
 	esac
 }
 
-swaddle_build_configuration_validateDigest()
+configure_validateDigest()
 {
 	case "$1" in
 
@@ -259,13 +266,13 @@ swaddle_build_configuration_validateDigest()
 		;;
 
 		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' ('$1') is not a valid digest (it must be one of 'md5', 'sha1', 'sha256', 'sha384' or 'sha512')."
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid digest (it must be one of 'md5', 'sha1', 'sha256', 'sha384' or 'sha512')."
 		;;
 		
 	esac
 }
 
-swaddle_build_configuration_validateCompression()
+configure_validateCompression()
 {
 	case "$1" in
 
@@ -274,7 +281,7 @@ swaddle_build_configuration_validateCompression()
 		;;
 
 		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'none', 'gzip', 'bzip2', 'lzma' or 'xz')."
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'none', 'gzip', 'bzip2', 'lzma' or 'xz')."
 		;;
 		
 	esac
@@ -282,26 +289,26 @@ swaddle_build_configuration_validateCompression()
 
 # Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
 core_snippet_embed raw swaddle_licence
-swaddle_build_configuration_validateLicence()
+configure_validateLicence()
 {
-	_swaddle_build_configuration_validateValue licence "$1"
+	_configure_validateValue licence "$1"
 }
 
 # Some rules on the GROUP TAG: https://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/Packagers_Guide/chap-Packagers_Guide-Spec_File_Reference-Preamble.html
 # Derived from /usr/share/doc/rpm-4.8.0/ on Centos 6.5
 core_snippet_embed raw swaddle_rpm_group
-swaddle_build_configuration_validateRpmGroup()
+configure_validateRpmGroup()
 {
-	_swaddle_build_configuration_validateValue group "$1"
+	_configure_validateValue group "$1"
 	
 	if core_variable_endsWith "$_swaddle_build_swaddleName" '-doc'; then
 		if [ "$1" != 'Documentation' ]; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' ('$1') ends in '-doc' so its rpm_group must be 'Documentation', not '$1'."
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') ends in '-doc' so its rpm_group must be 'Documentation', not '$1'."
 		fi
 	fi
 }
 
-_swaddle_build_configuration_validateValue()
+_configure_validateValue()
 {
 	local valueKind="$1"
 	local configurationSettingValue="$2"

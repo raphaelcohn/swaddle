@@ -1,28 +1,28 @@
 core_usesIn swaddle build build/configuration
 
-swaddles_all()
+swaddle_swaddles_all()
 {
-	core_functions_execute _swaddles_functions "$@"
+	core_functions_execute _swaddle_swaddles_functions "$@"
 }
 
-core_functions_register _swaddles_functions swaddles_deduceIfSwaddlesAreInGit
-swaddles_deduceIfSwaddlesAreInGit()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_deduceIfSwaddlesAreInGit
+swaddle_swaddles_deduceIfSwaddlesAreInGit()
 {
 	if ! core_compatibility_whichNoOutput git; then
-		_swaddles_canUseGit=0
+		_swaddle_swaddles_canUseGit=0
 		return 0
 	fi
 		
 	if git log -n 0 "$swaddle_swaddlesPath" 2>/dev/null; then
-		_swaddles_canUseGit=1
+		_swaddle_swaddles_canUseGit=1
 	else
-		_swaddles_canUseGit=0
+		_swaddle_swaddles_canUseGit=0
 	fi
 }
 
 core_dependency_requires '*' mkdir
-core_functions_register _swaddles_functions swaddles_createTemporaryFolder
-swaddles_createTemporaryFolder()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createTemporaryFolder
+swaddle_swaddles_createTemporaryFolder()
 {
 	if core_variable_isUnset swaddle_temporaryPath; then
 		local TMP_FOLDER
@@ -34,57 +34,57 @@ swaddles_createTemporaryFolder()
 }
 
 core_dependency_requires '*' rm mkdir
-core_functions_register _swaddles_functions swaddles_createEmptyFolderSoWeCanLeverageRsyncToRemoveBody
-swaddles_createEmptyFolderSoWeCanLeverageRsyncToRemoveBody()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createEmptyFolderSoWeCanLeverageRsyncToRemoveBody
+swaddle_swaddles_createEmptyFolderSoWeCanLeverageRsyncToRemoveBody()
 {
-	_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath="$swaddle_temporaryPath"/empty
-	rm -rf "$_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath" || core_exitError $core_commandLine_exitCode_CANTCREAT "Can not recreate temporary empty path '$_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath'."
-	mkdir -m 0700 -p "$_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath"
+	_swaddle_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath="$swaddle_temporaryPath"/empty
+	rm -rf "$_swaddle_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath" || core_exitError $core_commandLine_exitCode_CANTCREAT "Can not recreate temporary empty path '$_swaddle_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath'."
+	mkdir -m 0700 -p "$_swaddle_swaddles_emptyFolderSoWeCanLeverageRsyncToRemoveBodyPath"
 }
 
 core_dependency_requires '*' mkdir
-core_functions_register _swaddles_functions swaddles_createPackagesFolder
-swaddles_createPackagesFolder()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createPackagesFolder
+swaddle_swaddles_createPackagesFolder()
 {
-	_swaddles_temporaryFolderPath="$swaddle_temporaryPath"/swaddles
-	rm -rf "$_swaddles_temporaryFolderPath"|| core_exitError $core_commandLine_exitCode_CANTCREAT "Can not recreate temporary swaddles path '$_swaddles_temporaryFolderPath'."
-	mkdir -m 0700 -p "$_swaddles_temporaryFolderPath"
+	_swaddle_swaddles_temporaryFolderPath="$swaddle_temporaryPath"/swaddles
+	rm -rf "$_swaddle_swaddles_temporaryFolderPath"|| core_exitError $core_commandLine_exitCode_CANTCREAT "Can not recreate temporary swaddles path '$_swaddle_swaddles_temporaryFolderPath'."
+	mkdir -m 0700 -p "$_swaddle_swaddles_temporaryFolderPath"
 }
 
 core_dependency_requires '*' mkdir
-core_functions_register _swaddles_functions swaddles_createOutputFolder
-swaddles_createOutputFolder()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createOutputFolder
+swaddle_swaddles_createOutputFolder()
 {
 	mkdir -m 0700 -p "$swaddle_outputPath" 2>/dev/null || true
 }
 
 core_dependency_requires '*' git date awk md5sum
-core_functions_register _swaddles_functions swaddles_attemptToDiscoverVersion
-swaddles_attemptToDiscoverVersion()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_attemptToDiscoverVersion
+swaddle_swaddles_attemptToDiscoverVersion()
 {
 	pushd "$swaddle_swaddlesPath"
 		
 		local iso8601Date="$(git log -n 1 --format='%ci')"
 		local version="$(date -d "$iso8601Date" '+%Y.%m.%d.%H.%M')"
 		
-		swaddle_build_configuration_register Value NotEmpty swaddle version "$version"
+		configure_register Value NotEmpty swaddle version "$version"
 		
 		local pendingChanges="$(git diff --minimal --no-color --name-status)"
 		if [ -n "$pendingChanges" ]; then
 			# We bump iteration; not a perfect solution, but at least we differentiate
-			swaddle_build_configuration_register Value NotEmpty swaddle iteration '1'
+			configure_register Value NotEmpty swaddle iteration '1'
 		else
-			swaddle_build_configuration_register Value NotEmpty swaddle iteration '0'
+			configure_register Value NotEmpty swaddle iteration '0'
 		fi
 		
 	popd
 }
 
 core_dependency_requires '*' head
-core_functions_register _swaddles_functions swaddles_attemptToDiscoverUrl
-swaddles_attemptToDiscoverLicence()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_attemptToDiscoverUrl
+swaddle_swaddles_attemptToDiscoverLicence()
 {
-	if core_variable_isFalse "$_swaddles_canUseGit"; then
+	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
 		return 0
 	fi
 	
@@ -116,14 +116,14 @@ swaddles_attemptToDiscoverLicence()
 		
 	esac
 
-	swaddle_build_configuration_register Value Licence swaddle licence "$licence"
+	configure_register Value Licence swaddle licence "$licence"
 }
 
 core_dependency_requires '*' git awk
-core_functions_register _swaddles_functions swaddles_attemptToDiscoverUrl
-swaddles_attemptToDiscoverUrl()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_attemptToDiscoverUrl
+swaddle_swaddles_attemptToDiscoverUrl()
 {
-	if core_variable_isFalse "$_swaddles_canUseGit"; then
+	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
 		return 0
 	fi
 	
@@ -137,14 +137,14 @@ swaddles_attemptToDiscoverUrl()
 		
 	popd
 	
-	swaddle_build_configuration_register Value NotEmpty swaddle url "$fetchUrl"
+	configure_register Value NotEmpty swaddle url "$fetchUrl"
 }
 
 core_dependency_requires '*' date
-core_functions_register _swaddles_functions swaddles_attemptToDiscoverRpmChangelog
-swaddles_attemptToDiscoverRpmChangelog()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_attemptToDiscoverRpmChangelog
+swaddle_swaddles_attemptToDiscoverRpmChangelog()
 {
-	if core_variable_isFalse "$_swaddles_canUseGit"; then
+	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
 		return 0
 	fi
 	
@@ -156,7 +156,7 @@ swaddles_attemptToDiscoverRpmChangelog()
 	local changelogDate
 	pushd "$swaddle_swaddlesPath"
 		
-		_swaddles_attemptToDiscoverRpmChangelog_internal()
+		_swaddle_swaddles_attemptToDiscoverRpmChangelog_internal()
 		{
 			git log --format='%at%x09%aN%x09%aE%x09%H%x09%s' | while IFS="$(printf '\t')" read -r epochSeconds author authorEmail commitHash subject
 			do
@@ -167,13 +167,128 @@ swaddles_attemptToDiscoverRpmChangelog()
 			done
 		}
 		
-		swaddle_build_configuration_register Value NotEmpty swaddle_rpm changelog "$(_swaddles_attemptToDiscoverRpmChangelog_internal)"
+		configure_register Value NotEmpty swaddle_rpm changelog "$(_swaddle_swaddles_attemptToDiscoverRpmChangelog_internal)"
 		
 	popd
 }
 
-core_functions_register _swaddles_functions swaddles_buildSwaddles
-swaddles_buildSwaddles()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerConfiguration
+swaddle_swaddles_registerConfiguration()
+{
+	# derive name from folderpath
+	local defaultName="$(core_compatibility_basename "$swaddle_swaddlesPath")"
+	configure_register Value NotEmpty swaddles name "$defaultName"
+	
+	# Might want to use github pages going forward...
+	#http://blog.teamtreehouse.com/using-github-pages-to-host-your-website
+	configure_register Value NotEmpty swaddles mirror
+	
+	if core_variable_isSet HOME; then
+		if core_path_isReadableAndSearchableFolderPath "$HOME/.gnupg"; then
+			configure_register Value ReadableSearchableFolderPath swaddles keyring "$HOME/.gnupg"
+		else
+			configure_register Value ReadableSearchableFolderPath swaddles keyring
+		fi
+	else
+		configure_register Value ReadableSearchableFolderPath swaddles keyring
+	fi
+
+	configure_register Value NotEmpty swaddles signer
+	configure_register Value NotEmpty swaddle_swaddles_yum distributionName 'centos'
+	configure_register Value NotEmpty swaddle_swaddles_yum distributionVersion '6.6'
+	configure_register Array NotEmpty swaddle_swaddles_yum distributionArchitectures
+}
+
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_resetConfiguration
+swaddle_swaddles_resetConfiguration()
+{
+	configure_reset swaddles
+}
+
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_sourceConfiguration
+swaddle_swaddles_sourceConfiguration()
+{
+	configure_source "$swaddle_swaddlesPath" swaddles
+}
+
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_buildSwaddles
+swaddle_swaddles_buildSwaddles()
 {
 	core_variable_array_iterate swaddle_swaddles swaddle_build_all
+}
+
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_buildYumRepositories
+swaddle_swaddles_buildYumRepositories()
+{
+	local configurationSettingValue
+	_configure_configurationSettingValue 'swaddle_swaddles_yum' 'distributionArchitectures'
+	
+	if ! core_variable_array_isEmpty "$configurationSettingValue"; then
+	
+		_swaddle_swaddles_buildYumRepositories_callback()
+		{
+			local distributionArchitecture="$core_variable_array_element"
+			swaddle_build_repository_yum packages/rpm "$distributionArchitecture"
+		}
+	
+		core_variable_array_iterate "$configurationSettingValue" _swaddle_swaddles_buildYumRepositories_callback
+		
+	else
+		
+		case "$(_configure_getConfigurationSetting swaddle_swaddles_yum distributionName)" in
+			
+			centos|rhel)			
+				case "$(_configure_getConfigurationSetting swaddle_swaddles_yum distributionVersion)" in
+		
+					1|1.*|2|2.*)
+						core_message WARN "Building ancient versions isn't supported"
+					;;
+		
+					3|3.*)
+						swaddle_build_repository_yum packages/rpm i386
+						swaddle_build_repository_yum packages/rpm ia64
+						swaddle_build_repository_yum packages/rpm s390
+						swaddle_build_repository_yum packages/rpm s390x
+						swaddle_build_repository_yum packages/rpm x86_64
+					;;
+		
+					4|4.*)
+						swaddle_build_repository_yum packages/rpm alpha
+						swaddle_build_repository_yum packages/rpm i386
+						swaddle_build_repository_yum packages/rpm ia64
+						swaddle_build_repository_yum packages/rpm s390
+						swaddle_build_repository_yum packages/rpm s390x
+						swaddle_build_repository_yum packages/rpm x86_64
+					;;
+		
+					5|5.*)
+						swaddle_build_repository_yum packages/rpm i386
+						swaddle_build_repository_yum packages/rpm x86_64
+					;;
+		
+					6|6.*)
+						swaddle_build_repository_yum packages/rpm i386
+						swaddle_build_repository_yum packages/rpm x86_64
+					;;
+		
+					7|7.*)
+						swaddle_build_repository_yum packages/rpm x86_64
+					;;
+		
+					*)
+						swaddle_build_repository_yum packages/rpm x86_64
+					;;
+		
+				esac
+			;;
+			
+			suse)
+				# As of 13.1
+				swaddle_build_repository_yum packages/rpm i586
+				swaddle_build_repository_yum packages/rpm i686
+				swaddle_build_repository_yum packages/rpm x86_64
+				
+				xxxxx likes a noarch folder, too
+			;;
+	fi
 }

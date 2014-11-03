@@ -1,4 +1,5 @@
-core_usesIn swaddle/build configuration rpm
+core_usesIn swaddle/build rpm
+core_usesIn configure
 
 swaddle_build_package()
 {
@@ -24,20 +25,20 @@ core_functions_register _swaddle_build_package_functions swaddle_build_package_r
 core_dependency_requires '*' git awk
 swaddle_build_package_registerConfiguration()
 {
-	swaddle_build_configuration_register Value Architecture swaddle architecture  'all'
-	swaddle_build_configuration_register Value NotEmpty swaddle epoch '0'
-	swaddle_build_configuration_register Value NotEmpty swaddle version '0'
+	configure_register Value Architecture swaddle architecture  'all'
+	configure_register Value NotEmpty swaddle epoch '0'
+	configure_register Value NotEmpty swaddle version '0'
 	# iteration is bumped by one for RPMs
-	swaddle_build_configuration_register Value NotEmpty swaddle iteration '0'
+	configure_register Value NotEmpty swaddle iteration '0'
 	
-	swaddle_build_configuration_register Value NotEmpty swaddle vendor
-	swaddle_build_configuration_register Value Licence swaddle licence
-	swaddle_build_configuration_register Value NotEmpty swaddle maintainer
-	swaddle_build_configuration_register Value NotEmpty swaddle description
-	swaddle_build_configuration_register Value NotEmpty swaddle url
+	configure_register Value NotEmpty swaddle vendor
+	configure_register Value Licence swaddle licence
+	configure_register Value NotEmpty swaddle maintainer
+	configure_register Value NotEmpty swaddle description
+	configure_register Value NotEmpty swaddle url
 	
 	# If set to '', then no mtime is applied
-	swaddle_build_configuration_register Value NotEmpty swaddle mtime '197001010000.00'
+	configure_register Value NotEmpty swaddle mtime '197001010000.00'
 		
 	swaddle_build_package_${_swaddle_build_package_kind}_registerConfiguration
 }
@@ -45,22 +46,22 @@ swaddle_build_package_registerConfiguration()
 core_functions_register _swaddle_build_package_functions swaddle_build_package_resetConfiguration
 swaddle_build_package_resetConfiguration()
 {
-	swaddle_build_configuration_reset swaddle
-	swaddle_build_configuration_reset swaddle_${_swaddle_build_package_kind}
+	configure_reset swaddle
+	configure_reset swaddle_${_swaddle_build_package_kind}
 }
 
 core_functions_register _swaddle_build_package_functions swaddle_build_package_sourceConfiguration
 swaddle_build_package_sourceConfiguration()
 {
-	swaddle_build_configuration_source "$_swaddle_build_sourcePath" package
-	swaddle_build_configuration_source "$_swaddle_build_sourcePath"/packages/"$_swaddle_build_package_kind" "$_swaddle_build_package_kind"
+	configure_source "$_swaddle_build_sourcePath" package
+	configure_source "$_swaddle_build_sourcePath"/packages/"$_swaddle_build_package_kind" "$_swaddle_build_package_kind"
 }
 
 core_functions_register _swaddle_build_package_functions swaddle_build_package_validateConfiguration
 swaddle_build_package_validateConfiguration()
 {
-	swaddle_build_configuration_validate swaddle
-	swaddle_build_configuration_validate swaddle_${_swaddle_build_package_kind}
+	configure_validate swaddle
+	configure_validate swaddle_${_swaddle_build_package_kind}
 }
 
 core_dependency_requires '*' rsync
