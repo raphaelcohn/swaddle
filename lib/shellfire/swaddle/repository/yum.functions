@@ -167,7 +167,7 @@ swaddle_repository_yum_repodata()
 			xmlwriter_close data
 		}
 	
-		xmlwriter_version10
+		xmlwriter_declaration '1.0' 'UTF-8' 'no'
 		
 		xmlwriter_open repomd xmlns "http://linux.duke.edu/metadata/repo" xmlns:rpm "http://linux.duke.edu/metadata/rpm"
 			
@@ -212,7 +212,7 @@ swaddle_repository_yum_primary()
 	local rpmDescription
 	local rpmFileName
 	{
-		xmlwriter_version10
+		xmlwriter_declaration '1.0' 'UTF-8' 'no'
 
 		set +f
 		set -- "$rpmsFolderPath"/*.noarch.rpm "$rpmsFolderPath"/*."$distributionArchitecture".rpm
@@ -440,7 +440,7 @@ swaddle_repository_yum_other()
 	local rpmChangelogEntry
 	
 	{
-		xmlwriter_version10
+		xmlwriter_declaration '1.0' 'UTF-8' 'no'
 
 		set +f
 		set -- "$rpmsFolderPath"/*.noarch.rpm "$rpmsFolderPath"/*."$distributionArchitecture".rpm
@@ -490,7 +490,7 @@ swaddle_repository_yum_filelists()
 	local rpmSha56Sum
 	
 	{
-		xmlwriter_version10
+		xmlwriter_declaration '1.0' 'UTF-8' 'no'
 
 		set +f
 		set -- "$rpmsFolderPath"/*.noarch.rpm "$rpmsFolderPath"/*."$distributionArchitecture".rpm
@@ -530,8 +530,9 @@ swaddle_repository_yum_comps()
 	local categoryId="$(printf '%s' "$categoryName" | tr 'ABCEDFGHIJKLMNOPQRSTUVWXYZ ' 'abcdefghijklmnopqrstuvwxyz-' )"
 	
 	{
-		xmlwriter_version10
-		printf '%s' '<!DOCTYPE comps PUBLIC "-//CentOS//DTD Comps info//EN" "comps.dtd">'
+		xmlwriter_declaration '1.0' 'UTF-8' 'no'
+		#<!DOCTYPE comps PUBLIC "-//CentOS//DTD Comps info//EN" "comps.dtd">
+		xmlwriter_dtd comps "-//CentOS//DTD Comps info//EN"
 		xmlwriter_open comps
 			# instead of group, there is also category, which is composed of grouplist and group
 			xmlwriter_open group

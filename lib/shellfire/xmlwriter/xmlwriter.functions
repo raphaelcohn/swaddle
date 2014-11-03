@@ -1,6 +1,22 @@
-xmlwriter_version10()
+core_usesIn core variable
+
+xmlwriter_declaration()
 {
-	printf '%s' "<?xml version='1.0' encoding='UTF-8'?>"
+	local version="$1"
+	local encoding="$2"
+	local standalone="$3"
+	if core_variable_isTrue "$standalone"; then
+		printf '<?xml version="%s" encoding="%s" standlone="yes"?>' "$version" "$encoding"
+	else
+		printf '<?xml version="%s" encoding="%s"?>' "$version" "$encoding"
+	fi
+}
+
+xmlwriter_dtd()
+{
+	local name="$1"
+	local path="$2"
+	printf '<!DOCTYPE %s PUBLIC "%s" "%s.dtd">' "$name" "$path" "$name"
 }
 
 xmlwriter_open()
