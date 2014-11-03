@@ -57,3 +57,12 @@ swaddle_build_packages()
 		core_message WARN "No package kinds (rpm, deb, tar) in '$_swaddle_build_packagesPath' for swaddle '$_swaddle_build_swaddleName"
 	fi
 }
+
+
+
+# Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
+core_snippet_embed raw swaddle_licence
+configure_validateLicence()
+{
+	configure_validateValue licence "$1"
+}

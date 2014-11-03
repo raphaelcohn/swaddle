@@ -29,7 +29,7 @@ swaddle_build_package_registerConfiguration()
 	configure_register Value NotEmpty swaddle epoch '0'
 	configure_register Value NotEmpty swaddle version '0'
 	# iteration is bumped by one for RPMs
-	configure_register Value NotEmpty swaddle iteration '0'
+	configure_register Value NotEmpty swaddle iteration '1'
 	
 	configure_register Value NotEmpty swaddle vendor
 	configure_register Value Licence swaddle licence
@@ -99,11 +99,12 @@ swaddle_build_package_validateConfiguration()
 	configure_validate swaddle_${_swaddle_build_package_kind}
 }
 
-core_dependency_requires '*' rsync sort fakeroot
+core_dependency_requires '*' rsync sort fakeroot rm
 core_functions_register _swaddle_build_package_functions swaddle_build_package_synchroniseToPackageRoot
 swaddle_build_package_synchroniseToPackageRoot()
 {
-	_swaddle_build_package_destinationFakerootFilePath="$_swaddle_build_package_root".fakeroot
+	_swaddle_build_package_rootFakerootFilePath="$_swaddle_build_package_root".fakeroot
+	
 	local destinationFakerootTemporaryFilePath="$_swaddle_build_package_root".fakeroot.tmp
 	rm -f "$destinationFakerootTemporaryFilePath"
 
@@ -153,7 +154,7 @@ swaddle_build_package_synchroniseToPackageRoot()
 	rm "$destinationFakerootTemporaryFilePath"
 	
 	# gets around user, group, mode, but not mtime / atime
-	swaddle_build_package_fakeroot "$_swaddle_build_package_destinationFakerootFilePath" "$_swaddle_build_package_destinationFakerootFilePath" rsync --quiet --archive --acls --xattrs --hard-links --delete --delete-after --delete-excluded --exclude=.gitignore "$@" "$_swaddle_build_package_root"/
+	swaddle_build_package_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" rsync --quiet --archive --acls --xattrs --hard-links --delete --delete-after --delete-excluded --exclude=.gitignore "$@" "$_swaddle_build_package_root"/
 }
 
 swaddle_build_package_fakeroot()

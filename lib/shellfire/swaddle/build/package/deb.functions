@@ -1,32 +1,57 @@
 swaddle_build_package_deb_registerConfiguration()
 {
-	#configure_register Array NotEmpty swaddle_deb build_depends
-	configure_register Array NotEmpty swaddle_deb pre_depends
+	configure_register Value DebSection swaddle_deb section 'Miscellaneous'
+	configure_register Value DebPriority swaddle_deb priority 'Extra'
+	configure_register Value DebComponent swaddle_deb component 'multiverse'
+	configure_register Value DebMultiArch swaddle_deb multiarch 'allowed'
+	configure_register Boolean swaddle_deb essential 'no'
+	configure_register Array NotEmpty swaddle_deb uploaders
 	configure_register Array NotEmpty swaddle_deb depends
-	configure_register Array NotEmpty swaddle_deb provides
+	configure_register Array NotEmpty swaddle_deb pre_depends
+	configure_register Array NotEmpty swaddle_deb recommends
+	configure_register Array NotEmpty swaddle_deb suggests
+	configure_register Array NotEmpty swaddle_deb breaks
 	configure_register Array NotEmpty swaddle_deb conflicts
+	configure_register Array NotEmpty swaddle_deb provides
 	configure_register Array NotEmpty swaddle_deb replaces
+	configure_register Array NotEmpty swaddle_deb enhances
+	configure_register Array NotEmpty swaddle_deb built_using
 	
+	# eg Original-Uploader: xyz <xyz@mail.com>
+	configure_register Array NotEmpty swaddle_deb extraControlFields
+
 	#http://www.debian.org/doc/debian-policy/ch-sharedlibs.html#s-shlibs
 	configure_register Array NotEmpty swaddle_deb shlibs
+	configure_register Array NotEmpty swaddle_deb configFiles
+	configure_register Array NotEmpty swaddle_deb triggers_activate
+	configure_register Array NotEmpty swaddle_deb triggers_activate_noawait
+	configure_register Array NotEmpty swaddle_deb triggers_interest
+	configure_register Array NotEmpty swaddle_deb triggers_interest_noawait
+	
 	
 	configure_register Value Compression swaddle_deb compression 'xz'
 	
-	configure_register Value NotEmpty swaddle_deb changelog
+	core_TODO "We don't yet support debconf and templates, as, in our view, they're evil."
 }
 
 swaddle_build_package_deb()
 {
 	core_functions_execute _swaddle_build_package_deb_functions "$@"
 }
-
-core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createDebianBinary
-swaddle_build_package_deb_createDebianBinary()
+	
+core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_computeDebianVersion
+swaddle_build_package_deb_computeDebianVersion()
 {
-	local _swaddle_build_package_deb_debianBinaryFilePath="$_swaddle_build_package_temporaryFolderPath"/debian-binary
-	printf '2.0\n' > "$_swaddle_build_package_deb_debianBinaryFilePath"
-	local _swaddle_build_package_deb_workspaceFolderPath="$_swaddle_build_package_temporaryFolderPath"/workspace
-	mkdir -m 0755 -p "$"
+	local epoch="$(configure_getConfigurationSetting swaddle epoch)"
+	local version="$(configure_getConfigurationSetting swaddle version)"
+	local iteration="$(configure_getConfigurationSetting swaddle iteration)"
+	if [ -z "$epoch" ]; then
+		_swaddle_build_package_deb_debianVersion="$version"-"$iteration"
+	elif [ "$epoch" = '0' ]; then
+		_swaddle_build_package_deb_debianVersion="$version"-"$iteration"
+	else
+		_swaddle_build_package_deb_debianVersion="$epoch":"$version"-"$iteration"
+	fi
 }
 
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createControlFolder
@@ -37,65 +62,31 @@ swaddle_build_package_deb_createControlFolder()
 	mkdir -m 0755 -p "$_swaddle_build_package_deb_controlFolderPath"
 }
 
-
-# conffiles
-# control
-# preinst postinst prerm postrm (shell script, chmod +x)
-
-
-
-core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createControlConffiles
-swaddle_build_package_deb_createControlConffiles()
+core_functions_register _swaddle_build_package_rpm_functions swaddle_build_package_rpm_validateConfigFiles
+swaddle_build_package_deb_createConffiles()
 {
-	_swaddle_build_package_deb_createControlConffiles_recurse()
+	_swaddle_build_package_deb_createConffiles_callback()
 	{
-		local parentPath="$1"
-		local relativePath="$2"
-		local entry
-
-		local digest
-		local uselessFileName
-		
-		pushd "$parentPath"
-			
-			set +f
-			for entry in *
-			do
-				set -f
-				if [ ! -e "$entry" ]; then
-					continue
-				fi
-				
-				if core_variable_endsWith "$(core_compatibility_basename "$objectPath")" '.swaddle-settings'; then
-					core_exitError $core_commandLine_exitCode_CONFIG "swaddle-settings without matching parent '$entry'"
-				fi
-				
-				if [ -L "$entry" ]; then
-					continue
-				fi
-				
-				if [ -d "$entry" ]; then
-					_swaddle_build_package_deb_createControlConffiles_recurse "$entry" "$relativePath"/"$entry"
-					continue
-				fi
-				
-				if core_path_isReadableNonEmptyFilePath "$entry"; then
-					
-					
-					md5sum "$entry" | IFS=' ' read -r digest uselessFileName
-					if [ -z "$relativePath" ]; then
-						printf '%s  %s\n' "$digest" "$entry"
-					else
-						printf '%s  %s\n' "$digest" "$relativePath"/"$entry"
-					fi
-				fi
-			done
-			set -f
-			
-		popd
+		local configFile="$core_variable_array_element"
+		if core_variable_doesNotStartWith "$configFile" '/'; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The configFiles file '$configFile' does not start with a '/'"
+		fi
+		if core_variable_endsWith "$configFile" '/'; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The configFiles file '$configFile' ends with a '/'"
+		fi
+		local absoluteConfigFilePath="$_swaddle_build_package_root"/"$configFile"
+		if [ -L "$absoluteConfigFilePath" ]; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The configFiles file '$configFile' is a symlink"
+		fi
+		if [ ! -f "$absoluteConfigFilePath" ]; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The configFiles file '$configFile' does not exist or is not a file"
+		fi
+		printf '%\n' "$configFile"
 	}
 	
-	_swaddle_build_package_deb_createControlConffiles_recurse "$_swaddle_build_package_root" '/' >"$_swaddle_build_package_deb_controlFolderPath"/conffiles
+	local configurationSettingValue
+	_configure_configurationSettingValue 'swaddle_deb' "configFiles"
+	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_deb_createConffiles_callback >"$_swaddle_build_package_deb_controlFolderPath"/conffiles
 }
 
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createControlShlibs
@@ -118,9 +109,46 @@ swaddle_build_package_deb_createControlShlibs()
 	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_deb_createControlShlibs_callback >"$_swaddle_build_package_deb_controlFolderPath"/shlibs
 }
 
-core_dependency_requires '*' md5sum
-core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createControlMd5sums
-swaddle_build_package_deb_createControlMd5sums()
+core_dependency_requires '*' rm
+core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createControlTriggers
+swaddle_build_package_deb_createControlTriggers()
+{
+	local triggersFilePath="$_swaddle_build_package_deb_controlFolderPath"/triggers
+	local configurationSettingValue
+	local triggerKind
+	
+	_swaddle_build_package_deb_createControlTriggers_callback()
+	{
+		local triggerPath="$core_variable_array_element"
+		printf '%s %s\n' "$triggerKind" "$triggerPath"
+	}
+	
+	{
+		triggerKind=activate
+		_configure_configurationSettingValue 'swaddle_deb' "triggers_$triggerKind"
+		core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_deb_createControlTriggers_callback
+		
+		_configure_configurationSettingValue 'swaddle_deb' "triggers_$triggerKind_noawait"
+		triggerKind="$triggerKind"-noawait
+		core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_deb_createControlTriggers_callback
+		
+		triggerKind=interest
+		_configure_configurationSettingValue 'swaddle_deb' "triggers_$triggerKind"
+		core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_deb_createControlTriggers_callback
+		
+		_configure_configurationSettingValue 'swaddle_deb' "triggers_$triggerKind_noawait"
+		triggerKind="$triggerKind"-noawait
+		core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_deb_createControlTriggers_callback
+	} >"$triggersFilePath"
+	
+	if [ ! -s "$triggersFilePath" ]; then
+		rm "$triggersFilePath"
+	fi
+}
+
+core_dependency_requires '*' md5sum stat
+core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createControlMd5sumsAndCalculateInstalledSize
+swaddle_build_package_deb_createControlMd5sumsAndCalculateInstalledSize()
 {
 	_swaddle_build_package_deb_createControlMd5sums_recurse()
 	{
@@ -154,12 +182,18 @@ swaddle_build_package_deb_createControlMd5sums()
 					else
 						printf '%s  %s\n' "$digest" "$relativePath"/"$entry"
 					fi
+					
+					size="$(stat -c '%s' "$entry")"
+					_swaddle_build_package_deb_installedSizeInBytes=$((_swaddle_build_package_deb_installedSizeInBytes+size))
 				fi
 			done
 			set -f
 			
 		popd
 	}
+	
+	_swaddle_build_package_deb_installedSizeInBytes=0
+	local size
 	
 	_swaddle_build_package_deb_createControlMd5sums_recurse "$_swaddle_build_package_root" '' >"$_swaddle_build_package_deb_controlFolderPath"/md5sums
 }
@@ -213,40 +247,161 @@ swaddle_build_package_deb_createControlScripts()
 	_swaddle_build_package_deb_createControlScript postrm
 }
 
+core_dependency_requires '*' cat
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createControlFile
 swaddle_build_package_deb_createControlFile()
 {
-	# debian-binary
+	local controlFile="$_swaddle_build_package_deb_controlFolderPath"/control
 	
-	# Contents of control.tar.gz
-	cat >/dev/null <<-EOF
+	{
+		cat <<-EOF
+			Package: ${_swaddle_build_swaddleName}
+			Version: ${_swaddle_build_package_deb_debianVersion}
+			Source: ${_swaddle_build_swaddleName} (${_swaddle_build_package_deb_debianVersion})
+			Architecture: $(_swaddle_build_package_deb_architecture)
+			Maintainer: $(configure_getConfigurationSetting swaddle maintainer)
+			Installed-Size: $(_swaddle_build_package_deb_installedSize)
+			Essential: $(configure_getConfigurationSetting swaddle_deb essential)
+		EOF
+		_swaddle_build_package_deb_commaSeparatedControlField Uploaders uploaders
+		_swaddle_build_package_deb_commaSeparatedControlField Depends depends
+		_swaddle_build_package_deb_commaSeparatedControlField Pre-Depends pre_depends
+		_swaddle_build_package_deb_commaSeparatedControlField Recommends recommends
+		_swaddle_build_package_deb_commaSeparatedControlField Suggests suggests
+		_swaddle_build_package_deb_commaSeparatedControlField Breaks breaks
+		_swaddle_build_package_deb_commaSeparatedControlField Conflicts conflicts
+		_swaddle_build_package_deb_commaSeparatedControlField Provides provides
+		_swaddle_build_package_deb_commaSeparatedControlField Replaces replaces
+		_swaddle_build_package_deb_commaSeparatedControlField Enhances enhances
+		_swaddle_build_package_deb_commaSeparatedControlField Built-Using built_using
+		cat <<-EOF
+			Section: $(configure_getConfigurationSetting swaddle_deb section)
+			Priority: $(configure_getConfigurationSetting swaddle_deb priority)
+			Component: $(configure_getConfigurationSetting swaddle_deb component)
+			Homepage: $(configure_getConfigurationSetting swaddle url)
+		EOF
+		if [ "$(_swaddle_build_package_deb_architecture)" != 'all' ]; then
+			_swaddle_build_package_deb_commaSeparatedControlField Multi-Arch "$(configure_getConfigurationSetting swaddle_deb multiarch)"
+		fi
+		_swaddle_build_package_deb_extraControlFields
+		_swaddle_build_package_deb_description
+		
+	} >"$controlFile"
+}
 	
-	EOF
+core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createDebianBinary
+swaddle_build_package_deb_createDebianBinary()
+{
+	local _swaddle_build_package_deb_debianBinaryFilePath="$_swaddle_build_package_temporaryFolderPath"/debian-binary
+	printf '2.0\n' > "$_swaddle_build_package_deb_debianBinaryFilePath"
+}
+
+core_dependency_requires '*' chmod touch tar
+core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_tarControl
+swaddle_build_package_deb_tarControl()
+{
+	local filePath
+	for filePath in "$_swaddle_build_package_deb_controlFolderPath"/*
+	do
+		if [ -x "$filePath" ]; then
+			chmod 0755 "$filePath"
+		else
+			chmod 0644 "$filePath"
+		fi
+		touch -a -m -h -t 197001010000.00 "$filePath"
+	done
 	
-	# Contents of data.tar.gz
+	local options
+	local options_initialised
+	local tarFileName
+	core_variable_array_initialise options
+	core_variable_array_append options --create
+	_swaddle_build_package_deb_tarCompression control
+	core_variable_array_append options \
+		--no-acls \
+		--owner 0 \
+		--group 0 \
+		--numeric-owner \
+		--directory "$_swaddle_build_package_deb_controlFolderPath"
 	
+	_swaddle_build_package_deb_controlTarballFileName="$tarFileName"
+	core_variable_array_passToFunctionAsArguments options tar
+}
+
+core_dependency_requires '*' tar
+core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_tarData
+swaddle_build_package_deb_tarData()
+{
+	local options
+	local options_initialised
+	local tarFileName
+	core_variable_array_initialise options
+	core_variable_array_append options --create
+	_swaddle_build_package_deb_tarCompression data
+	core_variable_array_append options \
+		--no-acls \
+		--numeric-owner \
+		--directory "$_swaddle_build_package_root"
 	
-	cat <<-EOF
-		Source: ${_swaddle_build_swaddleName}
-		Section:
-		Priority
-		Maintainer:
-		Uploaders: ARRAY
-		Homepage:
-		$(_swaddle_build_package_deb_dependencies 'Build-Depends' build_depends)
-		Standards-Version: 3.8.4.0
-		XBCS-Component: multiverse
+	_swaddle_build_package_deb_tarData()
+	{
+		swaddle_build_package_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" tar "$@"
+	}
 	
-		Package: ${_swaddle_build_swaddleName}
-		Architecture: $(_swaddle_build_package_deb_architecture)
-		$(_swaddle_build_package_deb_dependencies 'Pre-Depends' pre_depends)
-		$(_swaddle_build_package_deb_dependencies 'Depends' depends)
-		$(_swaddle_build_package_deb_dependencies 'Provides' provides)
-		$(_swaddle_build_package_deb_dependencies 'Replaces' replaces)
-		$(_swaddle_build_package_deb_dependencies 'Conflicts' conflicts)
-	EOF
+	_swaddle_build_package_deb_dataTarballFileName="$tarFileName"
+	 core_variable_array_passToFunctionAsArguments options _swaddle_build_package_deb_tarData
+}
+
+core_dependency_requires '*' ar
+core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createDeb
+swaddle_build_package_deb_createDeb()
+{
+	local debOutputPath="$swaddle_outputPath"/packages/deb
+	mkdir -m 0755 -p "$debOutputPath"
 	
+	pushd "$_swaddle_build_package_temporaryFolderPath"
+		ar -qc "$debOutputPath"/"${_swaddle_build_swaddleName}_${_swaddle_build_package_deb_debianVersion}_${_swaddle_build_package_deb_architecture}".deb debian_binary "$_swaddle_build_package_deb_controlTarballFileName" "$_swaddle_build_package_deb_dataTarballFileName"
+	popd
+}
+
+_swaddle_build_package_deb_tarCompression()
+{
+	local fileBaseName="$1"
+	local compressionExtension
+	case "$(configure_getConfigurationSetting swaddle architecture)" in
+		
+		none)
+			compressionExtension=''
+		;;
+		
+		gzip)
+			core_variable_array_append options --gzip
+			compressionExtension='.gz'
+		;;
+		
+		bzip2)
+			core_variable_array_append options --bzip2
+			compressionExtension='.bz2'
+		;;
+		
+		lzma)
+			core_variable_array_append options --lzma
+			compressionExtension='.lzma'
+		;;
+		
+		xz)
+			core_variable_array_append options --xz
+			compressionExtension='.xz'
+		;;
+		
+		*)
+			core_exitError $core_commandLine_exitCode_CONFIG "Invalid compression '$compression'"
+		;;
+		
+	esac
 	
+	tarFileName="$fileBaseName".tar${_swaddle_build_package_deb_compressionExtension}
+	core_variable_array_append options --file "$_swaddle_build_package_temporaryFolderPath"/"$tarFileName"
 }
 
 _swaddle_build_package_deb_architecture()
@@ -269,9 +424,20 @@ _swaddle_build_package_deb_architecture()
 	esac
 }
 
-_swaddle_build_package_deb_dependencies()
+_swaddle_build_package_deb_installedSize()
 {
-	local dependencyName="$1"
+	local modulus=$((_swaddle_build_package_deb_installedSizeInBytes%1024))
+	local divided=$((_swaddle_build_package_deb_installedSizeInBytes/1024))
+	if [ $modulus -eq 0 ]; then
+		printf '%s' $divided
+	else
+		printf '%s' $((divided+1))
+	fi
+}
+
+_swaddle_build_package_deb_commaSeparatedControlField()
+{
+	local controlFieldName="$1"
 	local configurationSettingName="$2"
 
 	local namespace='swaddle_deb'
@@ -283,19 +449,75 @@ _swaddle_build_package_deb_dependencies()
 	fi
 	
 	local isAfterFirst=0
-	_swaddle_build_package_deb_dependencies_callback()
+	_swaddle_build_package_deb_commaSeparatedControlField_callback()
 	{
-		local dependency="$core_variable_array_element"
+		local controlFieldValuePiece="$core_variable_array_element"
 		if [ $isAfterFirst -eq 1 ]; then
 			printf '%s' ','
 		else
-			printf '%s:' "$dependencyName"
+			printf '%s:' "$controlFieldName"
 			isAfterFirst=1
 		fi
-		printf ' %s' "$dependency"
+		printf ' %s' "$controlFieldValuePiece"
 	}
 	printf '\n'
 	# ${misc:Depends}, ${shlibs:Depends}
 	
-	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_deb_dependencies_callback
+	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_deb_commaSeparatedControlField_callback
+}
+
+_swaddle_build_package_deb_extraControlFields()
+{
+	local configurationSettingName="$1"
+
+	local namespace='swaddle_deb'
+	local configurationSettingValue
+	_configure_configurationSettingValue "$namespace" 'extraControlFields'
+	
+	_swaddle_build_package_deb_extraControlFields_callback()
+	{
+		local controlFieldNameAndValueColonSpaceSeparated="$core_variable_array_element"
+		printf '%s\n' "$controlFieldNameAndValueColonSpaceSeparated"
+	}
+	
+	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_deb_extraControlFields_callback
+}
+
+core_dependency_requires '*' sed
+_swaddle_build_package_deb_description()
+{
+	local line
+	$(configure_getConfigurationSetting swaddle description) | sed -e 's/^\w*$/\./g' | while IFS='' read -r line
+	do
+		printf ' %s\n' "$line"
+	done
+	if [ -n "$line" ]; then
+		printf ' %s\n' "$line"
+	fi
+}
+
+# Derived from http://packages.ubuntu.com/lucid/
+core_snippet_embed raw swaddle_deb_section
+configure_validateDebSection()
+{
+	configure_validateValue section "$1"
+}
+
+https://www.debian.org/doc/manuals/debian-faq/ch-pkg_basics.en.html#s-priority
+core_snippet_embed raw swaddle_deb_section
+configure_validateDebPriority()
+{
+	configure_validateValue priority "$1"
+}
+
+core_snippet_embed raw swaddle_deb_component
+configure_DebComponent()
+{
+	configure_validateValue component "$1"
+}
+
+core_snippet_embed raw swaddle_deb_multiarch
+configure_validateDebMultiArch()
+{
+	configure_validateValue multiarch "$1"
 }

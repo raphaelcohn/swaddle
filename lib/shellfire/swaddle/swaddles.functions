@@ -64,9 +64,9 @@ swaddle_swaddles_attemptToDiscoverVersion()
 		local pendingChanges="$(git diff --minimal --no-color --name-status)"
 		if [ -n "$pendingChanges" ]; then
 			# We bump iteration; not a perfect solution, but at least we differentiate
-			configure_register Value NotEmpty swaddle iteration '1'
+			configure_register Value NotEmpty swaddle iteration '2'
 		else
-			configure_register Value NotEmpty swaddle iteration '0'
+			configure_register Value NotEmpty swaddle iteration '1'
 		fi
 		
 	popd
