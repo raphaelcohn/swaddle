@@ -50,15 +50,18 @@ swaddle_swaddles_createOutputFolder()
 	mkdir -m 0700 -p "$swaddle_outputPath" 2>/dev/null || true
 }
 
-core_dependency_requires '*' git date awk md5sum
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_attemptToDiscoverVersion
-swaddle_swaddles_attemptToDiscoverVersion()
+core_dependency_requires '*' git date awk
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_attemptToDiscoverVersionAndMtime
+swaddle_swaddles_attemptToDiscoverVersionAndMtime()
 {
 	pushd "$swaddle_swaddlesPath"
 		
 		local iso8601Date="$(git log -n 1 --format='%ci')"
-		local version="$(date -d "$iso8601Date" '+%Y.%m.%d.%H.%M')"
 		
+		local timestamp="$(date -d "$iso8601Date" +'%s')"
+		configure_register Value NotEmpty swaddle timestamp "$timestamp"
+		
+		local version="$(date -d "$iso8601Date" '+%Y.%m.%d.%H.%M')"
 		configure_register Value NotEmpty swaddle version "$version"
 		
 		local pendingChanges="$(git diff --minimal --no-color --name-status)"

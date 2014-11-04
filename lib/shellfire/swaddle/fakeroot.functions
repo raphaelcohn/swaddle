@@ -1,0 +1,12 @@
+swaddle_fakeroot()
+{
+	local fakerootEnvironmentInputPath="$1"
+	local fakerootEnvironmentOutputPath="$2"
+	shift 2
+	
+	if [ -f "$fakerootEnvironmentInputPath" ]; then
+		fakeroot --unknown-is-real -i "$fakerootEnvironmentInputPath" -s "$fakerootEnvironmentOutputPath" -- "$@"
+	else
+		fakeroot --unknown-is-real -s "$fakerootEnvironmentOutputPath" -- "$@"
+	fi	
+}

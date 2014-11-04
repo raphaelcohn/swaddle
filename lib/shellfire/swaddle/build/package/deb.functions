@@ -1,3 +1,6 @@
+core_usesIn swaddle fakeroot
+core_usesIn swaddle touch
+
 swaddle_build_package_deb_registerConfiguration()
 {
 	configure_register Value DebSection swaddle_deb section 'Miscellaneous'
@@ -27,7 +30,6 @@ swaddle_build_package_deb_registerConfiguration()
 	configure_register Array NotEmpty swaddle_deb triggers_activate_noawait
 	configure_register Array NotEmpty swaddle_deb triggers_interest
 	configure_register Array NotEmpty swaddle_deb triggers_interest_noawait
-	
 	
 	configure_register Value Compression swaddle_deb compression 'xz'
 	
@@ -296,10 +298,11 @@ swaddle_build_package_deb_createDebianBinary()
 	printf '2.0\n' > "$_swaddle_build_package_deb_debianBinaryFilePath"
 }
 
-core_dependency_requires '*' chmod touch tar
+core_dependency_requires '*' chmod tar
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_tarControl
 swaddle_build_package_deb_tarControl()
 {
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
 	local filePath
 	for filePath in "$_swaddle_build_package_deb_controlFolderPath"/*
 	do
@@ -308,7 +311,7 @@ swaddle_build_package_deb_tarControl()
 		else
 			chmod 0644 "$filePath"
 		fi
-		touch -a -m -h -t 197001010000.00 "$filePath"
+		swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath"
 	done
 	
 	local options
@@ -345,14 +348,14 @@ swaddle_build_package_deb_tarData()
 	
 	_swaddle_build_package_deb_tarData()
 	{
-		swaddle_build_package_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" tar "$@"
+		swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" tar "$@"
 	}
 	
 	_swaddle_build_package_deb_dataTarballFileName="$tarFileName"
 	 core_variable_array_passToFunctionAsArguments options _swaddle_build_package_deb_tarData
 }
 
-core_dependency_requires '*' ar
+core_dependency_requires '*' mkdir ar
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createDeb
 swaddle_build_package_deb_createDeb()
 {

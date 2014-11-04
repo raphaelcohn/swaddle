@@ -1,4 +1,5 @@
 core_usesIn xmlwriter
+core_usesIn swaddle touch
 
 core_dependency_requires '*' mkdir date
 swaddle_repository_yum()
@@ -92,12 +93,12 @@ swaddle_repository_yum_repoFiles()
 	# Interesting design. If it works with yum...
 }
 
+core_dependency_requires '*' gzip stat sha256sum
 swaddle_repository_yum_repodata()
 {
-	local timestampAsEpochSeconds=$(date +%s)
-	local timestampForTouch=$(date -d @${timestampAsEpochSeconds} +'%Y%m%d%H%M.%S')
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	
 	{
-		core_dependency_requires '*' gzip stat sha256sum
 		swaddle_repository_yum_repodataCompressedFile()
 		{
 			local fileName="$1"
@@ -106,21 +107,22 @@ swaddle_repository_yum_repodata()
 			local filePath="$repodataPath"/"$fileName".xml
 			local digest="$(sha256sum "$filePath")"
 			local size="$(stat -c '%s' "$filePath")"
+			swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath"
 		
-			gzip -9 "$filePath"
+			gzip -9 -n "$filePath"
 			local digestGz="$(sha256sum "$filePath".gz)"
 			local sizeGz="$(stat -c '%s' "$filePath".gz)"
 		
 			local newFileName="$digestGz"-"$fileName".xml.gz
 			mv "$filePath" "$repodataPath"/"$newFileName"
-			touch -t "$timestampForTouch" "$repodataPath"/"$newFileName"
+			swaddle_touch_setMtimeAndAtime "$timestamp" "$repodataPath"/"$newFileName"
 		
 			xmlwriter_open data type "$dataType"
 		
 				xmlwriter_leaf checksum type sha256 "$digestGz"
 				xmlwriter_leaf open-checksum type sha256 "$digest"
 				xmlwriter_leaf location href repodata/"$newFileName"
-				xmlwriter_leaf timestamp "$timestampAsEpochSeconds"
+				xmlwriter_leaf timestamp "$timestamp"
 				xmlwriter_leaf size $sizeGz
 				xmlwriter_lead open-size $size
 		
@@ -128,7 +130,6 @@ swaddle_repository_yum_repodata()
 		}
 		
 		# What a mess - the XML is completely inconsistent
-		core_dependency_requires '*' gzip stat sha256sum
 		swaddle_repository_yum_repodataBothFile()
 		{
 			local fileName="$1"
@@ -139,29 +140,29 @@ swaddle_repository_yum_repodata()
 			local size="$(stat -c '%s' "$filePath")"
 			local digestFilePath="$digest"-"$distributionArchitecture"-"$fileName".xml
 			mv "$filePath" "$digestFilePath"
-			touch -t "$timestampForTouch" "$digestFilePath"
+			swaddle_touch_setMtimeAndAtime "$timestamp" "$digestFilePath"
 		
 			# Note 'group' not 'groups'
 			xmlwriter_open data type "$dataType"
 		
 				xmlwriter_leaf checksum type sha256 "$digest"
 				xmlwriter_leaf location href repodata/"$digestFilePath"
-				xmlwriter_leaf timestamp "$timestampAsEpochSeconds"
+				xmlwriter_leaf timestamp "$timestamp"
 				xmlwriter_leaf size $size
 		
 			xmlwriter_close data
 		
-			gzip -9 -c "$digestFilePath" >"$digestFilePath".gz
+			gzip -9 -n -c "$digestFilePath" >"$digestFilePath".gz
 			local digestGz="$(sha256sum "$digestFilePath".gz)"
 			local sizeGz="$(stat -c '%s' "$digestFilePath".gz)"
-			touch -t "$timestampForTouch" "$digestFilePath".gz
+			swaddle_touch_setMtimeAndAtime "$timestamp" "$digestFilePath".gz
 		
 			xmlwriter_open data type "$dataType"_gz
 		
 				xmlwriter_leaf checksum type sha256 "$digestGz"
 				xmlwriter_leaf open-checksum type sha256 "$digest"
 				xmlwriter_leaf location href repodata/"$digestFilePath".gz
-				xmlwriter_leaf timestamp "$timestampAsEpochSeconds"
+				xmlwriter_leaf timestamp "$timestamp"
 				xmlwriter_lead size $sizeGz
 		
 			xmlwriter_close data
@@ -172,8 +173,9 @@ swaddle_repository_yum_repodata()
 		xmlwriter_open repomd xmlns "http://linux.duke.edu/metadata/repo" xmlns:rpm "http://linux.duke.edu/metadata/rpm"
 			
 		# need timestamp as epoch, too...
-			xmlwriter_leaf revision "$timestampAsEpochSeconds"
+			xmlwriter_leaf revision "$timestamp"
 		
+			swaddle_repository_yum_repodataCompressedFile primary
 			swaddle_repository_yum_repodataCompressedFile filelists
 			swaddle_repository_yum_repodataCompressedFile other
 			swaddle_repository_yum_repodataBothFile comps group
@@ -181,7 +183,8 @@ swaddle_repository_yum_repodata()
 		xmlwriter_close repomd
 		
 	} >"$repodataPath"/repomd.xml
-	touch -t "$touchTimestamp" "$repodataPath"/repomd.xml
+	
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$repodataPath"/repomd.xml
 }
 
 core_dependency_requires '*' rpm sha256sum stat ln
@@ -283,7 +286,9 @@ swaddle_repository_yum_primary()
 			done
 		xmlwriter_close metadata
 	} >"$repodataPath"/primary.xml
-	
+
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$repodataPath"/primary.xml
 }
 
 core_dependency_requires '*' rpm
@@ -476,6 +481,9 @@ swaddle_repository_yum_other()
 			
 		xmlwriter_close otherdata
 	} >"$repodataPath"/other.xml
+
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$repodataPath"/other.xml
 }
 
 core_dependency_requires '*' rpm sha256sum
@@ -520,6 +528,9 @@ swaddle_repository_yum_filelists()
 			
 		xmlwriter_close filelists
 	} >"$repodataPath"/filelists.xml
+
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$repodataPath"/filelists.xml
 }
 
 swaddle_repository_yum_comps()
@@ -578,5 +589,8 @@ swaddle_repository_yum_comps()
 			
 			xmlwriter_close category
 		xmlwriter_close comps
-	} >"$repodataPath"/other.xml
+	} >"$repodataPath"/comps.xml
+
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$repodataPath"/comps.xml
 }

@@ -116,7 +116,7 @@ swaddle_build_package_rpm_generateSpecFile()
 	core_snippet_retrieveAndSourceAsHereDoc swaddle_rpm_spec_template >"$_swaddle_build_package_rpm_specFile"
 }
 
-core_dependency_requires '*' rpmbuild
+core_dependency_requires '*' rpmbuild mkdir mv
 core_functions_register _swaddle_build_package_rpm_functions swaddle_package_rpm_rpmbuild
 swaddle_package_rpm_rpmbuild()
 {
