@@ -1,0 +1,51 @@
+core_usesIn xmlwriter
+
+core_dependency_requires '*' rpm sha256sum tr
+swaddle_repository_yum_other()
+{
+	{
+		xmlwriter_declaration '1.0' 'UTF-8' 'no'
+		
+		xmlwriter_open otherdata xmlns "http://linux.duke.edu/metadata/common" packages "$(swaddle_repository_yum_rpmxml_packageCount)"
+			
+			_swaddle_repository_yum_other_callback()
+			{
+				local rpmName
+				local rpmArchitecture
+				local rpmEpoch
+				local rpmVersion
+				local rpmRelease
+	
+				local rpmSha56Sum
+	
+				local rpmChangelogAuthor
+				local rpmChangelogDate
+				local rpmChangelogEntryRaw
+				local rpmChangelogEntry
+	
+				IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease <<-EOF
+					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}')
+				EOF
+				
+				rpmSha56Sum="$(sha256sum "$rpmFilePath")"
+				
+				xmlwriter_open package pkgid "$rpmSha56Sum" name "$rpmName" arch "$rpmArchitecture"
+					xmlwriter_leaf version epoch "$rpmEpoch" ver "$rpmVersion" rel "$rpmRelease"
+					
+					# changelog text can have embedded line feeds, hence the 'tr' and strange '\r' at the end of the query 
+					rpm --query --package "$rpmFilePath" --queryformat '[%{CHANGELOGNAME}\t%{CHANGELOGTIME}\t%{CHANGELOGTEXT}\r]' | tr '\r\n' '\n\r' | while IFS="$(printf '\t')" read -r rpmChangelogAuthor rpmChangelogDate rpmChangelogEntryRaw
+					do
+						# Should use a CDATA entry, but yum doesn't...
+						local rpmChangelogEntry="$(printf '%s' "$rpmChangelogEntryRaw" | tr '\r' '\n')"
+						xmlwriter_leaf changelog author "$rpmChangelogAuthor" date "$rpmChangelogDate" "$rpmChangelogEntry"
+					done
+				
+				xmlwriter_close package
+			}
+			swaddle_repository_yum_rpmxml_iterateRpmFiles _swaddle_repository_yum_other_callback
+			
+		xmlwriter_close otherdata
+	} >"$_swaddle_repository_yum_repodataPath"/other.xml
+	
+	swaddle_repository_yum_rpmxml_addToRepodata other
+}

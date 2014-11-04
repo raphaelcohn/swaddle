@@ -1,0 +1,216 @@
+core_usesIn xmlwriter
+core_usesIn swaddle/repository/yum rpmxml
+
+core_dependency_requires '*' rpm sha256sum stat
+swaddle_repository_yum_primaryXmlFile()
+{
+	{
+		xmlwriter_declaration '1.0' 'UTF-8' 'no'
+		
+		xmlwriter_open metadata xmlns "http://linux.duke.edu/metadata/common" xmlns:rpm "http://linux.duke.edu/metadata/rpm" packages "$(swaddle_repository_yum_rpmxml_packageCount)"
+		
+			_swaddle_repository_yum_primaryXmlFile_callback()
+			{
+				local rpmName
+				local rpmArchitecture
+				local rpmEpoch
+				local rpmVersion
+				local rpmRelease
+				local rpmSummary
+				local rpmPackager
+				local rpmUrl
+				local rpmBuildTime
+				local rpmPackageSize
+				local rpmInstalledSize
+				local rpmArchiveSize
+				local rpmLicense
+				local rpmVendor
+				local rpmGroup
+				local rpmBuildHost
+				local rpmSourceRpm
+				local rpmHeaderRangeStart
+				local rpmHeaderRangeEnd
+	
+				local rpmSha56Sum
+				local rpmTimestamp
+				local rpmDescription
+				local rpmFileName
+		
+				IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease rpmSummary rpmPackager rpmUrl rpmBuildTime rpmPackageSize rpmInstalledSize rpmArchiveSize rpmLicense rpmVendor rpmGroup rpmBuildHost rpmSourceRpm rpmHeaderRangeStart rpmHeaderRangeEnd <<-EOF
+					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}\t%{SUMMARY}\t%{PACKAGER}\t%{URL}\t${BUILDTIME}\t%{PACKAGESIZE}\t%{SIZE}\t%{ARCHIVESIZE}\t%{LICENSE}\t%{VENDOR}\t%{GROUP}\t%{BUILDHOST}\t%{SOURCERPM}\t%{HEADERSTARTOFF}\t%{HEADERENDOFF}')
+				EOF
+				
+				rpmSha56Sum="$(sha256sum "$rpmFilePath")"
+				rpmTimestamp="$(gstat -c '%Y' "$rpmFilePath")"
+				rpmDescription="$(rpm --query --package "$rpmFilePath" --queryformat '%{DESCRIPTON}')"
+				rpmFileName="$(core_compatibility_basename "$rpmFilePath")"
+				
+				xmlwriter_open package type 'rpm'
+					xmlwriter_leaf name "$rpmName"
+					xmlwriter_leaf arch "$rpmArchitecture"
+					xmlwriter_leaf version epoch "$rpmEpoch" ver "$rpmVersion" rel "$rpmRelease"
+					xmlwriter_leaf checksum type 'sha256' pkgid 'YES' "$rpmSha56Sum"
+					xmlwriter_leaf summary "$rpmSummary"
+					xmlwriter_leaf description "$rpmDescription"
+					xmlwriter_leaf packager "$rpmPackager"
+					xmlwriter_leaf url "$rpmUrl"
+					xmlwriter_leaf time file "$rpmTimestamp" build "$rpmBuildTime"
+					xmlwriter_leaf size package "$rpmPackageSize" installed "$rpmInstalledSize" archive "$rpmArchiveSize"
+					xmlwriter_leaf location "$rpmArchitecture/$rpmFileName"
+					xmlwriter_open format
+						xmlwriter_leaf rpm:license "$rpmLicense"
+						xmlwriter_leaf rpm:vendor "$rpmVendor"
+						xmlwriter_leaf rpm:group "$rpmGroup"
+						xmlwriter_leaf rpm:buildhost "$rpmBuildHost"
+						xmlwriter_leaf rpm:sourcerpm "$rpmSourceRpm"
+						xmlwriter_leaf rpm:header-range start "$rpmHeaderRangeStart" end "$rpmHeaderRangeEnd"
+						
+						# Section provides/requires/etc should only be present if there is at least 1 entry
+						xmlwriter_open rpm:provides
+							swaddle_repository_yum_primaryXmlFile_entries '[%{PROVIDES}\t%{PROVIDEVERSION}\t%{PROVIDEFLAGS:depflags}\n]'
+						xmlwriter_close rpm:provides
+						
+						xmlwriter_open rpm:requires
+							swaddle_repository_yum_primaryXmlFile_entries '[%{REQUIRENAME}\t%{REQUIREVERSION}\t%{REQUIREFLAGS:depflags}\n]'
+						xmlwriter_close rpm:requires
+						
+						xmlwriter_open rpm:conflicts
+							swaddle_repository_yum_primaryXmlFile_entries '[%{CONFLICTS}\t%{CONFLICTVERSION}\t%{CONFLICTFLAGS:depflags}\n]'
+						xmlwriter_close rpm:conflicts
+						
+						xmlwriter_open rpm:obsoletes
+							swaddle_repository_yum_primaryXmlFile_entries '[%{OBSOLETES}\t%{OBSOLETEVERSION}\t%{OBSOLETEFLAGS:depflags}\n]'
+						xmlwriter_close rpm:obsoletes
+						
+						# Not all files are included in this listing, why?
+						swaddle_repository_yum_rpmxml_files
+						
+					xmlwriter_close format
+				xmlwriter_close package
+			}
+			swaddle_repository_yum_rpmxml_iterateRpmFiles _swaddle_repository_yum_primaryXmlFile_callback
+			
+		xmlwriter_close metadata
+	} >"$_swaddle_repository_yum_repodataPath"/primary.xml
+	
+	swaddle_repository_yum_rpmxml_addToRepodata primary
+}
+
+core_dependency_requires '*' rpm
+swaddle_repository_yum_primaryXmlFile_entries()
+{
+	local querystring="$1"
+	
+	local entryName
+	local entryEpochVersionRelease
+	local entryFlags
+	local entryFlagsConverted
+	
+	local lastEntryName
+	local lastEntryEpochVersionRelease
+	local lastEntryFlags
+	local lastEntryCount
+	lastEntryName=''
+	lastEntryEpochVersionRelease=''
+	lastEntryFlags=''
+	lastEntryCount=0
+	
+	local entryEpoch
+	local entryRemainder
+	local entryVersion
+	local entryRelease
+	rpm --query --package "$rpmFilePath" --queryformat "$querystring" 2>/dev/null | while IFS="$(printf '\t')" read -r entryName entryEpochVersionRelease entryFlags
+	do
+		set -- rpm:entry name "$entryName"
+		
+		# This revolting mess is to handle that things like /bin/sh can appear up to 4 times, but are recorded as a duplicate in the XML only on the second occurrence. Weird.
+		if [ "$lastEntryName" = "$entryName" ]; then
+			if [ $lastEntryCount -eq 1 ]; then
+				continue
+			fi
+			if [ "$lastEntryEpochVersionRelease" = "$entryEpochVersionRelease" ]; then
+				if [ "$lastEntryFlags" = "$entryFlags" ]; then
+					if [ $lastEntryCount -eq 0 ]; then
+						set -- "$@" pre 1
+						xmlwriter_leaf "$@"
+						continue
+					else
+						lastEntryCount=1
+					fi
+				else
+					lastEntryCount=0
+				fi
+			else
+				lastEntryCount=0
+			fi
+		else
+			lastEntryCount=0
+		fi
+		
+		
+		if [ -n "$entryConstraint" ]; then
+			case "$entryConstant" in
+				
+				'<')
+					entryFlagsConverted=LT
+				;;
+				
+				'>')
+					entryFlagsConverted=GT
+				;;
+				
+				'>=')
+					entryFlagsConverted=GE
+				;;
+				
+				'<=')
+					entryFlagsConverted=LE
+				;;
+				
+				'=')
+					entryFlagsConverted=EQ
+				;;
+				
+				'!=')
+					entryFlagsConverted=NE
+				;;
+				
+				*)
+					core_exitError $core_commandLine_exitCode_SOFTWARE "Unknown entry constraint '$entryConstraint'"
+				;;
+				
+			esac
+			
+			# Parse the entryEpochVersionRelease
+			
+			IFS=':' read -r entryEpoch entryRemainder <<-EOF
+				$entryEpochVersionRelease
+			EOF
+			
+			# Problems due to leading ':' and bash / sh's bizarre splitting rules
+			if [ -z "$entryRemainder" ]; then
+				entryRemainder="$entryEpoch"
+				entryEpoch='0'
+			# prefixed by ':' not '0:'
+			elif [ -z "$entryEpoch" ]; then
+				entryEpoch='0'
+			fi
+			
+			IFS='-' read -r entryVersion entryRelease <<-EOF
+				$entryRemainder
+			EOF
+			
+			set -- "$@" flags "$entryFlags" epoch "$entryEpoch" ver "$entryVersion"
+			
+			if [ -n "$entryRelease" ]; then
+				set -- "$@" rel "$entryRelease"
+			fi
+		fi
+		
+		xmlwriter_leaf "$@"
+		
+		lastEntryName="$entryName"
+		lastEntryEpochVersionRelease="$entryEpochVersionRelease"
+		lastEntryFlags="$entryFlags"
+	done
+}

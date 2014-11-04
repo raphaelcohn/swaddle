@@ -1,0 +1,41 @@
+core_usesIn xmlwriter
+core_usesIn swaddle/repository/yum rpmxml
+
+core_dependency_requires '*' rpm sha256sum
+swaddle_repository_yum_filelistsXmlFile()
+{
+	{
+		xmlwriter_declaration '1.0' 'UTF-8' 'no'
+		
+		xmlwriter_open filelists xmlns "http://linux.duke.edu/metadata/common" packages "$(swaddle_repository_yum_rpmxml_packageCount)"
+			
+			_swaddle_repository_yum_filelistsXmlFile_callback()
+			{
+				local rpmName
+				local rpmArchitecture
+				local rpmEpoch
+				local rpmVersion
+				local rpmRelease
+	
+				local rpmSha56Sum
+	
+				IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease <<-EOF
+					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}')
+				EOF
+				
+				rpmSha56Sum="$(sha256sum "$rpmFilePath")"
+				
+				xmlwriter_open package pkgid "$rpmSha56Sum" name "$rpmName" arch "$rpmArchitecture"
+					xmlwriter_leaf version epoch "$rpmEpoch" ver "$rpmVersion" rel "$rpmRelease"
+
+					swaddle_repository_yum_rpmxml_files
+				
+				xmlwriter_close package
+			}
+			swaddle_repository_yum_rpmxml_iterateRpmFiles _swaddle_repository_yum_filelistsXmlFile_callback
+			
+		xmlwriter_close filelists
+	} >"$_swaddle_repository_yum_repodataPath"/filelists.xml
+	
+	swaddle_repository_yum_rpmxml_addToRepodata filelists
+}

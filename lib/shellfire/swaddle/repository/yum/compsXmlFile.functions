@@ -1,0 +1,61 @@
+core_usesIn xmlwriter
+core_usesIn swaddle/repository/yum rpmxml
+
+core_dependency_requires '*' rpm tr
+swaddle_repository_yum_compsXmlFile()
+{
+	local groupName="$1"
+	local groupId="$(printf '%s' "$groupName" | tr 'ABCEDFGHIJKLMNOPQRSTUVWXYZ ' 'abcdefghijklmnopqrstuvwxyz-' )"
+	local categoryName="$groupName"
+	local categoryId="$(printf '%s' "$categoryName" | tr 'ABCEDFGHIJKLMNOPQRSTUVWXYZ ' 'abcdefghijklmnopqrstuvwxyz-' )"
+	
+	{
+		xmlwriter_declaration '1.0' 'UTF-8' 'no'
+		#<!DOCTYPE comps PUBLIC "-//CentOS//DTD Comps info//EN" "comps.dtd">
+		xmlwriter_dtd comps "-//CentOS//DTD Comps info//EN"
+		xmlwriter_open comps
+			# instead of group, there is also category, which is composed of grouplist and group
+			xmlwriter_open group
+				
+				xmlwriter_leaf id "$groupId"
+				xmlwriter_leaf name "$groupName"
+				xmlwriter_leaf description "All available packages for '$groupName'"
+				xmlwriter_leaf default false
+				xmlwriter_leaf uservisible false
+			
+				xmlwriter_open packagelist
+					
+					_swaddle_repository_yum_compsXmlFile_callback()
+					{
+						local rpmName
+						IFS="$(printf '\t')" read -r rpmName <<-EOF
+							$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}')
+						EOF
+						xmlwriter_leaf packagereq type 'optional' "$rpmName"
+					}
+					swaddle_repository_yum_rpmxml_iterateRpmFiles _swaddle_repository_yum_compsXmlFile_callback
+					
+				xmlwriter_close packagelist
+				
+				swaddle_repository_yum_rpmxml_iterateRpmFiles
+			xmlwriter_close group
+			
+			xmlwriter_open category
+				xmlwriter_leaf id "$categoryId"
+				xmlwriter_leaf name "$categoryName"
+				xmlwriter_leaf description "All available groups for '$categoryName'"
+				
+				xmlwriter_open grouplist
+				
+					xmlwriter_leaf groupid "$groupId"
+				
+				xmlwriter_close grouplist
+			
+			xmlwriter_close category
+		xmlwriter_close comps
+	} >"$_swaddle_repository_yum_repodataPath"/comps.xml
+	
+	# was "$_swaddle_repository_yum_repodataPath"/ARCH-comps.xml but is that really necessary?
+	
+	swaddle_repository_yum_rpmxml_addToRepodataComps comps group
+}

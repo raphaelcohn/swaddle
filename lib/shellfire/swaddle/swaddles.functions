@@ -43,13 +43,6 @@ swaddle_swaddles_createPackagesFolder()
 	mkdir -m 0700 -p "$_swaddle_swaddles_temporaryFolderPath"
 }
 
-core_dependency_requires '*' mkdir
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createOutputFolder
-swaddle_swaddles_createOutputFolder()
-{
-	mkdir -m 0700 -p "$swaddle_outputPath" 2>/dev/null || true
-}
-
 core_dependency_requires '*' git date awk
 core_functions_register _swaddle_swaddles_functions swaddle_swaddles_attemptToDiscoverVersionAndMtime
 swaddle_swaddles_attemptToDiscoverVersionAndMtime()
@@ -172,11 +165,11 @@ swaddle_swaddles_registerConfiguration()
 {
 	# derive name from folderpath
 	local defaultName="$(core_compatibility_basename "$swaddle_swaddlesPath")"
-	configure_register Value NotEmpty swaddles name "$defaultName"
+	configure_register Value NotEmpty swaddles repositoryName "$defaultName"
 	
 	# Might want to use github pages going forward...
 	#http://blog.teamtreehouse.com/using-github-pages-to-host-your-website
-	configure_register Value NotEmpty swaddles mirror
+	configure_register Value NotEmpty swaddles hostBaseUrl
 	
 	if core_variable_isSet HOME; then
 		if core_path_isReadableAndSearchableFolderPath "$HOME/.gnupg"; then
@@ -189,9 +182,9 @@ swaddle_swaddles_registerConfiguration()
 	fi
 
 	configure_register Value NotEmpty swaddles signer
-	configure_register Value NotEmpty swaddle_swaddles_yum distributionName 'centos'
-	configure_register Value NotEmpty swaddle_swaddles_yum distributionVersion '6.6'
-	configure_register Array NotEmpty swaddle_swaddles_yum distributionArchitectures
+	configure_register Value Boolean swaddles sign
+	
+	configure_register Array NotEmpty swaddles mirrors
 }
 
 core_functions_register _swaddle_swaddles_functions swaddle_swaddles_resetConfiguration
@@ -206,6 +199,17 @@ swaddle_swaddles_sourceConfiguration()
 	configure_source "$swaddle_swaddlesPath" swaddles
 }
 
+core_dependency_requires '*' mkdir
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createOutputFolder
+swaddle_swaddles_createOutputFolder()
+{
+	mkdir -m 0700 -p "$swaddle_outputPath" 2>/dev/null || true
+	
+	_swaddle_repository_yum_parentPath="$swaddle_outputPath"/"$repositoryName"/rpm
+	_swaddle_repository_deb_parentPath="$swaddle_outputPath"/"$repositoryName"/deb
+	_swaddle_repository_tar_parentPath="$swaddle_outputPath"/"$repositoryName"/tar
+}
+
 core_functions_register _swaddle_swaddles_functions swaddle_swaddles_buildSwaddles
 swaddle_swaddles_buildSwaddles()
 {
@@ -215,73 +219,5 @@ swaddle_swaddles_buildSwaddles()
 core_functions_register _swaddle_swaddles_functions swaddle_swaddles_buildYumRepositories
 swaddle_swaddles_buildYumRepositories()
 {
-	local configurationSettingValue
-	_configure_configurationSettingValue 'swaddle_swaddles_yum' 'distributionArchitectures'
-	
-	if ! core_variable_array_isEmpty "$configurationSettingValue"; then
-	
-		_swaddle_swaddles_buildYumRepositories_callback()
-		{
-			local distributionArchitecture="$core_variable_array_element"
-			swaddle_build_repository_yum packages/rpm "$distributionArchitecture"
-		}
-	
-		core_variable_array_iterate "$configurationSettingValue" _swaddle_swaddles_buildYumRepositories_callback
-		
-	else
-		
-		case "$(configure_getConfigurationSetting swaddle_swaddles_yum distributionName)" in
-			
-			centos|rhel)			
-				case "$(configure_getConfigurationSetting swaddle_swaddles_yum distributionVersion)" in
-		
-					1|1.*|2|2.*)
-						core_message WARN "Building ancient versions isn't supported"
-					;;
-		
-					3|3.*)
-						swaddle_build_repository_yum packages/rpm i386
-						swaddle_build_repository_yum packages/rpm ia64
-						swaddle_build_repository_yum packages/rpm s390
-						swaddle_build_repository_yum packages/rpm s390x
-						swaddle_build_repository_yum packages/rpm x86_64
-					;;
-		
-					4|4.*)
-						swaddle_build_repository_yum packages/rpm alpha
-						swaddle_build_repository_yum packages/rpm i386
-						swaddle_build_repository_yum packages/rpm ia64
-						swaddle_build_repository_yum packages/rpm s390
-						swaddle_build_repository_yum packages/rpm s390x
-						swaddle_build_repository_yum packages/rpm x86_64
-					;;
-		
-					5|5.*)
-						swaddle_build_repository_yum packages/rpm i386
-						swaddle_build_repository_yum packages/rpm x86_64
-					;;
-		
-					6|6.*)
-						swaddle_build_repository_yum packages/rpm i386
-						swaddle_build_repository_yum packages/rpm x86_64
-					;;
-		
-					7|7.*)
-						swaddle_build_repository_yum packages/rpm x86_64
-					;;
-		
-					*)
-						swaddle_build_repository_yum packages/rpm x86_64
-					;;
-		
-				esac
-			;;
-			
-			suse)
-				# As of 13.1
-				swaddle_build_repository_yum packages/rpm i586
-				swaddle_build_repository_yum packages/rpm i686
-				swaddle_build_repository_yum packages/rpm x86_64
-			;;
-	fi
+	swaddle_repository_yum
 }

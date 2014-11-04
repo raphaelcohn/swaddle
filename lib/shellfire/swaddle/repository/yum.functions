@@ -1,596 +1,119 @@
 core_usesIn xmlwriter
 core_usesIn swaddle touch
 
+core_usesIn swaddle/repository/yum primaryXmlFile otherXmlFile filelistsXmlFile compsXmlFile
 core_dependency_requires '*' mkdir date
 swaddle_repository_yum()
 {
-	local rpmsFolderName="$1"
-	local distributionName="$(configure_getConfigurationSetting swaddles_yum distributionName)"
-	local distributionVersion="$(configure_getConfigurationSetting swaddles_yum distributionVersion)"
-	local repositoryName="$(configure_getConfigurationSetting swaddles name)"
-	local distributionArchitecture="$2"
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	local repositoryName="$(configure_getConfigurationSetting swaddles repositoryName)"
+	local hostBaseUrl
+	swaddle_repository_yum_adjustUrl hostBaseUrl "$(configure_getConfigurationSetting swaddles hostBaseUrl)"
 	
-	case "$distributionArchitecture" in
-		
-		all|noarch)
-			core_exitError $core_commandLine_exitCode_SOFTWARE "The distributionArchitecture '$distributionArchitecture' must be real, not 'all' or 'noarch'."
-		;;
-		
-	esac
-	
-	local rpmsFolderPath="$swaddle_outputPath"/"$rpmsFolderName"
-	
-	# eg to match http://mirror.centos.org/centos/6.5/os/x86_64/
-	local repositoryOutputRelativeFolderPath="$distributionName"/"$distributionVersion"/"$repositoryName"/"$distributionArchitecture"
-	local repositoryRootOutputPath="$swaddle_outputPath"/yum
-	local repositoryOutputPath="$repositoryRootOutputPath"/"$repositoryOutputRelativeFolderPath"
-	mkdir -m 0755 -p "$repositoryOutputPath"
-	
-	local repodataPath="$repositoryOutputPath"/repodata
-	mkdir -m 0755 -p "$repodataPath"
-	
-	local packagesPath="$repositoryOutputPath"/Packages
-	mkdir -m 0755 -p "$packagesPath"
-	
-	
-	swaddle_repository_yum_primary
-	swaddle_repository_yum_other
-	swaddle_repository_yum_filelists
-	swaddle_repository_yum_comps "$repositoryName"
-	swaddle_repository_yum_repodata
-	
-	swaddle_repository_yum_repoFiles
+	swaddle_repository_yum_createRepodata
+	swaddle_repository_yum_createRepoFile
+	swaddle_repository_yum_createMirrorlist
+	swaddle_repository_yum_exportSigningKey
+	swaddle_repository_yum_signRepomdForSuse
+	swaddle_repository_yum_createInstallScript
 }
 
-# This ought to go into a $repositoryName-release.VERSION.rpm
-# Along with the GPG, which needs copying into position
-# And a simple install script would be nice
-# http://blog.teamtreehouse.com/using-github-pages-to-host-your-website
-swaddle_repository_yum_repoFiles()
+swaddle_repository_yum_adjustUrl()
 {
-	# eg http://mirror.centos.org/ or http://mirror1.hs-esslingen.de/repoforge/
-	local mirrorHostPath="$1"
-	if core_variable_doesNotEndWith "$mirrorHostPath" /; then
-		mirrorHostPath="$mirrorHostPath"/
+	local variableName="$1"
+	local url="$2"
+	if core_variable_doesNotEndWith "$url" /; then
+		url="$url"/
+	fi
+	core_variable_setVariable "$variableName" "$url"
+}
+
+swaddle_repository_yum_createRepodata()
+{
+	local _swaddle_repository_yum_repodataPath="$_swaddle_repository_yum_parentPath"/repodata
+	mkdir -m 0755 -p "$_swaddle_repository_yum_repodataPath"
+	
+	_swaddle_repository_yum_rpmxml_repomdXmlFilePath="$_swaddle_repository_yum_repodataPath"/repomd.xml
+	
+	swaddle_repository_yum_rpmxml_startRepodata
+		swaddle_repository_yum_primaryXmlFile
+		swaddle_repository_yum_otherXmlFile
+		swaddle_repository_yum_filelistsXmlFile
+		swaddle_repository_yum_compsXmlFile "$repositoryName"
+	swaddle_repository_yum_rpmxml_endRepodata
+}
+
+swaddle_repository_yum_createRepoFile()
+{
+	if core_variable_isTrue "$(configure_getConfigurationSetting swaddles sign)"; then
+		local gpgCheck=1
+	else
+		local gpgCheck=0
 	fi
 	
-	swaddle_repository_yum_repoFile_gpgEnabled()
-	{
-		if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_rpm sign)"; then
-			printf '1'
-		else
-			printf '0'
-		fi
-	}
-	
-	# Strictly speaking, we're supposed to use TitleCase for distribution name, but CentOS is so inconsistent what does it matter?
-	cat >"$repositoryOutputPath"/${distributionName}-${repositoryName}.repo <<-EOF
+	cat >"$_swaddle_repository_yum_parentPath"/"$repositoryName".repo <<-EOF
 		[${repositoryName}]
-		name=${distributionName}-${distributionVersion} - ${repositoryName}
-		baseurl=${mirrorHostPath}${repositoryOutputRelativeFolderPath}
-		mirrorlist=${mirrorHostPath}${repositoryOutputRelativeFolderPath}/${repositoryName}.mirrors
-		#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-${distributionName}-${distributionVersion}
-		gpkgkey=${mirrorHostPath}${repositoryOutputRelativeFolderPath}/RPM-GPG-KEY-${distributionName}-${distributionVersion}
-		gpgcheck=$(swaddle_repository_yum_repoFile_gpgEnabled)
+		name=${repositoryName}
+		baseurl=${hostBaseUrl}${repositoryName}/rpm
+		mirrorlist=${hostBaseUrl}${repositoryName}/rpm/mirrorlist
+		#gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-${repositoryName}
+		gpkgkey=${hostBaseUrl}${repositoryName}/rpm/RPM-GPG-KEY-${repositoryName}
+		gpgcheck=${gpgCheck}
 		enabled=1
 		protect=0
 	EOF
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_yum_parentPath"/"$repositoryName".repo
+}
+
+swaddle_repository_yum_createMirrorlist()
+{
+	_swaddle_repository_yum_createMirrorlist_callback()
+	{
+		local mirrorBaseUrl
+		swaddle_repository_yum_adjustUrl hostBaseUrl "$core_variable_array_element"
+		printf '%s%s\n' "$mirrorBaseUrl" "$repositoryName"/rpm
+	}
 	
-	cat >"$repositoryOutputPath"/"${repositoryName}".mirrors <<-EOF
-		${mirrorHostPath}${repositoryOutputRelativeFolderPath}
+	{
+		printf '%s%s\n' "$hostBaseUrl" "$repositoryName"/rpm
+		
+		local configurationSettingValue
+		_configure_configurationSettingValue 'swaddles' 'mirrors'
+		core_variable_array_iterate "$configurationSettingValue" _swaddle_repository_yum_createMirrorlist_callback
+		
+	} >"$_swaddle_repository_yum_parentPath"/mirrorlist
+	
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_yum_parentPath"/mirrorlist
+}
+
+swaddle_repository_yum_exportSigningKey()
+{
+	gpg --home "$(configure_getConfigurationSetting swaddle keyring)" --armor --export "$(configure_getConfigurationSetting swaddle signer)" >"$_swaddle_repository_yum_parentPath"/RPM-GPG-KEY-"$repositoryName"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_yum_parentPath"/RPM-GPG-KEY-"$repositoryName"
+}
+
+swaddle_repository_yum_signRepomdForSuse()
+{
+	# OpenSUSE-like (http://download.opensuse.org/distribution/13.1/repo/oss/suse/repodata/)
+	ln "$_swaddle_repository_yum_parentPath"/RPM-GPG-KEY-"$repositoryName" "$_swaddle_repository_yum_repodataPath"/repomd.xml.key
+	
+	gpg --home ~/.gnupg --default-key "$(configure_getConfigurationSetting swaddle signer)" --armor --sign "$_swaddle_repository_yum_repodataPath"/repomd.xml
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_yum_repodataPath"/repomd.xml.asc
+}
+
+swaddle_repository_yum_createInstallScript()
+{
+	# This ought to go into a $repositoryName-release.VERSION.rpm, but that's just painful
+	cat >"$_swaddle_repository_yum_parentPath"/install.sh <<-EOF
+		#!/usr/bin/env sh
+		set -e
+		set -u
+		
+		repoFilePath='/etc/yum.repos.d/$repositoryName.repo'
+		sudo -p "Password to allow root to remove '$repoFilePath' and perform install: " rm -rf "$repoFilePath"
+		curl --fail --location --silent --show-error '${hostBaseUrl}${repositoryName}/rpm/${repositoryName}.repo' | sudo -p "Password to allow root to install '$repoFilePath': " tee "$repoFilePath" >/dev/null
+		echo "Now run 'sudo yum update' and 'sudo yum group info $repositoryName' to see all packages available."
 	EOF
-	
-	gpg --home "$(configure_getConfigurationSetting swaddle keyring)" --armor --export "$(configure_getConfigurationSetting swaddle signer)" >"$repositoryOutputPath"/RPM-GPG-KEY-${distributionName}-${distributionVersion}
-	
-	# OpenSUSE likes the key to be here
-	ln "$repositoryOutputPath"/RPM-GPG-KEY-${distributionName}-${distributionVersion} "$repositoryOutputPath"/repomd.xml.key
-	
-	# OpenSUSE likes a signature on repomd.xml
-	# http://download.opensuse.org/distribution/13.1/repo/oss/suse/repodata/
-	gpg --home ~/.gnupg --default-key 'Raphael Cohn (Package Signing Key) <raphael.cohn@stormmq.com>' --armor --sign "$repositoryOutputPath"/repomd.xml
-	
-	# OpenSuse doesn't use 'Packages', but puts each package kind in a different arch folder, then includes ALL OF THEM in the primary, etc.
-	# Interesting design. If it works with yum...
-}
-
-core_dependency_requires '*' gzip stat sha256sum
-swaddle_repository_yum_repodata()
-{
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	
-	{
-		swaddle_repository_yum_repodataCompressedFile()
-		{
-			local fileName="$1"
-			local dataType="$fileName"
-		
-			local filePath="$repodataPath"/"$fileName".xml
-			local digest="$(sha256sum "$filePath")"
-			local size="$(stat -c '%s' "$filePath")"
-			swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath"
-		
-			gzip -9 -n "$filePath"
-			local digestGz="$(sha256sum "$filePath".gz)"
-			local sizeGz="$(stat -c '%s' "$filePath".gz)"
-		
-			local newFileName="$digestGz"-"$fileName".xml.gz
-			mv "$filePath" "$repodataPath"/"$newFileName"
-			swaddle_touch_setMtimeAndAtime "$timestamp" "$repodataPath"/"$newFileName"
-		
-			xmlwriter_open data type "$dataType"
-		
-				xmlwriter_leaf checksum type sha256 "$digestGz"
-				xmlwriter_leaf open-checksum type sha256 "$digest"
-				xmlwriter_leaf location href repodata/"$newFileName"
-				xmlwriter_leaf timestamp "$timestamp"
-				xmlwriter_leaf size $sizeGz
-				xmlwriter_lead open-size $size
-		
-			xmlwriter_close data
-		}
-		
-		# What a mess - the XML is completely inconsistent
-		swaddle_repository_yum_repodataBothFile()
-		{
-			local fileName="$1"
-			local dataType="$2"
-			
-			local filePath="$repodataPath"/"$fileName".xml
-			local digest="$(sha256sum "$filePath")"
-			local size="$(stat -c '%s' "$filePath")"
-			local digestFilePath="$digest"-"$distributionArchitecture"-"$fileName".xml
-			mv "$filePath" "$digestFilePath"
-			swaddle_touch_setMtimeAndAtime "$timestamp" "$digestFilePath"
-		
-			# Note 'group' not 'groups'
-			xmlwriter_open data type "$dataType"
-		
-				xmlwriter_leaf checksum type sha256 "$digest"
-				xmlwriter_leaf location href repodata/"$digestFilePath"
-				xmlwriter_leaf timestamp "$timestamp"
-				xmlwriter_leaf size $size
-		
-			xmlwriter_close data
-		
-			gzip -9 -n -c "$digestFilePath" >"$digestFilePath".gz
-			local digestGz="$(sha256sum "$digestFilePath".gz)"
-			local sizeGz="$(stat -c '%s' "$digestFilePath".gz)"
-			swaddle_touch_setMtimeAndAtime "$timestamp" "$digestFilePath".gz
-		
-			xmlwriter_open data type "$dataType"_gz
-		
-				xmlwriter_leaf checksum type sha256 "$digestGz"
-				xmlwriter_leaf open-checksum type sha256 "$digest"
-				xmlwriter_leaf location href repodata/"$digestFilePath".gz
-				xmlwriter_leaf timestamp "$timestamp"
-				xmlwriter_lead size $sizeGz
-		
-			xmlwriter_close data
-		}
-	
-		xmlwriter_declaration '1.0' 'UTF-8' 'no'
-		
-		xmlwriter_open repomd xmlns "http://linux.duke.edu/metadata/repo" xmlns:rpm "http://linux.duke.edu/metadata/rpm"
-			
-		# need timestamp as epoch, too...
-			xmlwriter_leaf revision "$timestamp"
-		
-			swaddle_repository_yum_repodataCompressedFile primary
-			swaddle_repository_yum_repodataCompressedFile filelists
-			swaddle_repository_yum_repodataCompressedFile other
-			swaddle_repository_yum_repodataBothFile comps group
-			
-		xmlwriter_close repomd
-		
-	} >"$repodataPath"/repomd.xml
-	
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$repodataPath"/repomd.xml
-}
-
-core_dependency_requires '*' rpm sha256sum stat ln
-swaddle_repository_yum_primary()
-{
-	local rpmName
-	local rpmArchitecture
-	local rpmEpoch
-	local rpmVersion
-	local rpmRelease
-	local rpmSummary
-	local rpmPackager
-	local rpmUrl
-	local rpmBuildTime
-	local rpmPackageSize
-	local rpmInstalledSize
-	local rpmArchiveSize
-	local rpmLicense
-	local rpmVendor
-	local rpmGroup
-	local rpmBuildHost
-	local rpmSourceRpm
-	local rpmHeaderRangeStart
-	local rpmHeaderRangeEnd
-	
-	local rpmSha56Sum
-	local rpmTimestamp
-	local rpmDescription
-	local rpmFileName
-	{
-		xmlwriter_declaration '1.0' 'UTF-8' 'no'
-
-		set +f
-		set -- "$rpmsFolderPath"/*.noarch.rpm "$rpmsFolderPath"/*."$distributionArchitecture".rpm
-		set -f
-		
-		if [ ! -e "$1" ]; then
-			set --
-		fi
-		
-		xmlwriter_open metadata xmlns "http://linux.duke.edu/metadata/common" xmlns:rpm "http://linux.duke.edu/metadata/rpm" packages "$#"
-			local rpmFilePath
-			for rpmFilePath in "$@"
-			do
-				IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease rpmSummary rpmPackager rpmUrl rpmBuildTime rpmPackageSize rpmInstalledSize rpmArchiveSize rpmLicense rpmVendor rpmGroup rpmBuildHost rpmSourceRpm rpmHeaderRangeStart rpmHeaderRangeEnd <<-EOF
-					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}\t%{SUMMARY}\t%{PACKAGER}\t%{URL}\t${BUILDTIME}\t%{PACKAGESIZE}\t%{SIZE}\t%{ARCHIVESIZE}\t%{LICENSE}\t%{VENDOR}\t%{GROUP}\t%{BUILDHOST}\t%{SOURCERPM}\t%{HEADERSTARTOFF}\t%{HEADERENDOFF}')
-				EOF
-				
-				rpmSha56Sum="$(sha256sum "$rpmFilePath")"
-				rpmTimestamp="$(gstat -c '%Y' "$rpmFilePath")"
-				rpmDescription="$(rpm --query --package "$rpmFilePath" --queryformat '%{DESCRIPTON}')"
-				rpmFileName="$(core_compatibility_basename "$rpmFilePath")"
-				
-				xmlwriter_open package type 'rpm'
-					xmlwriter_leaf name "$rpmName"
-					xmlwriter_leaf arch "$rpmArchitecture"
-					xmlwriter_leaf version epoch "$rpmEpoch" ver "$rpmVersion" rel "$rpmRelease"
-					xmlwriter_leaf checksum type 'sha256' pkgid 'YES' "$rpmSha56Sum"
-					xmlwriter_leaf summary "$rpmSummary"
-					xmlwriter_leaf description "$rpmDescription"
-					xmlwriter_leaf packager "$rpmPackager"
-					xmlwriter_leaf url "$rpmUrl"
-					xmlwriter_leaf time file "$rpmTimestamp" build "$rpmBuildTime"
-					xmlwriter_leaf size package "$rpmPackageSize" installed "$rpmInstalledSize" archive "$rpmArchiveSize"
-					xmlwriter_leaf location "Packages/$rpmFileName"
-					xmlwriter_open format
-						xmlwriter_leaf rpm:license "$rpmLicense"
-						xmlwriter_leaf rpm:vendor "$rpmVendor"
-						xmlwriter_leaf rpm:group "$rpmGroup"
-						xmlwriter_leaf rpm:buildhost "$rpmBuildHost"
-						xmlwriter_leaf rpm:sourcerpm "$rpmSourceRpm"
-						xmlwriter_leaf rpm:header-range start "$rpmHeaderRangeStart" end "$rpmHeaderRangeEnd"
-						
-						# Section provides/requires/etc should only be present if there is at least 1 entry
-						xmlwriter_open rpm:provides
-							swaddle_repository_yum_primaryRpmEntries '[%{PROVIDES}\t%{PROVIDEVERSION}\t%{PROVIDEFLAGS:depflags}\n]'
-						xmlwriter_close rpm:provides
-						
-						xmlwriter_open rpm:requires
-							swaddle_repository_yum_primaryRpmEntries '[%{REQUIRENAME}\t%{REQUIREVERSION}\t%{REQUIREFLAGS:depflags}\n]'
-						xmlwriter_close rpm:requires
-						
-						xmlwriter_open rpm:conflicts
-							swaddle_repository_yum_primaryRpmEntries '[%{CONFLICTS}\t%{CONFLICTVERSION}\t%{CONFLICTFLAGS:depflags}\n]'
-						xmlwriter_close rpm:conflicts
-						
-						xmlwriter_open rpm:obsoletes
-							swaddle_repository_yum_primaryRpmEntries '[%{OBSOLETES}\t%{OBSOLETEVERSION}\t%{OBSOLETEFLAGS:depflags}\n]'
-						xmlwriter_close rpm:obsoletes
-						
-						# Not all files are included in this listing, why?
-						swaddle_repository_yum_files
-						
-						# Move the package into position
-						ln "$rpmFilePath" "$packagesPath"/"$rpmFileName"
-						
-					xmlwriter_close format
-				xmlwriter_close package
-			done
-		xmlwriter_close metadata
-	} >"$repodataPath"/primary.xml
-
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$repodataPath"/primary.xml
-}
-
-core_dependency_requires '*' rpm
-swaddle_repository_yum_primaryRpmEntries()
-{
-	local querystring="$1"
-	
-	local entryName
-	local entryEpochVersionRelease
-	local entryFlags
-	local entryFlagsConverted
-	
-	local lastEntryName
-	local lastEntryEpochVersionRelease
-	local lastEntryFlags
-	local lastEntryCount
-	lastEntryName=''
-	lastEntryEpochVersionRelease=''
-	lastEntryFlags=''
-	lastEntryCount=0
-	
-	local entryEpoch
-	local entryRemainder
-	local entryVersion
-	local entryRelease
-	rpm --query --package "$rpmFilePath" --queryformat "$querystring" 2>/dev/null | while IFS="$(printf '\t')" read -r entryName entryEpochVersionRelease entryFlags
-	do
-		set -- rpm:entry name "$entryName"
-		
-		# This revolting mess is to handle that things like /bin/sh can appear up to 4 times, but are recorded as a duplicate in the XML only on the second occurrence. Weird.
-		if [ "$lastEntryName" = "$entryName" ]; then
-			if [ $lastEntryCount -eq 1 ]; then
-				continue
-			fi
-			if [ "$lastEntryEpochVersionRelease" = "$entryEpochVersionRelease" ]; then
-				if [ "$lastEntryFlags" = "$entryFlags" ]; then
-					if [ $lastEntryCount -eq 0 ]; then
-						set -- "$@" pre 1
-						xmlwriter_leaf "$@"
-						continue
-					else
-						lastEntryCount=1
-					fi
-				else
-					lastEntryCount=0
-				fi
-			else
-				lastEntryCount=0
-			fi
-		else
-			lastEntryCount=0
-		fi
-		
-		
-		if [ -n "$entryConstraint" ]; then
-			case "$entryConstant" in
-				
-				'<')
-					entryFlagsConverted=LT
-				;;
-				
-				'>')
-					entryFlagsConverted=GT
-				;;
-				
-				'>=')
-					entryFlagsConverted=GE
-				;;
-				
-				'<=')
-					entryFlagsConverted=LE
-				;;
-				
-				'=')
-					entryFlagsConverted=EQ
-				;;
-				
-				'!=')
-					entryFlagsConverted=NE
-				;;
-				
-				*)
-					core_exitError $core_commandLine_exitCode_SOFTWARE "Unknown entry constraint '$entryConstraint'"
-				;;
-				
-			esac
-			
-			# Parse the entryEpochVersionRelease
-			
-			IFS=':' read -r entryEpoch entryRemainder <<-EOF
-				$entryEpochVersionRelease
-			EOF
-			
-			# Problems due to leading ':' and bash / sh's bizarre splitting rules
-			if [ -z "$entryRemainder" ]; then
-				entryRemainder="$entryEpoch"
-				entryEpoch='0'
-			# prefixed by ':' not '0:'
-			elif [ -z "$entryEpoch" ]; then
-				entryEpoch='0'
-			fi
-			
-			IFS='-' read -r entryVersion entryRelease <<-EOF
-				$entryRemainder
-			EOF
-			
-			set -- "$@" flags "$entryFlags" epoch "$entryEpoch" ver "$entryVersion"
-			
-			if [ -n "$entryRelease" ]; then
-				set -- "$@" rel "$entryRelease"
-			fi
-		fi
-		
-		xmlwriter_leaf "$@"
-		
-		lastEntryName="$entryName"
-		lastEntryEpochVersionRelease="$entryEpochVersionRelease"
-		lastEntryFlags="$entryFlags"
-	done
-}
-
-core_dependency_requires '*' rpm
-swaddle_repository_yum_files()
-{
-	# We're supposed to sort directories last
-	local filePath
-	local fileClass
-	rpm --query --package "$rpmFilePath" --queryformat '[%{FILENAMES}\t%{FILECLASS}\n]' 2>/dev/null | while IFS="$(printf '\t')" read -r filePath fileClass
-	do
-		set -- file
-		
-		if [ "$fileClass" ='directory' ]; then
-			set -- "$@" type dir
-		fi
-		
-		xmlwriter_leaf "$@"
-	done
-}
-
-core_dependency_requires '*' rpm sha256sum tr
-swaddle_repository_yum_other()
-{
-	local rpmName
-	local rpmArchitecture
-	local rpmEpoch
-	local rpmVersion
-	local rpmRelease
-	
-	local rpmSha56Sum
-	
-	local rpmChangelogAuthor
-	local rpmChangelogDate
-	local rpmChangelogEntryRaw
-	local rpmChangelogEntry
-	
-	{
-		xmlwriter_declaration '1.0' 'UTF-8' 'no'
-
-		set +f
-		set -- "$rpmsFolderPath"/*.noarch.rpm "$rpmsFolderPath"/*."$distributionArchitecture".rpm
-		set -f
-		
-		if [ ! -e "$1" ]; then
-			set --
-		fi
-		
-		xmlwriter_open otherdata xmlns "http://linux.duke.edu/metadata/common" packages "$#"
-
-			local rpmFilePath
-			for rpmFilePath in "$@"
-			do
-				IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease <<-EOF
-					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}')
-				EOF
-				
-				rpmSha56Sum="$(sha256sum "$rpmFilePath")"
-				
-				xmlwriter_open package pkgid "$rpmSha56Sum" name "$rpmName" arch "$rpmArchitecture"
-					xmlwriter_leaf version epoch "$rpmEpoch" ver "$rpmVersion" rel "$rpmRelease"
-					
-					# changelog text can have embedded line feeds, hence the 'tr' and strange '\r' at the end of the query 
-					rpm --query --package "$rpmFilePath" --queryformat '[%{CHANGELOGNAME}\t%{CHANGELOGTIME}\t%{CHANGELOGTEXT}\r]' | tr '\r\n' '\n\r' | while IFS="$(printf '\t')" read -r rpmChangelogAuthor rpmChangelogDate rpmChangelogEntryRaw
-					do
-						# Should use a CDATA entry, but yum doesn't...
-						local rpmChangelogEntry="$(printf '%s' "$rpmChangelogEntryRaw" | tr '\r' '\n')"
-						xmlwriter_leaf changelog author "$rpmChangelogAuthor" date "$rpmChangelogDate" "$rpmChangelogEntry"
-					done
-				
-				xmlwriter_close package
-			
-		xmlwriter_close otherdata
-	} >"$repodataPath"/other.xml
-
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$repodataPath"/other.xml
-}
-
-core_dependency_requires '*' rpm sha256sum
-swaddle_repository_yum_filelists()
-{
-	local rpmName
-	local rpmArchitecture
-	local rpmEpoch
-	local rpmVersion
-	local rpmRelease
-	
-	local rpmSha56Sum
-	
-	{
-		xmlwriter_declaration '1.0' 'UTF-8' 'no'
-
-		set +f
-		set -- "$rpmsFolderPath"/*.noarch.rpm "$rpmsFolderPath"/*."$distributionArchitecture".rpm
-		set -f
-		
-		if [ ! -e "$1" ]; then
-			set --
-		fi
-		
-		xmlwriter_open filelists xmlns "http://linux.duke.edu/metadata/common" packages "$#"
-
-			local rpmFilePath
-			for rpmFilePath in "$@"
-			do
-				IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease <<-EOF
-					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}')
-				EOF
-				
-				rpmSha56Sum="$(sha256sum "$rpmFilePath")"
-				
-				xmlwriter_open package pkgid "$rpmSha56Sum" name "$rpmName" arch "$rpmArchitecture"
-					xmlwriter_leaf version epoch "$rpmEpoch" ver "$rpmVersion" rel "$rpmRelease"
-
-					swaddle_repository_yum_files
-				
-				xmlwriter_close package
-			
-		xmlwriter_close filelists
-	} >"$repodataPath"/filelists.xml
-
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$repodataPath"/filelists.xml
-}
-
-swaddle_repository_yum_comps()
-{
-	local groupName="$1"
-	local groupId="$(printf '%s' "$groupName" | tr 'ABCEDFGHIJKLMNOPQRSTUVWXYZ ' 'abcdefghijklmnopqrstuvwxyz-' )"
-	local categoryName="$groupName"
-	local categoryId="$(printf '%s' "$categoryName" | tr 'ABCEDFGHIJKLMNOPQRSTUVWXYZ ' 'abcdefghijklmnopqrstuvwxyz-' )"
-	
-	{
-		xmlwriter_declaration '1.0' 'UTF-8' 'no'
-		#<!DOCTYPE comps PUBLIC "-//CentOS//DTD Comps info//EN" "comps.dtd">
-		xmlwriter_dtd comps "-//CentOS//DTD Comps info//EN"
-		xmlwriter_open comps
-			# instead of group, there is also category, which is composed of grouplist and group
-			xmlwriter_open group
-				
-				xmlwriter_leaf id "$groupId"
-				xmlwriter_leaf name "$groupName"
-				xmlwriter_leaf description "All available packages for '$groupName'"
-				xmlwriter_leaf default false
-				xmlwriter_leaf uservisible false
-				
-				xmlwriter_open packagelist
-
-					set +f
-					set -- "$rpmsFolderPath"/*.noarch.rpm "$rpmsFolderPath"/*."$distributionArchitecture".rpm
-					set -f
-		
-					if [ ! -e "$1" ]; then
-						set --
-					fi
-				
-					local rpmFilePath
-					local rpmName
-					for rpmFilePath in "$@"
-					do
-						IFS="$(printf '\t')" read -r rpmName <<-EOF
-							$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}')
-						EOF
-						xmlwriter_leaf packagereq type 'optional' "$rpmName"
-				
-				xmlwriter_close packagelist
-			xmlwriter_close group
-			
-			xmlwriter_open category
-				xmlwriter_leaf id "$categoryId"
-				xmlwriter_leaf name "$categoryName"
-				xmlwriter_leaf description "All available groups for '$categoryName'"
-				
-				xmlwriter_open grouplist
-				
-					xmlwriter_leaf groupid "$groupId"
-				
-				xmlwriter_close grouplist
-			
-			xmlwriter_close category
-		xmlwriter_close comps
-	} >"$repodataPath"/comps.xml
-
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$repodataPath"/comps.xml
+	chmod 0755 "$_swaddle_repository_yum_parentPath"/install.sh
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_yum_parentPath"/install.sh
 }

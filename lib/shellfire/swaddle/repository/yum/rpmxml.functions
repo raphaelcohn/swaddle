@@ -1,0 +1,148 @@
+core_usesIn xmlwriter
+core_usesIn swaddle touch
+
+swaddle_repository_yum_rpmxml_packageCount()
+{
+	set +f
+	set -- "$_swaddle_repository_yum_parentPath"/*/*.rpm
+	set -f
+	
+	if [ ! -e "$1" ]; then
+		set --
+	fi
+	
+	printf '%s' $#
+}
+
+swaddle_repository_yum_rpmxml_iterateRpmFiles()
+{
+	local callback="$1"
+
+	set +f
+	set -- "$_swaddle_repository_yum_parentPath"/*/*.rpm
+	set -f
+	
+	if [ ! -e "$1" ]; then
+		set --
+	fi
+
+	local rpmFilePath
+	for rpmFilePath in "$@"
+	do
+		$callback
+	done
+}
+
+core_dependency_requires '*' rpm
+swaddle_repository_yum_rpmxml_files()
+{
+	# We're supposed to sort directories last
+	local filePath
+	local fileClass
+	rpm --query --package "$rpmFilePath" --queryformat '[%{FILENAMES}\t%{FILECLASS}\n]' 2>/dev/null | while IFS="$(printf '\t')" read -r filePath fileClass
+	do
+		set -- file
+		
+		if [ "$fileClass" = 'directory' ]; then
+			set -- "$@" type dir
+		fi
+		
+		xmlwriter_leaf "$@"
+	done
+}
+
+swaddle_repository_yum_rpmxml_startRepodata()
+{	
+	{
+		xmlwriter_declaration '1.0' 'UTF-8' 'no'
+		xmlwriter_open repomd xmlns "http://linux.duke.edu/metadata/repo" xmlns:rpm "http://linux.duke.edu/metadata/rpm"
+			xmlwriter_leaf revision "$timestamp"
+	} >"$_swaddle_repository_yum_rpmxml_repomdXmlFilePath"
+}
+
+swaddle_repository_yum_rpmxml_endRepodata()
+{
+	{
+		xmlwriter_close repomd
+	} >"$_swaddle_repository_yum_rpmxml_repomdXmlFilePath"
+	
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_yum_rpmxml_repomdXmlFilePath"
+}
+
+core_dependency_requires '*' sha25sum stat gzip mv
+swaddle_repository_yum_rpmxml_addToRepodata()
+{
+	local fileName="$1"
+	
+	local dataType="$fileName"
+	local filePath="$_swaddle_repository_yum_repodataPath"/"$fileName".xml
+	
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath"
+	
+	local digest="$(sha256sum "$filePath")"
+	local size="$(stat -c '%s' "$filePath")"
+
+	gzip -9 -n "$filePath"
+	local digestGz="$(sha256sum "$filePath".gz)"
+	local sizeGz="$(stat -c '%s' "$filePath".gz)"
+
+	local newFileName="$digestGz"-"$fileName".xml.gz
+	mv "$filePath" "$_swaddle_repository_yum_repodataPath"/"$newFileName"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_yum_repodataPath"/"$newFileName"
+
+	{
+		xmlwriter_open data type "$dataType"
+
+			xmlwriter_leaf checksum type sha256 "$digestGz"
+			xmlwriter_leaf open-checksum type sha256 "$digest"
+			xmlwriter_leaf location href repodata/"$newFileName"
+			xmlwriter_leaf timestamp "$timestamp"
+			xmlwriter_leaf size $sizeGz
+			xmlwriter_lead open-size $size
+
+		xmlwriter_close data
+	} >>"$_swaddle_repository_yum_rpmxml_repomdXmlFilePath"
+}
+
+swaddle_repository_yum_rpmxml_addToRepodataComps()
+{
+	# What a mess - the XML is completely inconsistent
+	{
+		local fileName="$1"
+		local dataType="$2"
+		
+		local filePath="$_swaddle_repository_yum_repodataPath"/"$fileName".xml
+		local digest="$(sha256sum "$filePath")"
+		local size="$(stat -c '%s' "$filePath")"
+		local digestFilePath="$digest"-"$fileName".xml
+		mv "$filePath" "$digestFilePath"
+		swaddle_touch_setMtimeAndAtime "$timestamp" "$digestFilePath"
+	
+		# Note 'group' not 'groups'
+		xmlwriter_open data type "$dataType"
+	
+			xmlwriter_leaf checksum type sha256 "$digest"
+			xmlwriter_leaf location href repodata/"$digestFilePath"
+			xmlwriter_leaf timestamp "$timestamp"
+			xmlwriter_leaf size $size
+	
+		xmlwriter_close data
+	
+		gzip -9 -n -c "$digestFilePath" >"$digestFilePath".gz
+		local digestGz="$(sha256sum "$digestFilePath".gz)"
+		local sizeGz="$(stat -c '%s' "$digestFilePath".gz)"
+		swaddle_touch_setMtimeAndAtime "$timestamp" "$digestFilePath".gz
+	
+		xmlwriter_open data type "$dataType"_gz
+	
+			xmlwriter_leaf checksum type sha256 "$digestGz"
+			xmlwriter_leaf open-checksum type sha256 "$digest"
+			xmlwriter_leaf location href repodata/"$digestFilePath".gz
+			xmlwriter_leaf timestamp "$timestamp"
+			xmlwriter_lead size $sizeGz
+	
+		xmlwriter_close data
+	} >>"$_swaddle_repository_yum_rpmxml_repomdXmlFilePath"
+}
