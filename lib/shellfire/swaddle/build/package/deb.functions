@@ -40,7 +40,7 @@ swaddle_build_package_deb()
 {
 	core_functions_execute _swaddle_build_package_deb_functions "$@"
 }
-	
+
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_computeDebianVersion
 swaddle_build_package_deb_computeDebianVersion()
 {
@@ -148,7 +148,8 @@ swaddle_build_package_deb_createControlTriggers()
 	fi
 }
 
-core_dependency_requires '*' md5sum stat
+core_usesIn swaddle digest
+core_dependency_requires '*' stat
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createControlMd5sumsAndCalculateInstalledSize
 swaddle_build_package_deb_createControlMd5sumsAndCalculateInstalledSize()
 {
@@ -178,7 +179,7 @@ swaddle_build_package_deb_createControlMd5sumsAndCalculateInstalledSize()
 					continue
 				fi
 				if [ -f "$entry" ]; then
-					md5sum "$entry" | IFS=' ' read -r digest uselessFileName
+					local digest="$(swaddle_digest_md5sum "$entry")"
 					if [ -z "$relativePath" ]; then
 						printf '%s  %s\n' "$digest" "$entry"
 					else
@@ -207,7 +208,7 @@ swaddle_build_package_deb_createControlScripts()
 	_swaddle_build_package_deb_createControlScript()
 	{
 		local scriptKind="$1"
-		local scriptTypePath="$_swaddle_build_packagesPath"/"$_swaddle_build_package_kind"/scripts/"$scriptKind"
+		local scriptTypePath="$_swaddle_build_templatesPath"/"$_swaddle_build_package_kind"/scripts/"$scriptKind"
 	
 		if ! core_path_isReadableAndSearchableFolderPath "$scriptTypePath"; then
 			return 0
@@ -290,12 +291,15 @@ swaddle_build_package_deb_createControlFile()
 		
 	} >"$controlFile"
 }
-	
+
+core_dependency_requires '*' chmod
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createDebianBinary
 swaddle_build_package_deb_createDebianBinary()
 {
 	local _swaddle_build_package_deb_debianBinaryFilePath="$_swaddle_build_package_temporaryFolderPath"/debian-binary
 	printf '2.0\n' > "$_swaddle_build_package_deb_debianBinaryFilePath"
+	
+	_swaddle_build_package_deb_permissionsForAr "$_swaddle_build_package_deb_debianBinaryFilePath"
 }
 
 core_dependency_requires '*' chmod tar
@@ -329,6 +333,8 @@ swaddle_build_package_deb_tarControl()
 	
 	_swaddle_build_package_deb_controlTarballFileName="$tarFileName"
 	core_variable_array_passToFunctionAsArguments options tar
+	 
+	_swaddle_build_package_deb_permissionsForAr "$_swaddle_build_package_temporaryFolderPath"/"$_swaddle_build_package_deb_controlTarballFileName"
 }
 
 core_dependency_requires '*' tar
@@ -353,18 +359,45 @@ swaddle_build_package_deb_tarData()
 	
 	_swaddle_build_package_deb_dataTarballFileName="$tarFileName"
 	 core_variable_array_passToFunctionAsArguments options _swaddle_build_package_deb_tarData
+	 
+	_swaddle_build_package_deb_permissionsForAr "$_swaddle_build_package_temporaryFolderPath"/"$_swaddle_build_package_deb_dataTarballFileName"
+}
+
+# ar records uid, gid, mode and timestamp
+core_dependency_requires '*' chmod chown
+_swaddle_build_package_deb_permissionsForAr()
+{
+	local filePath="$1"
+	
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath"
+	chmod 0644 "$filePath"
+	swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" chown 0:0 "$filePath"
 }
 
 core_dependency_requires '*' mkdir ar
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createDeb
 swaddle_build_package_deb_createDeb()
 {
-	local debOutputPath="$swaddle_outputPath"/packages/deb
-	mkdir -m 0755 -p "$debOutputPath"
-	
+	local architecture="$(_swaddle_build_package_deb_architecture)"
+	mkdir -m 0755 -p "$_swaddle_repository_deb_parentPath"/"$architecture"
+
 	pushd "$_swaddle_build_package_temporaryFolderPath"
-		ar -qc "$debOutputPath"/"${_swaddle_build_swaddleName}_${_swaddle_build_package_deb_debianVersion}_${_swaddle_build_package_deb_architecture}".deb debian_binary "$_swaddle_build_package_deb_controlTarballFileName" "$_swaddle_build_package_deb_dataTarballFileName"
+		
+		swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" ar -qc "$_swaddle_repository_deb_parentPath"/"$architecture"/"${_swaddle_build_swaddleName}_${_swaddle_build_package_deb_debianVersion}_${_swaddle_build_package_deb_architecture}".deb \
+			debian_binary \
+			"$_swaddle_build_package_deb_controlTarballFileName" \
+			"$_swaddle_build_package_deb_dataTarballFileName"
+	
+		rm -rf \
+			debian_binary \
+			"$_swaddle_build_package_deb_controlTarballFileName" \
+			"$_swaddle_build_package_deb_dataTarballFileName"
 	popd
+	
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_deb_parentPath"/"$architecture"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_deb_parentPath"
 }
 
 _swaddle_build_package_deb_tarCompression()
@@ -471,8 +504,6 @@ _swaddle_build_package_deb_commaSeparatedControlField()
 
 _swaddle_build_package_deb_extraControlFields()
 {
-	local configurationSettingName="$1"
-
 	local namespace='swaddle_deb'
 	local configurationSettingValue
 	_configure_configurationSettingValue "$namespace" 'extraControlFields'

@@ -18,8 +18,8 @@
 #%undefine __check_files
 
 # Digest method is '$(configure_getConfigurationSetting swaddle_rpm digest)'
-# %define _source_filedigest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
-%define _binary_filedigest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
+# %define _source_fileswaddle_digest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
+%define _binary_fileswaddle_digest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
 
 # Compression method is '$(configure_getConfigurationSetting swaddle_rpm compression)'
 # %define _source_payload $(_swaddle_build_package_rpm_compression)

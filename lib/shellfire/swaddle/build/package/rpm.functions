@@ -351,7 +351,7 @@ _swaddle_build_package_rpm_script()
 {
 	local rpmScriptType="$1"
 	local scriptType="$2"
-	local scriptTypePath="$_swaddle_build_packagesPath"/"$_swaddle_build_package_kind"/scripts/"$scriptType"
+	local scriptTypePath="$_swaddle_build_templatesPath"/"$_swaddle_build_package_kind"/scripts/"$scriptType"
 	
 	if ! core_path_isReadableAndSearchableFolderPath "$scriptTypePath"; then
 		return 0
@@ -403,7 +403,7 @@ _swaddle_build_package_rpm_trigger()
 {
 	local rpmScriptType="$1"
 	local scriptType="$2"
-	local scriptTypePath="$_swaddle_build_packagesPath"/"$_swaddle_build_package_kind"/scripts/"$scriptType"
+	local scriptTypePath="$_swaddle_build_templatesPath"/"$_swaddle_build_package_kind"/scripts/"$scriptType"
 	
 	if ! core_path_isReadableAndSearchableFolderPath "$scriptTypePath"; then
 		return 0

@@ -1,7 +1,8 @@
 core_usesIn xmlwriter
 core_usesIn swaddle/repository/yum rpmxml
+core_usesIn swaddle digest
 
-core_dependency_requires '*' rpm sha256sum
+core_dependency_requires '*' rpm
 swaddle_repository_yum_filelistsXmlFile()
 {
 	{
@@ -23,7 +24,7 @@ swaddle_repository_yum_filelistsXmlFile()
 					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}')
 				EOF
 				
-				rpmSha56Sum="$(sha256sum "$rpmFilePath")"
+				rpmSha56Sum="$(swaddle_digest_sha256 "$rpmFilePath")"
 				
 				xmlwriter_open package pkgid "$rpmSha56Sum" name "$rpmName" arch "$rpmArchitecture"
 					xmlwriter_leaf version epoch "$rpmEpoch" ver "$rpmVersion" rel "$rpmRelease"

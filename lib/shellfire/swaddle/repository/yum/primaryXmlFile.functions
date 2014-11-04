@@ -1,7 +1,8 @@
 core_usesIn xmlwriter
 core_usesIn swaddle/repository/yum rpmxml
+core_usesIn swaddle digest
 
-core_dependency_requires '*' rpm sha256sum stat
+core_dependency_requires '*' rpm stat
 swaddle_repository_yum_primaryXmlFile()
 {
 	{
@@ -40,7 +41,7 @@ swaddle_repository_yum_primaryXmlFile()
 					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}\t%{SUMMARY}\t%{PACKAGER}\t%{URL}\t${BUILDTIME}\t%{PACKAGESIZE}\t%{SIZE}\t%{ARCHIVESIZE}\t%{LICENSE}\t%{VENDOR}\t%{GROUP}\t%{BUILDHOST}\t%{SOURCERPM}\t%{HEADERSTARTOFF}\t%{HEADERENDOFF}')
 				EOF
 				
-				rpmSha56Sum="$(sha256sum "$rpmFilePath")"
+				rpmSha56Sum="$(swaddle_digest_sha256 "$rpmFilePath")"
 				rpmTimestamp="$(gstat -c '%Y' "$rpmFilePath")"
 				rpmDescription="$(rpm --query --package "$rpmFilePath" --queryformat '%{DESCRIPTON}')"
 				rpmFileName="$(core_compatibility_basename "$rpmFilePath")"

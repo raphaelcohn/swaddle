@@ -1,0 +1,7 @@
+core_dependency_requires '*' touch gzip
+swaddle_repository_compressForNginx()
+{
+	local filePath="$1"
+	gzip -9 -c -q -f -n "$1" >"$1".gz
+	touch -r "$1" "$1".gz
+}

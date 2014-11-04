@@ -1,0 +1,59 @@
+core_dependency_requires '*' md5sum
+swaddle_digest_md5()
+{
+	local digest
+	local uselessFileName
+	md5sum "$1" | IFS=' ' read -r digest uselessFileName
+	printf '%s' "$digest"
+}
+
+core_dependency_requires '*' sha1sum
+swaddle_digest_sha1()
+{
+	local digest
+	local uselessFileName
+	sha1sum "$1" | IFS=' ' read -r digest uselessFileName
+	printf '%s' "$digest"
+}
+
+core_dependency_requires '*' sha1sum
+swaddle_digest_sha256()
+{
+	local digest
+	local uselessFileName
+	sha256sum "$1" | IFS=' ' read -r digest uselessFileName
+	printf '%s' "$digest"
+}
+
+core_dependency_requires '*' sha1sum
+swaddle_digest_sha512()
+{
+	local digest
+	local uselessFileName
+	sha512sum "$1" | IFS=' ' read -r digest uselessFileName
+	printf '%s' "$digest"
+}
+
+swaddle_digest_file()
+{
+	local filePath="$1"
+	local algo
+	for algo in md5 sha1 sha256 sha512
+	do
+		swaddle_digest_${algo} "$filePath" >"$filePath"."$algo"
+		_swaddle_build_package_deb_permissionsForAr "$filePath"."$algo"
+	done
+	
+	swaddle_digest_signFile "$filePath"
+}
+
+swaddle_digest_signFile()
+{
+	if core_variable_isFalse "$(configure_getConfigurationSetting swaddle sign)"; then
+		return 0
+	fi
+	
+	local filePath="$1"
+	gpg --home ~/.gnupg --default-key "$(configure_getConfigurationSetting swaddle signer)" --armor --sign "$filePath"
+	_swaddle_build_package_deb_permissionsForAr "$filePath".asc
+}
