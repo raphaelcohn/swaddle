@@ -241,52 +241,6 @@ configure_validateReadableSearchableFolderPath()
 	fi
 }
 
-configure_validateArchitecture()
-{
-	case "$1" in
-		
-		# Currently, we only support these
-		all|noarch|x86_64|amd64)
-			:
-		;;
-
-		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid architecture (it must be one of 'all' or 'amd64')."
-		;;
-		
-	esac
-}
-
-configure_validateDigest()
-{
-	case "$1" in
-
-		md5|sha1|sha256|sha384|sha512)
-			:
-		;;
-
-		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid digest (it must be one of 'md5', 'sha1', 'sha256', 'sha384' or 'sha512')."
-		;;
-		
-	esac
-}
-
-configure_validateCompression()
-{
-	case "$1" in
-
-		none|gzip|bzip2|lzma|xz)
-			:
-		;;
-
-		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'none', 'gzip', 'bzip2', 'lzma' or 'xz')."
-		;;
-		
-	esac
-}
-
 configure_validateValue()
 {
 	local valueKind="$1"

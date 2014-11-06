@@ -1,0 +1,117 @@
+swaddle_configure_maintainer()
+{
+	printf '%s <%s>' "$(configure_getConfigurationSetting swaddle maintainer_name)" "$(configure_getConfigurationSetting swaddle maintainer_email)"
+}
+
+swaddle_configure_signer()
+{
+	printf '%s (%s) <%s>' "$(configure_getConfigurationSetting swaddle maintainer_name)" "$(configure_getConfigurationSetting swaddle maintainer_comment)" "$(configure_getConfigurationSetting swaddle maintainer_email)"
+}
+
+
+# Derived from http://packages.ubuntu.com/lucid/
+core_snippet_embed raw swaddle_deb_section
+configure_validateDebSection()
+{
+	configure_validateValue section "$1"
+}
+
+https://www.debian.org/doc/manuals/debian-faq/ch-pkg_basics.en.html#s-priority
+core_snippet_embed raw swaddle_deb_section
+configure_validateDebPriority()
+{
+	configure_validateValue priority "$1"
+}
+
+core_snippet_embed raw swaddle_deb_component
+configure_DebComponent()
+{
+	configure_validateValue component "$1"
+}
+
+core_snippet_embed raw swaddle_deb_multiarch
+configure_validateDebMultiArch()
+{
+	configure_validateValue multiarch "$1"
+}
+
+core_snippet_embed raw swaddle_deb_task
+configure_validateDebTask()
+{
+	configure_validateValue task "$1"
+}
+
+# Some rules on the GROUP TAG: https://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/Packagers_Guide/chap-Packagers_Guide-Spec_File_Reference-Preamble.html
+# Derived from /usr/share/doc/rpm-4.8.0/ on Centos 6.5
+core_snippet_embed raw swaddle_rpm_group
+configure_validateRpmGroup()
+{
+	configure_validateValue group "$1"
+	
+	if core_variable_endsWith "$_swaddle_build_swaddleName" '-doc'; then
+		if [ "$1" != 'Documentation' ]; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') ends in '-doc' so its rpm_group must be 'Documentation', not '$1'."
+		fi
+	fi
+}
+
+configure_validateTarCompression()
+{
+	case "$1" in
+
+		gzip|bzip2|lzma|xz|lzip|lzop|rzip)
+			:
+		;;
+
+		*)
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'gzip', 'bzip2', 'lzma', 'xz', 'lzip', 'lzop' or 'rzip')."
+		;;
+		
+	esac
+}
+
+configure_validateArchitecture()
+{
+	case "$1" in
+		
+		# Currently, we only support these
+		all|noarch|x86_64|amd64)
+			:
+		;;
+
+		*)
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid architecture (it must be one of 'all' or 'amd64')."
+		;;
+		
+	esac
+}
+
+configure_validateDigest()
+{
+	case "$1" in
+
+		md5|sha1|sha256|sha384|sha512)
+			:
+		;;
+
+		*)
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid digest (it must be one of 'md5', 'sha1', 'sha256', 'sha384' or 'sha512')."
+		;;
+		
+	esac
+}
+
+configure_validateCompression()
+{
+	case "$1" in
+
+		none|gzip|bzip2|lzma|xz)
+			:
+		;;
+
+		*)
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'none', 'gzip', 'bzip2', 'lzma' or 'xz')."
+		;;
+		
+	esac
+}

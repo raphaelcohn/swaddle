@@ -1,5 +1,6 @@
 core_usesIn core/variable array
 core_usesIn swaddle touch
+core_usesIn swaddle configure
 
 swaddle_build_package_rpm_registerConfiguration()
 {
@@ -150,7 +151,7 @@ swaddle_package_rpm_rpmbuild()
 		
 	esac
 	
-	if core_variable_isTrue "$(configure_getConfigurationSetting swaddles sign)"; then
+	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle sign)"; then
 		core_variable_array_append options --sign
 	fi
 	
@@ -574,21 +575,4 @@ _swaddle_build_package_rpm_files_recurse()
 	
 	done
 	set -f
-}
-
-
-
-
-# Some rules on the GROUP TAG: https://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/Packagers_Guide/chap-Packagers_Guide-Spec_File_Reference-Preamble.html
-# Derived from /usr/share/doc/rpm-4.8.0/ on Centos 6.5
-core_snippet_embed raw swaddle_rpm_group
-configure_validateRpmGroup()
-{
-	configure_validateValue group "$1"
-	
-	if core_variable_endsWith "$_swaddle_build_swaddleName" '-doc'; then
-		if [ "$1" != 'Documentation' ]; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') ends in '-doc' so its rpm_group must be 'Documentation', not '$1'."
-		fi
-	fi
 }

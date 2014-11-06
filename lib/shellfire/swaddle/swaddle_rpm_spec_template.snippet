@@ -11,7 +11,7 @@
 # RPM sign stuff
 %_signature gpg
 %_gpg_path $(configure_getConfigurationSetting swaddle keyring)
-%_gpg_name $(configure_getConfigurationSetting swaddle signer)
+%_gpg_name $(swaddle_configure_signer)
 #%_gpgbin /usr/bin/gpg
 
 # Disable checking for unpackaged files
@@ -45,7 +45,7 @@ Group: $(configure_getConfigurationSetting swaddle_rpm category)
 License: $(configure_getConfigurationSetting swaddle licence)
 Vendor: $(configure_getConfigurationSetting swaddle vendor)
 URL: $(configure_getConfigurationSetting swaddle url)
-Packager: $(configure_getConfigurationSetting swaddle maintainer)
+Packager: $(swaddle_configure_maintainer)
 
 $(_swaddle_build_package_rpm_iterateDependencies Requires depends)
 $(_swaddle_build_package_rpm_iterateDependencies 'Requires(pre)' depends_before_install)

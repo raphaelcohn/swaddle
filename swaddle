@@ -137,6 +137,9 @@ _program_commandLine_validate()
 			for potentialSwaddle in *
 			do
 				set +f
+				if [ "$potentialSwaddle" = 'swaddles.conf.d' ]; then
+					continue
+				fi
 				if core_path_isReadableAndSearchableFolderPath "$potentialSwaddle"; then
 					core_variable_array_append swaddle_swaddles "$potentialSwaddle"
 				fi
@@ -144,6 +147,9 @@ _program_commandLine_validate()
 			set -f
 			
 		popd
+		if core_variable_array_isEmpty swaddle_swaddles; then
+			core_message WARN "There are no swaddles in '$swaddle_swaddlesPath'"
+		fi
 	else
 		_program_commandLine_validate_swaddles()
 		{

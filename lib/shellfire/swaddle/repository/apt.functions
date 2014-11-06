@@ -1,0 +1,639 @@
+core_usesIn swaddle digest
+
+swaddle_repository_apt()
+{
+	configure_reset swaddle
+	configure_reset swaddle_deb
+	configure_source "$swaddle_swaddlesPath" swaddles
+	
+	# Loop over .all + .amd64, .all + .i386, etc, ie all architectures APART FROM 'all'
+	# Need a 'Release' file and a 'Packages' file
+	# Need to organise by Component - we can force this or we can take it from the Deb (more complexity)
+	
+	swaddle_repository_apt_createTemporaryFolderPath
+	swaddle_repository_apt_createDistsContentsTmp
+	swaddle_repository_apt_parseDebsInPool
+	swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile
+	swaddle_repository_apt_createDistsComponentsTranslations
+	swaddle_repository_apt_createDistsContents
+	swaddle_repository_apt_createDistsRelease
+	
+	# Not strictly required
+	swaddle_repository_apt_exportSigningKey
+	swaddle_repository_apt_createAptSourcesList
+	swaddle_repository_apt_createInstallScript
+	
+}
+
+core_dependency_requires '*' rm mkdir
+swaddle_repository_apt_createTemporaryFolderPath()
+{
+	_swaddle_repository_apt_temporaryFolderPath="$_swaddles_temporaryFolderPath"/apt
+	rm -rf "$_swaddle_repository_apt_temporaryFolderPath"
+	mkdir -m 0755 -p "$_swaddle_repository_apt_temporaryFolderPath"
+}
+
+swaddle_repository_apt_createDistsContentsTmp()
+{
+	_swaddle_repository_apt_createDistsContentsTmp_callback()
+	{
+		local packageArchitecture="$core_variable_array_element"
+		
+		pushd "$_swaddle_repository_deb_parentPath"/dists
+		
+			printf '' >Contents-"$packageArchitecture".tmp
+			
+		popd
+	}
+	
+	swaddle_repository_apt_architectures _swaddle_repository_apt_createDistsContentsTmp_callback
+}
+
+swaddle_repository_apt_parseDebsInPool()
+{
+	core_variable_array_initialise _swaddle_repository_apt_components 
+	
+	pushd "$_swaddle_repository_deb_parentPath"/pool
+	set +f
+	local poolComponent
+	for poolComponent in *
+	do
+		set -f
+		if [ -d "$poolComponent" ]; then
+			
+			core_variable_array_append _swaddle_repository_apt_components "$poolComponent"
+			
+			pushd "$poolComponent"
+			set +f
+			local poolAZ
+			for poolAZ in *
+			do
+				set -f
+				if [ -d "$poolAZ" ]; then
+					pushd "$poolAZ"
+					set +f
+					local poolSource
+					for poolSource in *
+					do
+						set -f
+						if [ -d "$poolSource" ]; then
+							pushd "$poolSource"
+							set +f
+							local poolDebFile
+							for poolDebFile in *.deb
+							do
+								set -f
+								if [ -f "$poolDebFile" ]; then
+									local debFilePath="$(pwd)"/"$poolDebFile"
+									swaddle_repository_apt_parseDeb
+								fi
+							done
+							set -f
+							popd
+						fi
+					done
+					set -f
+					popd
+				fi
+			done
+			set -f
+			popd
+		fi
+	done
+	set -f
+	popd
+}
+
+core_dependency_requires '*' rm
+swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile()
+{
+	_swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile_callback()
+	{
+		local packageArchitecture="$core_variable_array_element"
+	
+		pushd "$_swaddle_repository_deb_parentPath"/pool
+		set +f
+		for poolComponent in *
+		do
+			set -f
+			if [ -d "$poolComponent" ]; then
+				local componentFilesFolderPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/"$poolComponent"/binary-"$packageArchitecture"
+				
+				pushd "$componentFilesFolderPath"
+				
+					rm -f Packages
+					_swaddle_repository_apt_sortAndConcatenateFragments Packages
+					swaddle_repository_apt_createDistsComponentReleaseFile
+					
+				popd
+				
+			fi
+		done
+		set -f
+	}
+	
+	swaddle_repository_apt_architectures _swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile_callback
+}
+
+core_usesIn swaddle digest
+core_dependency_requires '*' mkdir cat sort rm
+swaddle_repository_apt_createDistsComponentsTranslations()
+{
+	pushd "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"
+		set +f
+		local poolComponent
+		for poolComponent in *
+		do
+			set -f
+			if [ -d "$poolComponent" ]; then
+				mkdir -m 0755 -p "$poolComponent"/i18n
+				pushd "$poolComponent"/i18n
+				
+					printf '' >Index
+				
+					local languageCode
+					for languageCode in ar ast bg bs ca cs da de el en en_AU en_CA en_GB eo es eu fa fi fr gl hr hu id is it ja ka km ko lt ms my nb nl oc pl pt pt_BR ro ru si sk sl sq sr sv th tr uk vi zh_CN zh_HK zh_TW
+					do
+						rm -f Translation-"$languageCode"
+						_swaddle_repository_apt_sortAndConcatenateFragments Translation-"$languageCode"
+					
+						printf ' %s %7s %s' "$(swaddle_digest_sha1 Translation-"$languageCode")" "$(stat -c '%s')" Translation-"$languageCode" >>Index
+					done
+	
+					swaddle_touch_setMtimeAndAtime Index
+					swaddle_digest_file Index
+					swaddle_compress_gzip Index
+				
+				popd
+			fi
+		done
+		set -f
+	popd
+}
+
+core_dependency_requires '*' rm sort
+core_usesIn core snippet
+core_snippet_embed raw swaddle_apt_contents
+swaddle_repository_apt_createDistsContents()
+{
+	_swaddle_repository_apt_createDistsContents_callback()
+	{
+		local packageArchitecture="$core_variable_array_element"
+		
+		pushd "$_swaddle_repository_deb_parentPath"/dists
+			
+			# Bug: We do not remove duplicate keys, eg for busybox:-
+			# bin/busybox                                                 shells/busybox-static,universe/utils/busybox
+			# we do
+			# bin/busybox  shells/busybox-static
+			# bin/busybox  universe/utils/busybox
+			
+			core_snippet_retrieve 'swaddle_apt_contents' no Contents-"$packageArchitecture"
+			sort -d Contents-"$packageArchitecture".tmp >>Contents-"$packageArchitecture"
+
+			swaddle_touch_setMtimeAndAtime Contents-"$packageArchitecture"
+			swaddle_compress_gzip Contents-"$packageArchitecture"
+			swaddle_digest_file Contents-"$packageArchitecture".gz
+			
+			# Yes, really delete it. apt-file only looks for a gz file ordinarily.
+			rm Contents-"$packageArchitecture"
+			
+		popd
+	}
+	
+	swaddle_repository_apt_architectures _swaddle_repository_apt_createDistsContents_callback
+}
+
+core_dependency_requires '*' cat date ln stat
+swaddle_repository_apt_createDistsRelease()
+{
+	local releaseFilePath="$_swaddle_repository_deb_parentPath"/dists/Release
+	
+	local configurationSettingValue
+	_configure_configurationSettingValue 'swaddle_apt' 'apt_architectures'
+	local architectures="$configurationSettingValue"
+
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	local releaseDate="$(date -u -d @$timestamp +'%a, %d %h %Y %H:%M:%S %Z')"
+	
+	{
+		cat <<-EOF
+			Origin: $(configure_getConfigurationSetting swaddle vendor)
+			Label: $(configure_getConfigurationSetting swaddle vendor)
+			Suite: $(configure_getConfigurationSetting swaddle repositoryName)
+			Version: $(configure_getConfigurationSetting swaddle version)
+			Codename: $(configure_getConfigurationSetting swaddle repositoryName)
+			Date: ${releaseDate}
+			Architectures: $(core_variable_array_string "$architectures" ' ')
+			Components: $(core_variable_array_string  _swaddle_repository_apt_components ' ')
+			Description: $(configure_getConfigurationSetting swaddle vendor) $(configure_getConfigurationSetting swaddle repositoryName) $(configure_getConfigurationSetting swaddle version)
+			NotAutomatic: no
+			ButAutomaticUpgrades: no
+		EOF
+		
+		_swaddle_repository_apt_createDistsRelease_callback()
+		{
+			local poolComponent="$core_variable_array_element"
+			set -f
+			for filePath in "$poolComponent"/binary-* "$poolComponent"/debian-installer/binary-* "$poolComponent"/i18n/* "$poolComponent"/source/*
+			do
+				set -f
+				if [ -f "$filePath" ]; then
+					printf ' %s%18s %s\n' "$filePath" "$(stat -c '%s' "$filePath")" "$(swaddle_digest_${digest} "$filePath")"
+				fi
+			done
+			set +f
+		}
+
+		pushd "$_swaddle_repository_deb_parentPath"/dists
+		
+			local digest
+			
+			printf 'MD5Sum:\n'
+			digest=md5
+			core_variable_array_iterate _swaddle_repository_apt_components _swaddle_repository_apt_createDistsRelease_callback
+			printf '\n'
+			
+			printf 'SHA1:\n'
+			digest=sha1
+			core_variable_array_iterate _swaddle_repository_apt_components _swaddle_repository_apt_createDistsRelease_callback
+			printf '\n'
+			
+			printf 'SHA256:\n'
+			digest=sha256
+			core_variable_array_iterate _swaddle_repository_apt_components _swaddle_repository_apt_createDistsRelease_callback
+			printf '\n'
+			
+		popd
+		
+	} >"$releaseFilePath"
+	
+	swaddle_touch_setMtimeAndAtime "$releaseFilePath"
+	
+	swaddle_digest_file "$releaseFilePath"
+	ln "$releaseFilePath".asc "$releaseFilePath".gpg
+	ln "$releaseFilePath".asc.gz "$releaseFilePath".gpg.gz
+	
+	swaddle_compress_gzip "$releaseFilePath"
+	swaddle_digest_file "$releaseFilePath".gz
+}
+
+swaddle_repository_apt_exportSigningKey()
+{
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_gpg_exportSigningKey >"$_swaddle_repository_deb_parentPath"/dists/Release.key
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_deb_parentPath"/dists/Release.key
+	swaddle_digest_file "$_swaddle_repository_deb_parentPath"/dists/Release.key
+	swaddle_compress_gzip "$_swaddle_repository_deb_parentPath"/dists/Release.key
+}
+
+swaddle_repository_apt_createAptSourcesList()
+{
+	local hostBaseUrl="$(configure_getConfigurationSetting swaddle hostBaseUrl)"
+	if core_variable_endsWith "$hostBaseUrl" '/'; then
+		local length=${#hostBaseUrl}
+		hostBaseUrl="$(core_variable_allButLastN "$hostBaseUrl" $((length-1)))"
+	fi
+	
+	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"
+	
+	local filePath="$_swaddle_repository_deb_parentPath"/dists/00$repositoryName.sources.list
+	printf '%s\n' "deb $hostBaseUrl $repositoryName $(core_variable_array_string  _swaddle_repository_apt_components ' ')" >"$filePath"
+	
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath"
+	swaddle_digest_file "$filePath"
+	swaddle_compress_gzip "$filePath"
+}
+
+swaddle_repository_apt_createInstallScript()
+{
+	local filePath="$_swaddle_repository_deb_parentPath"/install.sh
+	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"
+	
+	local mktemp=$(mktemp $repositoryName.key.XXXXXXXXX)
+	local temporaryKeyFile='$temporaryKeyFile'
+	cat >"$filePath" <<-EOA
+		#!/usr/bin/env sh
+		set -e
+		set -u
+		
+		temporaryKeyFile="${mktemp}"
+		trap 'rm -rf "$temporaryKeyFile"' EXIT
+		cat >"$temporaryKeyFile" <<EOF
+			$(cat "$_swaddle_repository_deb_parentPath"/dists/Release.key)
+		EOF
+		sudo -p "Password required to install repository "$repositoryName" public key to apt: " apt-key add "$temporaryKeyFile"
+		
+		printf '%s\n' "$(cat "$_swaddle_repository_deb_parentPath"/dists/00$repositoryName.sources.list)" | sudo -p "Password required to install repository '$repositoryName' apt sources list to '/etc/sources.list.d/00$repositoryName.sources.list': " tee /etc/sources.list.d/00$repositoryName.list >/dev/null
+	EOA
+	
+	chmod +x "$filePath"
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath"
+	swaddle_digest_file "$filePath"
+	swaddle_compress_gzip "$filePath"
+}
+
+core_dependency_requires '*' sort cat rm
+_swaddle_repository_apt_sortAndConcatenateFragments()
+{
+	local concatenatedFileName="$1"
+	
+	set +f
+	set -- *."$concatenatedFileName"
+	set -f
+	
+	{
+		if [ -e "$1" ]; then
+			local fragmentFile
+			{
+				for fragmentFile in "$@"
+				do
+					printf '%s\n' "$fragmentFile"
+				done
+			} | sort -d | while IFS='' read -r fragmentFile
+			do
+				cat "$fragmentFile"
+				rm "$fragmentFile"
+			done
+		fi
+	} >>"$concatenatedFileName"
+	
+	swaddle_touch_setMtimeAndAtime "$concatenatedFileName"
+	swaddle_digest_file "$concatenatedFileName"
+	
+	local compressor
+	for compressor in gzip bzip2 lzma xz
+	do
+		swaddle_compress_${compressor} "$concatenatedFileName"
+		swaddle_digest_file "$concatenatedFileName".$(swaddle_compress_extension "$compressor")
+	done
+}
+
+core_dependency_requires '*' cat
+swaddle_repository_apt_createDistsComponentReleaseFile()
+{
+	cat >Release <<-EOF
+		Archive: $(configure_getConfigurationSetting swaddle repositoryName)
+		Version: $(configure_getConfigurationSetting swaddle version)
+		Component: ${poolComponent}
+		Origin: $(configure_getConfigurationSetting swaddle vendor)
+		Label: $(configure_getConfigurationSetting swaddle vendor)
+		Architecture: ${packageArchitecture}
+	EOF
+	
+	swaddle_touch_setMtimeAndAtime 'Release'
+	swaddle_digest_file 'Release'
+	swaddle_compress_gzip 'Release'
+}
+
+core_dependency_requires '*' ar tar rm
+swaddle_repository_apt_parseDeb()
+{
+	local callback="$1"
+
+	pushd "$_swaddle_repository_apt_temporaryFolderPath"
+		
+		ar -x "$debFilePath"
+		
+		set +f
+			local controlTarFileName=control.tar*
+			local dataTarFileName=data.tar*
+		set -f
+
+		tar --extract --file "$controlTarFileName" control
+		
+		local packageArchitecture
+		local package
+		local section
+		swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry
+		swaddle_repository_apt_parseDeb_extractContentsList
+		
+		rm debian-binary "$controlTarFileName" "$dataTarFileName" control
+		
+	popd
+}
+
+core_dependency_requires '*' ln rm
+core_usesIn swaddle configure
+swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
+{
+	packageArchitecture="$(swaddle_repository_apt_parseDeb_extractField Architecture "$(_swaddle_build_package_deb_architecture)")"
+	package="$(swaddle_repository_apt_parseDeb_extractField Package "$poolSource")"
+	section="$(swaddle_repository_apt_parseDeb_extractField Section "$(configure_getConfigurationSetting swaddle_deb section)")"
+	
+	{
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Package "$package"
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Essential 'no'
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Priority "$(configure_getConfigurationSetting swaddle_deb priority)"
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Section "$section"
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Installed-Size '1'
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Maintainer "$(swaddle_configure_maintainer)"
+		swaddle_repository_apt_parseDeb_extractAndPrintControlFieldSynonyms Original-Maintainer Orig-Maintainer Orginal-Maintainer
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Architecture "$packageArchitecture"
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Source "$poolSource"
+		
+		# Over the years, I've seen Version to be missing
+		local _swaddle_build_package_deb_debianVersion
+		swaddle_build_package_deb_computeDebianVersion
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Version "$_swaddle_build_package_deb_debianVersion"
+
+		local fieldName
+		for fieldName in Replaces Provides Depends Pre-Depends Recommends Suggests Conflicts Breaks
+		do
+			swaddle_repository_apt_parseDeb_extractAndPrintControlField "$fieldName"
+		done
+		
+		swaddle_repository_apt_parseDeb_printControlField Filename pool/"$poolComponent"/"$poolAZ"/"$poolSource"/"$poolDebFile"
+		swaddle_repository_apt_parseDeb_printControlField Size "$(stat -c '%s' "$debFilePath")"
+		swaddle_repository_apt_parseDeb_printControlField MD5sum "$(swaddle_digest_md5 "$debFilePath")"
+		swaddle_repository_apt_parseDeb_printControlField SHA1 "$(swaddle_digest_sha1 "$debFilePath")"
+		swaddle_repository_apt_parseDeb_printControlField SHA256 "$(swaddle_digest_sha256 "$debFilePath")"
+		
+		local description="$(swaddle_repository_apt_deb_extractFieldDescription)"
+		swaddle_repository_apt_parseDeb_printControlField Description "$description"
+		swaddle_repository_apt_parseDeb_createTranslationFragment
+		
+		# Ruby-Versions is a LIST which is NOT comma separated
+		for fieldName in Xul-Appid Enhances Built-Using Multi-Arch Python-Runtime Python-Version Ruby-Versions Tag
+		do
+			swaddle_repository_apt_parseDeb_extractAndPrintControlField "$fieldName"
+		done
+
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Homepage "$(configure_getConfigurationSetting swaddle url)"
+		local homepageFieldValue="$fieldValue"
+		for fieldName in Npp-Applications Npp-Description Npp-Filename Npp-Mimetype Npp-Name Gstreamer-Decoders Gstreamer-Elements Gstreamer-Encoders Gstreamer-Uri-Sinks Gstreamer-Uri-Sources Gstreamer-Version
+		do
+			swaddle_repository_apt_parseDeb_extractAndPrintControlField "$fieldName"
+		done
+
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Bugs "$homepageFieldValue"
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Build-Essential 'no'
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Origin "$(configure_getConfigurationSetting swaddle vendor)"
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Supported "$(configure_getConfigurationSetting swaddle_deb supported)"
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Task
+
+		printf '\n'
+	} >"$_swaddle_repository_apt_temporaryFolderPath"/package
+	
+	_swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry_callback()
+	{
+		local packageArchitecture="$core_variable_array_element"
+		local packagesFolderPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/"$poolComponent"/binary-"$packageArchitecture"
+		mkdir -m 0755 -p "$packagesFolderPath"
+		
+		ln "$_swaddle_repository_apt_temporaryFolderPath"/package "$packagesFolderPath"/"$poolDebFile".Packages
+	}
+	
+	if [ "$packageArchitecture" = 'all' ]; then
+		swaddle_repository_apt_architectures _swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry_callback
+	else
+		local core_variable_array_element="$packageArchitecture"
+		_swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry_callback
+	fi
+		
+	rm "$_swaddle_repository_apt_temporaryFolderPath"/package
+}
+
+swaddle_repository_apt_parseDeb_extractContentsList()
+{
+	local filePathWithLeadingDotSlash
+	tar --list --file "$dataTarFileName" | while IFS=' ' read -r filePathWithLeadingDotSlash
+	do
+		# Exclude folders
+		if [ "$(core_variable_lastCharacter "$filePathWithLeadingDotSlash")" = '/' ]; then
+			continue
+		fi
+		
+		if [ "$poolComponent" = 'main' ]; then
+			local location="$section"/"$package"
+		else
+			local location="$poolComponent"/"$section"/"$package"
+		fi
+		
+		printf '%-60s%s\n' "$(core_variable_allButFirstN "$filePathWithLeadingDotSlash" 2)" "$location"
+	done >>"$_swaddle_repository_deb_parentPath"/dists/Contents-"$packageArchitecture".tmp
+}
+
+core_dependency_requires '*' grep
+swaddle_repository_apt_parseDeb_extractField()
+{
+	local fieldName="$1"
+	local defaultValue="$2"
+	
+	local line="$(grep -E "^${fieldName}: " control)"
+	if [ -z "$line" ]; then
+		printf '%s' "$defaultValue"
+		return 0
+	fi
+	local length=${#fieldName}
+	printf '%s' "$(core_variable_allButFirstN "$line" $((length+2)))"
+}
+
+core_dependency_requires '*' grep
+swaddle_repository_apt_deb_extractFieldDescription()
+{
+	local line
+	local isFirst
+	grep -A 40 '^Description: ' control | while IFS='' read -r line
+	do
+		if [ $isFirst -eq 0 ]; then
+			# 13 is 'Description :'
+			printf '%s\n' "$(core_variable_allButFirstN "$line" 13)"
+			isFirst=1
+		else
+			if ! core_variable_firstCharacter "$line" ' '; then
+				break
+			fi
+			if [ -z "$line" ]; then
+				break
+			fi
+			printf '%s\n' "$line"
+		fi
+	done
+}
+
+core_dependency_requires '*' grep
+swaddle_repository_apt_parseDeb_extractAndPrintControlField()
+{
+	local fieldName="$1"
+	
+	local line="$(grep -E "^${fieldName}: " control)"
+	if [ -z "$line" ]; then
+		if [ $# -eq 2 ]; then
+			local fieldDefault="$2"
+			printf '%s: %s\n' "$fieldName" "$fieldDefault"
+		fi
+	else
+		printf '%s\n' "$line"
+	fi
+}
+
+core_dependency_requires '*' grep
+swaddle_repository_apt_parseDeb_extractAndPrintControlFieldSynonyms()
+{
+	local fieldName="$1"
+	
+	local synonymFieldName
+	for synonymFieldName in "$@"
+	do
+		local line="$(grep -E "^${fieldName}: " control)"
+		if [ -n "$line" ]; then
+			local length=${#fieldName}
+			fieldValue="$(core_variable_allButFirstN "$line" $((length+2)))"
+			printf '%s: %s\n' "$fieldName" "$fieldValue"
+			return 0
+		fi
+	done
+}
+
+swaddle_repository_apt_parseDeb_printControlField()
+{
+	local fieldName="$1"
+	local fieldValue="$2"
+	printf '%s: %s\n' "$fieldName" "$fieldValue"
+}
+
+swaddle_repository_apt_architectures()
+{
+	local callback="$1"
+	
+	local configurationSettingValue
+	_configure_configurationSettingValue 'swaddle_apt' 'apt_architectures'
+	
+	if core_variable_array_isEmpty "$configurationSettingValue"; then
+		core_variable_array_append "$configurationSettingValue" amd64
+		core_variable_array_append "$configurationSettingValue" arm64
+		core_variable_array_append "$configurationSettingValue" armhf
+		core_variable_array_append "$configurationSettingValue" i386
+		core_variable_array_append "$configurationSettingValue" powerpc
+		core_variable_array_append "$configurationSettingValue" ppc64el
+	fi
+	
+	core_variable_array_iterate "$configurationSettingValue" "$callback"
+}
+
+core_dependency_requires '*' mkdir md5sum
+swaddle_repository_apt_parseDeb_createTranslationFragment()
+{
+	local languageCode='en'
+	local translationPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/"$poolComponent"/i18n
+	
+	mkdir -m 0755 -p "$translationPath"
+	
+	local descriptionMd5
+	local uselessFileName
+	# The \n is significant
+	IFS=' ' read -r descriptionMd5 uselessFileName <<-EOF
+		$(printf '%s\n' "$description" | md5sum)
+	EOF
+	
+	# We may overwrite an existing translation, as they are per package, not per package/version/architecture
+	{
+		printf "%s: %s\n" 'Package' "$package"
+		printf "%s: %s\n" 'Description-md5' "$descriptionMd5"
+		printf "%s: %s\n" "Description-$languageCode" "$description"
+		printf '\n'
+	} >"$package".Translation-"$languageCode"
+}

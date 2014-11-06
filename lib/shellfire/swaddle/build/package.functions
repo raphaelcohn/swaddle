@@ -23,29 +23,6 @@ swaddle_build_package_createRootFolder()
 	mkdir -m 0755 -p "$_swaddle_build_package_root"
 }
 
-core_functions_register _swaddle_build_package_functions swaddle_build_package_registerConfiguration
-core_dependency_requires '*' git awk
-swaddle_build_package_registerConfiguration()
-{
-	configure_register Value Architecture swaddle architecture  'all'
-	configure_register Value NotEmpty swaddle epoch '0'
-	configure_register Value NotEmpty swaddle version '0'
-	# iteration is bumped by one for RPMs
-	configure_register Value NotEmpty swaddle iteration '1'
-	
-	configure_register Value NotEmpty swaddle vendor
-	configure_register Value Licence swaddle licence
-	configure_register Value NotEmpty swaddle maintainer
-	configure_register Value NotEmpty swaddle description
-	configure_register Value NotEmpty swaddle url
-	
-	configure_register Value NotEmpty swaddle timestamp 0
-	
-	configure_register Value NotEmpty swaddle fix_permissions 'swaddle_build_package_defaultFixPermissions'
-	
-	swaddle_build_package_${_swaddle_build_package_kind}_registerConfiguration
-}
-
 swaddle_build_package_defaultFixPermissions()
 {
 	_swaddle_build_package_defaultFixPermissions_recurse()
@@ -83,6 +60,7 @@ swaddle_build_package_resetConfiguration()
 core_functions_register _swaddle_build_package_functions swaddle_build_package_sourceConfiguration
 swaddle_build_package_sourceConfiguration()
 {
+	configure_source "$swaddle_swaddlesPath" swaddles
 	configure_source "$_swaddle_build_sourcePath" package
 	configure_source "$_swaddle_build_templatesPath"/"$_swaddle_build_package_kind" "$_swaddle_build_package_kind"
 }

@@ -1,13 +1,26 @@
 core_usesIn swaddle fakeroot
 core_usesIn swaddle touch
+core_usesIn swaddle configure
 
 swaddle_build_package_deb_registerConfiguration()
 {
-	configure_register Value DebSection swaddle_deb section 'Miscellaneous'
-	configure_register Value DebPriority swaddle_deb priority 'Extra'
+	# Needed for both packages and repositories!
+	# common other values are 18m, 5y and 3y
+	configure_register Value NotEmpty swaddle_deb supported '9m'
+	configure_register Value DebSection swaddle_deb section 'misc'
+	configure_register Value DebPriority swaddle_deb priority 'extra'
 	configure_register Value DebComponent swaddle_deb component 'multiverse'
+	
+	
+	
 	configure_register Value DebMultiArch swaddle_deb multiarch 'allowed'
+	configure_register Value Compression swaddle_deb compression 'xz'
+	configure_register Value NotEmpty swaddle_deb bugs_url ''
+	
+	
 	configure_register Boolean swaddle_deb essential 'no'
+	configure_register Boolean swaddle_deb build_essential 'no'
+	
 	configure_register Array NotEmpty swaddle_deb uploaders
 	configure_register Array NotEmpty swaddle_deb depends
 	configure_register Array NotEmpty swaddle_deb pre_depends
@@ -20,7 +33,7 @@ swaddle_build_package_deb_registerConfiguration()
 	configure_register Array NotEmpty swaddle_deb enhances
 	configure_register Array NotEmpty swaddle_deb built_using
 	
-	# eg Original-Uploader: xyz <xyz@mail.com>
+	# eg Original-Maintainer: xyz <xyz@mail.com>
 	configure_register Array NotEmpty swaddle_deb extraControlFields
 
 	#http://www.debian.org/doc/debian-policy/ch-sharedlibs.html#s-shlibs
@@ -31,7 +44,8 @@ swaddle_build_package_deb_registerConfiguration()
 	configure_register Array NotEmpty swaddle_deb triggers_interest
 	configure_register Array NotEmpty swaddle_deb triggers_interest_noawait
 	
-	configure_register Value Compression swaddle_deb compression 'xz'
+	configure_register Array DebTask swaddle_deb tasks
+	configure_register Array NotEmpty swaddle_deb tags
 	
 	core_TODO "We don't yet support debconf and templates, as, in our view, they're evil."
 }
@@ -260,11 +274,12 @@ swaddle_build_package_deb_createControlFile()
 		cat <<-EOF
 			Package: ${_swaddle_build_swaddleName}
 			Version: ${_swaddle_build_package_deb_debianVersion}
-			Source: ${_swaddle_build_swaddleName} (${_swaddle_build_package_deb_debianVersion})
+			Source: ${_swaddle_build_swaddleName}
 			Architecture: $(_swaddle_build_package_deb_architecture)
-			Maintainer: $(configure_getConfigurationSetting swaddle maintainer)
+			Maintainer: $(swaddle_configure_maintainer)
 			Installed-Size: $(_swaddle_build_package_deb_installedSize)
 			Essential: $(configure_getConfigurationSetting swaddle_deb essential)
+			Build-Essential: $(configure_getConfigurationSetting swaddle_deb build_essential)
 		EOF
 		_swaddle_build_package_deb_commaSeparatedControlField Uploaders uploaders
 		_swaddle_build_package_deb_commaSeparatedControlField Depends depends
@@ -273,16 +288,18 @@ swaddle_build_package_deb_createControlFile()
 		_swaddle_build_package_deb_commaSeparatedControlField Suggests suggests
 		_swaddle_build_package_deb_commaSeparatedControlField Breaks breaks
 		_swaddle_build_package_deb_commaSeparatedControlField Conflicts conflicts
-		_swaddle_build_package_deb_commaSeparatedControlField Provides provides
-		_swaddle_build_package_deb_commaSeparatedControlField Replaces replaces
 		_swaddle_build_package_deb_commaSeparatedControlField Enhances enhances
-		_swaddle_build_package_deb_commaSeparatedControlField Built-Using built_using
+		_swaddle_build_package_deb_commaSeparatedControlField Task tasks
+		_swaddle_build_package_deb_commaSeparatedControlField Task tags
 		cat <<-EOF
 			Section: $(configure_getConfigurationSetting swaddle_deb section)
 			Priority: $(configure_getConfigurationSetting swaddle_deb priority)
-			Component: $(configure_getConfigurationSetting swaddle_deb component)
 			Homepage: $(configure_getConfigurationSetting swaddle url)
+			Bugs: $(_swaddle_build_package_deb_bugs_url)
+			Origin: $(configure_getConfigurationSetting swaddle vendor)
+			Supported: $(configure_getConfigurationSetting swaddle_deb supported)
 		EOF
+		_swaddle_build_package_deb_commaSeparatedControlField Built-Using built_using
 		if [ "$(_swaddle_build_package_deb_architecture)" != 'all' ]; then
 			_swaddle_build_package_deb_commaSeparatedControlField Multi-Arch "$(configure_getConfigurationSetting swaddle_deb multiarch)"
 		fi
@@ -292,7 +309,6 @@ swaddle_build_package_deb_createControlFile()
 	} >"$controlFile"
 }
 
-core_dependency_requires '*' chmod
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createDebianBinary
 swaddle_build_package_deb_createDebianBinary()
 {
@@ -302,7 +318,7 @@ swaddle_build_package_deb_createDebianBinary()
 	_swaddle_build_package_deb_permissionsForAr "$_swaddle_build_package_deb_debianBinaryFilePath"
 }
 
-core_dependency_requires '*' chmod tar
+core_dependency_requires '*' tar rm
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_tarControl
 swaddle_build_package_deb_tarControl()
 {
@@ -318,22 +334,19 @@ swaddle_build_package_deb_tarControl()
 		swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath"
 	done
 	
-	local options
-	local options_initialised
-	local tarFileName
-	core_variable_array_initialise options
-	core_variable_array_append options --create
-	_swaddle_build_package_deb_tarCompression control
-	core_variable_array_append options \
+	tar \
+		--create \
+		--file 'control.tar' \
 		--no-acls \
 		--owner 0 \
 		--group 0 \
 		--numeric-owner \
 		--directory "$_swaddle_build_package_deb_controlFolderPath"
 	
-	_swaddle_build_package_deb_controlTarballFileName="$tarFileName"
-	core_variable_array_passToFunctionAsArguments options tar
-	 
+	swaddle_compress_xz 'control.tar'
+	rm 'control.tar'
+	_swaddle_build_package_deb_controlTarballFileName='control.tar.xz'
+	
 	_swaddle_build_package_deb_permissionsForAr "$_swaddle_build_package_temporaryFolderPath"/"$_swaddle_build_package_deb_controlTarballFileName"
 }
 
@@ -345,20 +358,24 @@ swaddle_build_package_deb_tarData()
 	local options_initialised
 	local tarFileName
 	core_variable_array_initialise options
-	core_variable_array_append options --create
-	_swaddle_build_package_deb_tarCompression data
 	core_variable_array_append options \
+
+	swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" tar \
+		--create \
+		--file 'data.tar' \
 		--no-acls \
 		--numeric-owner \
 		--directory "$_swaddle_build_package_root"
 	
-	_swaddle_build_package_deb_tarData()
-	{
-		swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" tar "$@"
-	}
-	
 	_swaddle_build_package_deb_dataTarballFileName="$tarFileName"
-	 core_variable_array_passToFunctionAsArguments options _swaddle_build_package_deb_tarData
+	 
+	 local compression="$(configure_getConfigurationSetting swaddle_deb compression)"
+	 if [ "$compression" = 'none' ]; then
+		 _swaddle_build_package_deb_dataTarballFileName='data.tar'
+	 else
+		 swaddle_compress_$compression 'data.tar'
+		 _swaddle_build_package_deb_dataTarballFileName="data.tar.$(swaddle_compress_extension "$compression")"
+	 fi
 	 
 	_swaddle_build_package_deb_permissionsForAr "$_swaddle_build_package_temporaryFolderPath"/"$_swaddle_build_package_deb_dataTarballFileName"
 }
@@ -379,12 +396,20 @@ core_dependency_requires '*' mkdir ar
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createDeb
 swaddle_build_package_deb_createDeb()
 {
-	local architecture="$(_swaddle_build_package_deb_architecture)"
-	mkdir -m 0755 -p "$_swaddle_repository_deb_parentPath"/"$architecture"
-
+	local poolDebFile="${_swaddle_build_swaddleName}_${_swaddle_build_package_deb_debianVersion}_$(_swaddle_build_package_deb_architecture)".deb
+	local poolSource="$_swaddle_build_swaddleName"
+	local poolAZ
+	_swaddle_build_package_deb_poolAZ
+	local poolComponent="$(configure_getConfigurationSetting swaddle_deb component)"
+	
+	local parentPath="$_swaddle_repository_deb_parentPath"/pool/"$poolComponent"/"$poolAZ"/"$poolSource"
+	mkdir -m 0755 -p "$parentPath"
+	
+	local debFilePath="$parentPath"/"$poolDebFile"
+	
 	pushd "$_swaddle_build_package_temporaryFolderPath"
 		
-		swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" ar -qc "$_swaddle_repository_deb_parentPath"/"$architecture"/"${_swaddle_build_swaddleName}_${_swaddle_build_package_deb_debianVersion}_${_swaddle_build_package_deb_architecture}".deb \
+		swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" ar -qc "$debFilePath" \
 			debian_binary \
 			"$_swaddle_build_package_deb_controlTarballFileName" \
 			"$_swaddle_build_package_deb_dataTarballFileName"
@@ -396,48 +421,24 @@ swaddle_build_package_deb_createDeb()
 	popd
 	
 	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_deb_parentPath"/"$architecture"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_deb_parentPath"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$debFilePath"
 }
 
-_swaddle_build_package_deb_tarCompression()
+_swaddle_build_package_deb_poolAZ()
 {
-	local fileBaseName="$1"
-	local compressionExtension
-	case "$(configure_getConfigurationSetting swaddle architecture)" in
+	case "$poolSource" in
 		
-		none)
-			compressionExtension=''
-		;;
-		
-		gzip)
-			core_variable_array_append options --gzip
-			compressionExtension='.gz'
-		;;
-		
-		bzip2)
-			core_variable_array_append options --bzip2
-			compressionExtension='.bz2'
-		;;
-		
-		lzma)
-			core_variable_array_append options --lzma
-			compressionExtension='.lzma'
-		;;
-		
-		xz)
-			core_variable_array_append options --xz
-			compressionExtension='.xz'
+		lib*)
+			local withoutLib="$(core_variable_allButFirstN "$poolSource" 3)"
+			poolAZ="lib$(core_variable_firstCharacter "$poolSource")"
 		;;
 		
 		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "Invalid compression '$compression'"
+			poolAZ="$(core_variable_firstCharacter "$poolSource")"
 		;;
 		
 	esac
 	
-	tarFileName="$fileBaseName".tar${_swaddle_build_package_deb_compressionExtension}
-	core_variable_array_append options --file "$_swaddle_build_package_temporaryFolderPath"/"$tarFileName"
 }
 
 _swaddle_build_package_deb_architecture()
@@ -517,41 +518,24 @@ _swaddle_build_package_deb_extraControlFields()
 	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_deb_extraControlFields_callback
 }
 
+_swaddle_build_package_deb_bugs_url()
+{
+	local bugsUrl="$(configure_getConfigurationSetting swaddle_deb bugs_url)"
+	if [ -z "$bugsUrl" ]; then
+		bugsUrl="$(configure_getConfigurationSetting swaddle_deb url)"
+	fi
+	printf '%s' "$bugsUrl"
+}
+
 core_dependency_requires '*' sed
 _swaddle_build_package_deb_description()
 {
 	local line
-	$(configure_getConfigurationSetting swaddle description) | sed -e 's/^\w*$/\./g' | while IFS='' read -r line
+	printf '%s' $(configure_getConfigurationSetting swaddle description) | sed -e 's/^\w*$/\./g' | while IFS='' read -r line
 	do
 		printf ' %s\n' "$line"
 	done
 	if [ -n "$line" ]; then
 		printf ' %s\n' "$line"
 	fi
-}
-
-# Derived from http://packages.ubuntu.com/lucid/
-core_snippet_embed raw swaddle_deb_section
-configure_validateDebSection()
-{
-	configure_validateValue section "$1"
-}
-
-https://www.debian.org/doc/manuals/debian-faq/ch-pkg_basics.en.html#s-priority
-core_snippet_embed raw swaddle_deb_section
-configure_validateDebPriority()
-{
-	configure_validateValue priority "$1"
-}
-
-core_snippet_embed raw swaddle_deb_component
-configure_DebComponent()
-{
-	configure_validateValue component "$1"
-}
-
-core_snippet_embed raw swaddle_deb_multiarch
-configure_validateDebMultiArch()
-{
-	configure_validateValue multiarch "$1"
 }

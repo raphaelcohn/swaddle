@@ -6,21 +6,6 @@ swaddle_swaddles_all()
 	core_functions_execute _swaddle_swaddles_functions "$@"
 }
 
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_deduceIfSwaddlesAreInGit
-swaddle_swaddles_deduceIfSwaddlesAreInGit()
-{
-	if ! core_compatibility_whichNoOutput git; then
-		_swaddle_swaddles_canUseGit=0
-		return 0
-	fi
-		
-	if git log -n 0 "$swaddle_swaddlesPath" 2>/dev/null; then
-		_swaddle_swaddles_canUseGit=1
-	else
-		_swaddle_swaddles_canUseGit=0
-	fi
-}
-
 core_dependency_requires '*' mkdir
 core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createTemporaryFolder
 swaddle_swaddles_createTemporaryFolder()
@@ -43,10 +28,67 @@ swaddle_swaddles_createPackagesFolder()
 	mkdir -m 0700 -p "$_swaddle_swaddles_temporaryFolderPath"
 }
 
-core_dependency_requires '*' git date awk
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_attemptToDiscoverVersionAndMtime
-swaddle_swaddles_attemptToDiscoverVersionAndMtime()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_deduceIfSwaddlesAreInGit
+swaddle_swaddles_deduceIfSwaddlesAreInGit()
 {
+	if ! core_compatibility_whichNoOutput git; then
+		_swaddle_swaddles_canUseGit=0
+		return 0
+	fi
+		
+	if git log -n 0 "$swaddle_swaddlesPath" 2>/dev/null; then
+		_swaddle_swaddles_canUseGit=1
+	else
+		_swaddle_swaddles_canUseGit=0
+	fi
+}
+
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerConfiguration
+swaddle_swaddles_registerConfiguration()
+{
+	# derive name from folderpath
+	local defaultName="$(core_compatibility_basename "$swaddle_swaddlesPath")"
+	configure_register Value NotEmpty swaddle repositoryName "$defaultName"
+	
+	# Might want to use github pages going forward...
+	#http://blog.teamtreehouse.com/using-github-pages-to-host-your-website
+	##https://bintray.com/
+	configure_register Value NotEmpty swaddle hostBaseUrl
+	
+	if core_variable_isSet HOME; then
+		if core_path_isReadableAndSearchableFolderPath "$HOME/.gnupg"; then
+			configure_register Value ReadableSearchableFolderPath swaddle keyring "$HOME/.gnupg"
+		else
+			configure_register Value ReadableSearchableFolderPath swaddle keyring
+		fi
+	else
+		configure_register Value ReadableSearchableFolderPath swaddle keyring
+	fi
+
+	configure_register Value NotEmpty swaddle maintainer_name
+	configure_register Value NotEmpty swaddle maintainer_comment
+	configure_register Value NotEmpty swaddle maintainer_email
+	# Cranking up to 50 can produce slight improvements (24 bytes in 1 Mb)
+	configure_register Value NotEmpty swaddle zopfli_iterations 15
+	
+	configure_register Value Boolean swaddle sign
+	
+	configure_register Array NotEmpty swaddle mirrors
+	
+	configure_register Array NotEmpty swaddle apt_architectures
+}
+
+core_dependency_requires '*' git date awk
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerConfiguration_attemptToDiscoverVersionAndMtime
+swaddle_swaddles_registerConfiguration_attemptToDiscoverVersionAndMtime()
+{
+	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
+		configure_register Value NotEmpty swaddle timestamp 0
+		configure_register Value NotEmpty swaddle version '0'
+		configure_register Value NotEmpty swaddle iteration '1'
+		return 0
+	fi
+	
 	pushd "$swaddle_swaddlesPath"
 		
 		local iso8601Date="$(git log -n 1 --format='%ci')"
@@ -69,10 +111,11 @@ swaddle_swaddles_attemptToDiscoverVersionAndMtime()
 }
 
 core_dependency_requires '*' head
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_attemptToDiscoverUrl
-swaddle_swaddles_attemptToDiscoverLicence()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerConfiguration_attemptToDiscoverLicence
+swaddle_swaddles_registerConfiguration_attemptToDiscoverLicence()
 {
 	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
+		configure_register Value Licence swaddle licence
 		return 0
 	fi
 	
@@ -108,10 +151,11 @@ swaddle_swaddles_attemptToDiscoverLicence()
 }
 
 core_dependency_requires '*' git awk
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_attemptToDiscoverUrl
-swaddle_swaddles_attemptToDiscoverUrl()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerConfiguration_attemptToDiscoverUrl
+swaddle_swaddles_registerConfiguration_attemptToDiscoverUrl()
 {
 	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
+		configure_register Value NotEmpty swaddle url
 		return 0
 	fi
 	
@@ -129,8 +173,8 @@ swaddle_swaddles_attemptToDiscoverUrl()
 }
 
 core_dependency_requires '*' date
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_attemptToDiscoverRpmChangelog
-swaddle_swaddles_attemptToDiscoverRpmChangelog()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerConfiguration_attemptToDiscoverRpmChangelog
+swaddle_swaddles_registerConfiguration_attemptToDiscoverRpmChangelog()
 {
 	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
 		return 0
@@ -160,43 +204,24 @@ swaddle_swaddles_attemptToDiscoverRpmChangelog()
 	popd
 }
 
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerConfiguration
-swaddle_swaddles_registerConfiguration()
+core_functions_register _swaddle_build_package_functions swaddle_swaddles_registerConfiguration_miscellany
+core_dependency_requires '*' git awk
+swaddle_swaddles_registerConfiguration_miscellany()
 {
-	# derive name from folderpath
-	local defaultName="$(core_compatibility_basename "$swaddle_swaddlesPath")"
-	configure_register Value NotEmpty swaddles repositoryName "$defaultName"
-	
-	# Might want to use github pages going forward...
-	#http://blog.teamtreehouse.com/using-github-pages-to-host-your-website
-	configure_register Value NotEmpty swaddles hostBaseUrl
-	
-	if core_variable_isSet HOME; then
-		if core_path_isReadableAndSearchableFolderPath "$HOME/.gnupg"; then
-			configure_register Value ReadableSearchableFolderPath swaddles keyring "$HOME/.gnupg"
-		else
-			configure_register Value ReadableSearchableFolderPath swaddles keyring
-		fi
-	else
-		configure_register Value ReadableSearchableFolderPath swaddles keyring
-	fi
-
-	configure_register Value NotEmpty swaddles signer
-	configure_register Value Boolean swaddles sign
-	
-	configure_register Array NotEmpty swaddles mirrors
+	configure_register Value Architecture swaddle architecture  'all'
+	configure_register Value NotEmpty swaddle epoch '0'
+	configure_register Value NotEmpty swaddle vendor
+	configure_register Value NotEmpty swaddle description
+	configure_register Value NotEmpty swaddle fix_permissions 'swaddle_build_package_defaultFixPermissions'
 }
 
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_resetConfiguration
-swaddle_swaddles_resetConfiguration()
+core_functions_register _swaddle_build_package_functions swaddle_swaddles_registerConfiguration_byPackageKind
+core_dependency_requires '*' git awk
+swaddle_swaddles_registerConfiguration_byPackageKind()
 {
-	configure_reset swaddles
-}
-
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_sourceConfiguration
-swaddle_swaddles_sourceConfiguration()
-{
-	configure_source "$swaddle_swaddlesPath" swaddles
+	swaddle_build_package_deb_registerConfiguration
+	swaddle_build_package_rpm_registerConfiguration
+	swaddle_build_package_tar_registerConfiguration
 }
 
 core_dependency_requires '*' mkdir
@@ -205,6 +230,7 @@ swaddle_swaddles_createOutputFolder()
 {
 	mkdir -m 0700 -p "$swaddle_outputPath" 2>/dev/null || true
 	
+	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"
 	_swaddle_repository_yum_parentPath="$swaddle_outputPath"/"$repositoryName"/rpm
 	_swaddle_repository_deb_parentPath="$swaddle_outputPath"/"$repositoryName"/deb
 	_swaddle_repository_tar_parentPath="$swaddle_outputPath"/"$repositoryName"/tar
@@ -216,8 +242,9 @@ swaddle_swaddles_buildSwaddles()
 	core_variable_array_iterate swaddle_swaddles swaddle_build_all
 }
 
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_buildYumRepositories
-swaddle_swaddles_buildYumRepositories()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_buildRepositories
+swaddle_swaddles_buildRepositories()
 {
 	swaddle_repository_yum
+	swaddle_repository_apt
 }

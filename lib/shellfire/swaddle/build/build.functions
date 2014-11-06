@@ -32,7 +32,7 @@ core_dependency_requires '*' rm mkdir
 core_functions_register _swaddle_build_functions swaddle_build_createTemporaryFolder
 swaddle_build_createTemporaryFolder()
 {
-	_swaddle_build_temporaryFolderPath="$_swaddles_temporaryFolderPath"/"$_swaddle_build_swaddleName"
+	_swaddle_build_temporaryFolderPath="$_swaddles_temporaryFolderPath"/swaddle/"$_swaddle_build_swaddleName"
 	rm -rf "$_swaddle_build_temporaryFolderPath" 2>/dev/null || true
 	mkdir -m 0700 -p "$_swaddle_build_temporaryFolderPath"
 }

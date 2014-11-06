@@ -1,0 +1,32 @@
+This file maps each file available in the Ubuntu
+system to the package from which it originates.  It includes packages
+from the DIST distribution for the ARCH architecture.
+
+You can use this list to determine which package contains a specific
+file, or whether or not a specific file is available.  The list is
+updated weekly, each architecture on a different day.
+
+When a file is contained in more than one package, all packages are
+listed.  When a directory is contained in more than one package, only
+the first is listed. (Actually, directories are excluded - RJC)
+
+The best way to search quickly for a file is with the Unix `grep'
+utility, as in `grep <regular expression> CONTENTS':
+
+ $ grep nose Contents
+ etc/nosendfile                                          net/sendfile
+ usr/X11R6/bin/noseguy                                   x11/xscreensaver
+ usr/X11R6/man/man1/noseguy.1x.gz                        x11/xscreensaver
+ usr/doc/examples/ucbmpeg/mpeg_encode/nosearch.param     graphics/ucbmpeg
+ usr/lib/cfengine/bin/noseyparker                        admin/cfengine
+
+This list contains files in all packages, even though not all of the
+packages are installed on an actual system at once.  If you want to
+find out which packages on an installed Debian system provide a
+particular file, you can use `dpkg --search <filename>':
+
+ $ dpkg --search /usr/bin/dselect
+ dpkg: /usr/bin/dselect
+
+
+FILE                                                    LOCATION

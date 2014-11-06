@@ -1,0 +1,16 @@
+core_usesIn configure
+
+swaddle_gpg()
+{
+	gpg --home "$(configure_getConfigurationSetting swaddle keyring)" "$@"
+}
+
+swaddle_gpg_exportSigningKey()
+{
+	swaddle_gpg --armor --export "$(swaddle_configure_signer)"
+}
+
+swaddle_gpg_sign()
+{
+	swaddle_gpg --default-key "$(swaddle_configure_signer)" --armor --sign "$1"
+}

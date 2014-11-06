@@ -16,7 +16,7 @@ swaddle_digest_sha1()
 	printf '%s' "$digest"
 }
 
-core_dependency_requires '*' sha1sum
+core_dependency_requires '*' sha256sum
 swaddle_digest_sha256()
 {
 	local digest
@@ -25,7 +25,7 @@ swaddle_digest_sha256()
 	printf '%s' "$digest"
 }
 
-core_dependency_requires '*' sha1sum
+core_dependency_requires '*' sha512sum
 swaddle_digest_sha512()
 {
 	local digest
@@ -34,6 +34,7 @@ swaddle_digest_sha512()
 	printf '%s' "$digest"
 }
 
+core_dependency_requires '*' touch
 swaddle_digest_file()
 {
 	local filePath="$1"
@@ -41,12 +42,14 @@ swaddle_digest_file()
 	for algo in md5 sha1 sha256 sha512
 	do
 		swaddle_digest_${algo} "$filePath" >"$filePath"."$algo"
-		_swaddle_build_package_deb_permissionsForAr "$filePath"."$algo"
+		touch -r "$filePath" "$filePath"."$algo"
 	done
 	
 	swaddle_digest_signFile "$filePath"
 }
 
+core_dependency_requires '*' touch
+core_usesIn swaddle gpg compress
 swaddle_digest_signFile()
 {
 	if core_variable_isFalse "$(configure_getConfigurationSetting swaddle sign)"; then
@@ -54,6 +57,10 @@ swaddle_digest_signFile()
 	fi
 	
 	local filePath="$1"
-	gpg --home ~/.gnupg --default-key "$(configure_getConfigurationSetting swaddle signer)" --armor --sign "$filePath"
-	_swaddle_build_package_deb_permissionsForAr "$filePath".asc
+	swaddle_gpg_sign "$filePath"
+	touch -r "$filePath" "$filePath".asc
+	
+	# For NGINX
+	swaddle_compress_gzip "$filePath".asc
+	touch -r "$filePath".asc "$filePath".asc.gz
 }
