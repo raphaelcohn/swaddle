@@ -104,11 +104,17 @@ swaddle_compress_rzip()
 	touch -r "$1" "$1".rz
 }
 
-core_dependency_requires '*' xz touch
+# pixz
+core_dependency_requires '*' pixz xz touch
 swaddle_compress_xz()
 {
-	# --format=raw knocks off 32 bytes+ but is not auto-detectable.
-	xz -9 -c -q -f -e "$1" >"$1".xz
+	# pixz is c. 4 bytes worse in 3M, but much faster
+	if core_compatibility_whichNoOutput pixz; then
+		pixz -t -9 -e -i "$1" -o "$1".xz
+	else
+		# --format=raw knocks off 32 bytes+ but is not auto-detectable.
+		xz -9 -c -q -f -e "$1" >"$1".xz
+	fi
 	touch -r "$1" "$1".xz
 }
 
