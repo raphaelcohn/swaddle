@@ -220,6 +220,11 @@ configure_validate()
 	core_variable_array_iterate "$configurationSettingNamespace" _configure_validate_callback
 }
 
+configure_validateAny()
+{
+	:
+}
+
 configure_validateNotEmpty()
 {
 	if [ -z "$1" ]; then
