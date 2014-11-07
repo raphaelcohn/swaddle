@@ -9,6 +9,14 @@ swaddle_configure_signer()
 }
 
 
+
+# Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
+core_snippet_embed raw swaddle_licence
+configure_validateLicence()
+{
+	configure_validateValue licence "$1"
+}
+
 # Derived from http://packages.ubuntu.com/lucid/
 core_snippet_embed raw swaddle_deb_section
 configure_validateDebSection()

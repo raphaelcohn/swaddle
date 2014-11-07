@@ -47,8 +47,8 @@ core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerCon
 swaddle_swaddles_registerConfiguration()
 {
 	# derive name from folderpath
-	local defaultName="$(core_compatibility_basename "$swaddle_swaddlesPath")"
-	configure_register Value NotEmpty swaddle repositoryName "$defaultName"
+	local repositoryName="$(core_compatibility_basename "$swaddle_swaddlesPath")"
+	configure_register Value NotEmpty swaddle repositoryName "$repositoryName"
 	
 	# Might want to use github pages going forward...
 	#http://blog.teamtreehouse.com/using-github-pages-to-host-your-website
@@ -205,7 +205,6 @@ swaddle_swaddles_registerConfiguration_attemptToDiscoverRpmChangelog()
 }
 
 core_functions_register _swaddle_build_package_functions swaddle_swaddles_registerConfiguration_miscellany
-core_dependency_requires '*' git awk
 swaddle_swaddles_registerConfiguration_miscellany()
 {
 	configure_register Value Architecture swaddle architecture  'all'
@@ -216,12 +215,17 @@ swaddle_swaddles_registerConfiguration_miscellany()
 }
 
 core_functions_register _swaddle_build_package_functions swaddle_swaddles_registerConfiguration_byPackageKind
-core_dependency_requires '*' git awk
 swaddle_swaddles_registerConfiguration_byPackageKind()
 {
 	swaddle_build_package_deb_registerConfiguration
 	swaddle_build_package_rpm_registerConfiguration
 	swaddle_build_package_tar_registerConfiguration
+}
+
+core_functions_register _swaddle_build_package_functions swaddle_swaddles_sourceConfiguration
+swaddle_swaddles_sourceConfiguration()
+{
+	configure_source "$swaddle_swaddlesPath" swaddles
 }
 
 core_dependency_requires '*' mkdir

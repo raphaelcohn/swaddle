@@ -1,5 +1,6 @@
 core_usesIn core functions variable variable/array
 core_usesIn swaddle/build package
+core_usesIn swaddle configure
 
 swaddle_build_all()
 {
@@ -32,7 +33,7 @@ core_dependency_requires '*' rm mkdir
 core_functions_register _swaddle_build_functions swaddle_build_createTemporaryFolder
 swaddle_build_createTemporaryFolder()
 {
-	_swaddle_build_temporaryFolderPath="$_swaddles_temporaryFolderPath"/swaddle/"$_swaddle_build_swaddleName"
+	_swaddle_build_temporaryFolderPath="$_swaddle_swaddles_temporaryFolderPath"/swaddle/"$_swaddle_build_swaddleName"
 	rm -rf "$_swaddle_build_temporaryFolderPath" 2>/dev/null || true
 	mkdir -m 0700 -p "$_swaddle_build_temporaryFolderPath"
 }
@@ -56,13 +57,4 @@ swaddle_build_packages()
 	if [ $count -eq 0 ]; then
 		core_message WARN "No package kinds (rpm, deb, tar) in '$_swaddle_build_templatesPath' for swaddle '$_swaddle_build_swaddleName"
 	fi
-}
-
-
-
-# Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
-core_snippet_embed raw swaddle_licence
-configure_validateLicence()
-{
-	configure_validateValue licence "$1"
 }

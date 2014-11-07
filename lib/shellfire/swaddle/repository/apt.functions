@@ -24,7 +24,7 @@ swaddle_repository_apt()
 core_dependency_requires '*' rm mkdir
 swaddle_repository_apt_createTemporaryFolderPath()
 {
-	_swaddle_repository_apt_temporaryFolderPath="$_swaddles_temporaryFolderPath"/apt
+	_swaddle_repository_apt_temporaryFolderPath="$_swaddle_swaddles_temporaryFolderPath"/apt
 	rm -rf "$_swaddle_repository_apt_temporaryFolderPath"
 	mkdir -m 0755 -p "$_swaddle_repository_apt_temporaryFolderPath"
 }
