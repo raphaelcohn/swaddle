@@ -277,8 +277,8 @@ swaddle_repository_apt_createDistsRelease()
 	swaddle_touch_setMtimeAndAtime "$releaseFilePath"
 	
 	swaddle_digest_file "$releaseFilePath"
-	ln "$releaseFilePath".asc "$releaseFilePath".gpg
-	ln "$releaseFilePath".asc.gz "$releaseFilePath".gpg.gz
+	ln -f "$releaseFilePath".asc "$releaseFilePath".gpg
+	ln -f "$releaseFilePath".asc.gz "$releaseFilePath".gpg.gz
 	
 	swaddle_compress_gzip "$releaseFilePath"
 	swaddle_digest_file "$releaseFilePath".gz
@@ -495,7 +495,7 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 		local packagesFolderPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/"$poolComponent"/binary-"$packageArchitecture"
 		mkdir -m 0755 -p "$packagesFolderPath"
 		
-		ln "$_swaddle_repository_apt_temporaryFolderPath"/package "$packagesFolderPath"/"$poolDebFile".Packages
+		ln -f "$_swaddle_repository_apt_temporaryFolderPath"/package "$packagesFolderPath"/"$poolDebFile".Packages
 	}
 	
 	if [ "$packageArchitecture" = 'all' ]; then

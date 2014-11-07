@@ -117,7 +117,7 @@ swaddle_repository_yum_signRepomdForSuse()
 	fi
 	
 	# eg http://download.opensuse.org/distribution/13.1/repo/oss/suse/repodata/
-	ln "$_swaddle_repository_yum_parentPath"/RPM-GPG-KEY-"$repositoryName" "$_swaddle_repository_yum_repodataPath"/repomd.xml.key
+	ln -f "$_swaddle_repository_yum_parentPath"/RPM-GPG-KEY-"$repositoryName" "$_swaddle_repository_yum_repodataPath"/repomd.xml.key
 	swaddle_digest_signFile "$_swaddle_repository_yum_repodataPath"/repomd.xml
 }
 
