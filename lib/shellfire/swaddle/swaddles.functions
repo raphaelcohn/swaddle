@@ -204,7 +204,7 @@ swaddle_swaddles_registerConfiguration_attemptToDiscoverRpmChangelog()
 	popd
 }
 
-core_functions_register _swaddle_build_package_functions swaddle_swaddles_registerConfiguration_miscellany
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerConfiguration_miscellany
 swaddle_swaddles_registerConfiguration_miscellany()
 {
 	configure_register Value Architecture swaddle architecture  'all'
@@ -214,7 +214,7 @@ swaddle_swaddles_registerConfiguration_miscellany()
 	configure_register Value NotEmpty swaddle fix_permissions 'swaddle_build_package_defaultFixPermissions'
 }
 
-core_functions_register _swaddle_build_package_functions swaddle_swaddles_registerConfiguration_byPackageKind
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerConfiguration_byPackageKind
 swaddle_swaddles_registerConfiguration_byPackageKind()
 {
 	swaddle_build_package_deb_registerConfiguration
@@ -222,7 +222,13 @@ swaddle_swaddles_registerConfiguration_byPackageKind()
 	swaddle_build_package_tar_registerConfiguration
 }
 
-core_functions_register _swaddle_build_package_functions swaddle_swaddles_sourceConfiguration
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_resetConfiguration
+swaddle_swaddles_resetConfiguration()
+{
+	configure_reset swaddle
+}
+
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_sourceConfiguration
 swaddle_swaddles_sourceConfiguration()
 {
 	configure_source "$swaddle_swaddlesPath" swaddles
@@ -233,8 +239,8 @@ core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createOutpu
 swaddle_swaddles_createOutputFolder()
 {
 	mkdir -m 0700 -p "$swaddle_outputPath" 2>/dev/null || true
-	
 	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"
+	
 	_swaddle_repository_yum_parentPath="$swaddle_outputPath"/"$repositoryName"/rpm
 	_swaddle_repository_deb_parentPath="$swaddle_outputPath"/"$repositoryName"/deb
 	_swaddle_repository_tar_parentPath="$swaddle_outputPath"/"$repositoryName"/tar

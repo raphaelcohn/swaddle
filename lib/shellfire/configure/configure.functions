@@ -39,7 +39,7 @@ configure_getConfigurationSetting()
 	local configurationSettingDefault
 	local configurationSettingIsArray
 	_configure_configurationSetting "$namespace" "$configurationSettingName"
-
+		
 	local core_variable_indirectValue_result
 	core_variable_indirectValue "$configurationSettingValue"
 	printf '%s' "$core_variable_indirectValue_result"
