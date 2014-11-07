@@ -6,7 +6,7 @@ swaddle_digest()
 	local digest
 	local uselessFileName
 	IFS=' ' read -r digest uselessFileName <<-EOF
-		${algo}sum "$1"
+		$(${algo}sum "$filePath")
 	EOF
 	printf '%s' "$digest"
 }
