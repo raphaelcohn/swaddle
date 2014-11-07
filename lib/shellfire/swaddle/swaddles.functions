@@ -1,4 +1,4 @@
-core_usesIn swaddle build repository/yum
+core_usesIn swaddle build repository/yum repository/apt
 core_usesIn configure
 
 swaddle_swaddles_all()
@@ -79,11 +79,14 @@ swaddle_swaddles_registerConfiguration()
 	if core_variable_isSet HOME; then
 		if core_path_isReadableAndSearchableFolderPath "$HOME/.gnupg"; then
 			configure_register Value ReadableSearchableFolderPath swaddle keyring "$HOME/.gnupg"
+			configure_register Value Boolean swaddle sign yes
 		else
 			configure_register Value ReadableSearchableFolderPath swaddle keyring
+			configure_register Value Boolean swaddle sign no
 		fi
 	else
 		configure_register Value ReadableSearchableFolderPath swaddle keyring
+		configure_register Value Boolean swaddle sign no
 	fi
 
 	configure_register Value NotEmpty swaddle maintainer_name
@@ -91,8 +94,6 @@ swaddle_swaddles_registerConfiguration()
 	configure_register Value NotEmpty swaddle maintainer_email
 	# Cranking up to 50 can produce slight improvements (24 bytes in 1 Mb) but at such a cost...
 	configure_register Value NotEmpty swaddle zopfli_iterations 15
-	
-	configure_register Value Boolean swaddle sign no
 	
 	configure_register Array NotEmpty swaddle mirrors
 	
@@ -136,7 +137,7 @@ core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerCon
 swaddle_swaddles_registerConfiguration_attemptToDiscoverLicence()
 {
 	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
-		configure_register Value Licence swaddle licence
+		configure_register Value Licence swaddle_package licence
 		return 0
 	fi
 	
@@ -155,7 +156,7 @@ swaddle_swaddles_registerConfiguration_attemptToDiscoverLicence()
 		fi
 		
 		if [ -d "$currentPath"/.git ]; then
-			configure_register Value Licence swaddle licence
+			configure_register Value Licence swaddle_package licence
 			return 0
 		fi
 		
@@ -171,13 +172,13 @@ swaddle_swaddles_registerConfiguration_attemptToDiscoverLicence()
 		
 		*)
 			core_message NOTICE "Could not determine your licence automatically, please submit a pull request for swaddle"
-			configure_register Value Licence swaddle licence
+			configure_register Value Licence swaddle_package licence
 			return 0
 		;;
 		
 	esac
 
-	configure_register Value Licence swaddle licence "$licence"
+	configure_register Value Licence swaddle_package licence "$licence"
 }
 
 core_dependency_requires '*' git awk
@@ -240,7 +241,7 @@ swaddle_swaddles_registerConfiguration_miscellany()
 	configure_register Value Architecture swaddle architecture  'all'
 	configure_register Value NotEmpty swaddle epoch '0'
 	configure_register Value NotEmpty swaddle vendor
-	configure_register Value NotEmpty swaddle description
+	configure_register Value NotEmpty swaddle_package description
 	configure_register Value Any swaddle fix_permissions 'swaddle_build_package_defaultFixPermissions'
 }
 

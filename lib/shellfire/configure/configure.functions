@@ -145,7 +145,7 @@ configure_reset()
 }
 
 # eg  configure swaddle architecture amd64
-# eg  configure swaddle description <<EOF stuff EOF
+# eg  configure swaddle_package description <<EOF stuff EOF
 configure()
 {
 	local namespace="$1"

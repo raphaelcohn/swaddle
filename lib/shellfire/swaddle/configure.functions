@@ -90,7 +90,34 @@ configure_validateArchitecture()
 		;;
 
 		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid architecture (it must be one of 'all' or 'amd64')."
+			configure_validateDebRealArchitecture "$1"
+		;;
+		
+	esac
+}
+
+
+configure_validateDebRealArchitecture()
+{
+	case "$1" in
+		
+		# Ubuntu 14.04
+		amd64|arm64|armhf|i386|powerpc|ppc64el)
+			:
+		;;
+		
+		# Debian Official
+		armel|ia64|kfreebsd-amd64|kfreebsd-i386|mips|mipsel|s390|s390x|sparc)
+			:
+		;;
+		
+		# Debian Unofficial (excludes 'arm' as it is dead)
+		arm|alpha|AVR32|hppa|hurd-i386|m32|m68k|netbsd-i386|netbsd-alpha|or1k|sh)
+			:
+		;;
+		
+		*)
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid architecture (it must be one of 'amd64', 'arm64', 'armhf', 'i386', 'powerpc' or 'ppc64el' for Ubuntu/Debian. For Debian only, it may also be 'arm', 'armel', 'ia64', 'kfreebsd-amd64', 'kfreebsd-i386', 'mips', 'mipsel', 's390', 's390x', 'sparc', 'alpha', 'AVR32', 'hppa', 'hurd-i386', 'm32', 'm68k', 'netbsd-i386', 'netbsd-alpha', 'or1k' and 'sh'. 'arm' is dead)."
 		;;
 		
 	esac

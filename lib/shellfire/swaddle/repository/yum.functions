@@ -8,6 +8,8 @@ swaddle_repository_yum()
 	configure_reset swaddle
 	configure_reset swaddle_rpm
 	configure_source "$swaddle_swaddlesPath" swaddles
+	configure_validate swaddle
+	configure_validate swaddle_rpm
 	
 	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
 	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"

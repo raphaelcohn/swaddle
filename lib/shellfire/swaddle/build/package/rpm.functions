@@ -315,7 +315,7 @@ _swaddle_build_package_rpm_release()
 core_dependency_requires '*' head
 _swaddle_build_package_rpm_summaryDescription()
 {
-	printf '%s' "$(configure_getConfigurationSetting swaddle description)" | head -n 1
+	printf '%s' "$(configure_getConfigurationSetting swaddle_package description)" | head -n 1
 }
 
 _swaddle_build_package_rpm_iterateDependencies()
@@ -340,7 +340,7 @@ core_dependency_requires '*' sed
 _swaddle_build_package_rpm_formatDescription()
 {
 	sed -e 's/^\w*$/ \./g' <<EOF
-$(configure_getConfigurationSetting swaddle description)
+$(configure_getConfigurationSetting swaddle_package description)
 EOF
 }
 

@@ -42,7 +42,7 @@ AutoProv: $(_swaddle_build_package_rpm_yesNo autoProv)
 BuildRoot: %buildroot
 Prefix: /
 Group: $(configure_getConfigurationSetting swaddle_rpm category)
-License: $(configure_getConfigurationSetting swaddle licence)
+License: $(configure_getConfigurationSetting swaddle_package licence)
 Vendor: $(configure_getConfigurationSetting swaddle vendor)
 URL: $(configure_getConfigurationSetting swaddle url)
 Packager: $(swaddle_configure_maintainer)

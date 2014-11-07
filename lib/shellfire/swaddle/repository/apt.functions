@@ -5,8 +5,11 @@ swaddle_repository_apt()
 	configure_reset swaddle
 	configure_reset swaddle_deb
 	configure_source "$swaddle_swaddlesPath" swaddles
+	configure_validate swaddle
+	configure_validate swaddle_deb
 	
 	swaddle_repository_apt_createTemporaryFolderPath
+	swaddle_repository_apt_createDistsFolderPath
 	swaddle_repository_apt_createDistsContentsTmp
 	swaddle_repository_apt_parseDebsInPool
 	swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile
@@ -18,7 +21,6 @@ swaddle_repository_apt()
 	swaddle_repository_apt_exportSigningKey
 	swaddle_repository_apt_createAptSourcesList
 	swaddle_repository_apt_createInstallScript
-	
 }
 
 core_dependency_requires '*' rm mkdir
@@ -27,6 +29,14 @@ swaddle_repository_apt_createTemporaryFolderPath()
 	_swaddle_repository_apt_temporaryFolderPath="$_swaddle_swaddles_temporaryFolderPath"/apt
 	rm -rf "$_swaddle_repository_apt_temporaryFolderPath"
 	mkdir -m 0755 -p "$_swaddle_repository_apt_temporaryFolderPath"
+}
+
+swaddle_repository_apt_createDistsFolderPath()
+{
+	mkdir -m 0755 -p "$_swaddle_repository_deb_parentPath"/dists
+	
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_deb_parentPath"/dists
 }
 
 swaddle_repository_apt_createDistsContentsTmp()
@@ -206,7 +216,7 @@ swaddle_repository_apt_createDistsRelease()
 	local releaseFilePath="$_swaddle_repository_deb_parentPath"/dists/Release
 	
 	local configurationSettingValue
-	_configure_configurationSettingValue 'swaddle_apt' 'apt_architectures'
+	_configure_configurationSettingValue 'swaddle_deb' 'architectures'
 	local architectures="$configurationSettingValue"
 
 	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
@@ -387,18 +397,17 @@ swaddle_repository_apt_createDistsComponentReleaseFile()
 core_dependency_requires '*' ar tar rm
 swaddle_repository_apt_parseDeb()
 {
-	local callback="$1"
-
 	pushd "$_swaddle_repository_apt_temporaryFolderPath"
 		
 		ar -x "$debFilePath"
 		
 		set +f
-			local controlTarFileName=control.tar*
-			local dataTarFileName=data.tar*
+			set -- control.tar* data.tar*
+			local controlTarFileName="$1"
+			local dataTarFileName="$2"
 		set -f
-
-		tar --extract --file "$controlTarFileName" control
+		
+		tar --extract --file "$controlTarFileName" ./control
 		
 		local packageArchitecture
 		local package
@@ -415,9 +424,16 @@ core_dependency_requires '*' ln rm
 core_usesIn swaddle configure
 swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 {
+		
 	packageArchitecture="$(swaddle_repository_apt_parseDeb_extractField Architecture "$(_swaddle_build_package_deb_architecture)")"
 	package="$(swaddle_repository_apt_parseDeb_extractField Package "$poolSource")"
 	section="$(swaddle_repository_apt_parseDeb_extractField Section "$(configure_getConfigurationSetting swaddle_deb section)")"
+
+	local ourBugsUrl="$(configure_getConfigurationSetting swaddle_deb bugs_url)"
+	if [ -z "$ourBugsUrl" ]; then
+		ourBugsUrl="$(configure_getConfigurationSetting swaddle url)"
+	fi
+	local bugsUrlDefault="$(swaddle_repository_apt_parseDeb_extractField Homepage "$ourBugsUrl")"
 	
 	{
 		swaddle_repository_apt_parseDeb_extractAndPrintControlField Package "$package"
@@ -458,13 +474,13 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 		done
 
 		swaddle_repository_apt_parseDeb_extractAndPrintControlField Homepage "$(configure_getConfigurationSetting swaddle url)"
-		local homepageFieldValue="$fieldValue"
+		
 		for fieldName in Npp-Applications Npp-Description Npp-Filename Npp-Mimetype Npp-Name Gstreamer-Decoders Gstreamer-Elements Gstreamer-Encoders Gstreamer-Uri-Sinks Gstreamer-Uri-Sources Gstreamer-Version
 		do
 			swaddle_repository_apt_parseDeb_extractAndPrintControlField "$fieldName"
 		done
 
-		swaddle_repository_apt_parseDeb_extractAndPrintControlField Bugs "$homepageFieldValue"
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Bugs "$bugsUrlDefault"
 		swaddle_repository_apt_parseDeb_extractAndPrintControlField Build-Essential 'no'
 		swaddle_repository_apt_parseDeb_extractAndPrintControlField Origin "$(configure_getConfigurationSetting swaddle vendor)"
 		swaddle_repository_apt_parseDeb_extractAndPrintControlField Supported "$(configure_getConfigurationSetting swaddle_deb supported)"
@@ -596,7 +612,7 @@ swaddle_repository_apt_architectures()
 	local callback="$1"
 	
 	local configurationSettingValue
-	_configure_configurationSettingValue 'swaddle_apt' 'apt_architectures'
+	_configure_configurationSettingValue 'swaddle_deb' 'architectures'
 	
 	if core_variable_array_isEmpty "$configurationSettingValue"; then
 		core_variable_array_append "$configurationSettingValue" amd64
