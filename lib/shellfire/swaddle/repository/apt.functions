@@ -145,6 +145,7 @@ core_usesIn swaddle digest
 core_dependency_requires '*' mkdir cat sort rm
 swaddle_repository_apt_createDistsComponentsTranslations()
 {
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
 	pushd "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"
 		set +f
 		local poolComponent
@@ -154,21 +155,29 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 			if [ -d "$poolComponent" ]; then
 				mkdir -m 0755 -p "$poolComponent"/i18n
 				pushd "$poolComponent"/i18n
-				
-					printf '' >Index
-				
-					local languageCode
-					for languageCode in ar ast bg bs ca cs da de el en en_AU en_CA en_GB eo es eu fa fi fr gl hr hu id is it ja ka km ko lt ms my nb nl oc pl pt pt_BR ro ru si sk sl sq sr sv th tr uk vi zh_CN zh_HK zh_TW
-					do
-						rm -f Translation-"$languageCode"
-						_swaddle_repository_apt_sortAndConcatenateFragments Translation-"$languageCode"
 					
-						printf ' %s %7s %s' "$(swaddle_digest sha1 Translation-"$languageCode")" "$(stat -c '%s')" Translation-"$languageCode" >>Index
-					done
+					{
+						printf 'SHA1:\n'
+				
+						local languageCode
+						for languageCode in ar ast bg bs ca cs da de el en en_AU en_CA en_GB eo es eu fa fi fr gl hr hu id is it ja ka km ko lt ms my nb nl oc pl pt pt_BR ro ru si sk sl sq sr sv th tr uk vi zh_CN zh_HK zh_TW
+						do
+							rm -f Translation-"$languageCode"
+							_swaddle_repository_apt_sortAndConcatenateFragments Translation-"$languageCode"
+							
+							local extension
+							local translationFile
+							for extension in '' .gz .bz2 .lzma .xz
+							do
+								translationFile=Translation-${languageCode}${extension}
+								printf ' %s %7s %s\n' "$(swaddle_digest sha1 "$translationFile")" "$(stat -c '%s' "$translationFile")" "$translationFile"
+							done
+						done
 	
-					swaddle_touch_setMtimeAndAtime Index
-					swaddle_digest_file Index
-					swaddle_compress_gzip Index
+						swaddle_touch_setMtimeAndAtime "$timestamp" Index
+						swaddle_digest_file Index
+						swaddle_compress_gzip Index
+					} >Index
 				
 				popd
 			fi
@@ -182,6 +191,8 @@ core_usesIn core snippet
 core_snippet_embed raw swaddle_apt_contents
 swaddle_repository_apt_createDistsContents()
 {
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	
 	_swaddle_repository_apt_createDistsContents_callback()
 	{
 		local packageArchitecture="$core_variable_array_element"
@@ -197,12 +208,15 @@ swaddle_repository_apt_createDistsContents()
 			core_snippet_retrieve 'swaddle_apt_contents' no Contents-"$packageArchitecture"
 			sort -d Contents-"$packageArchitecture".tmp >>Contents-"$packageArchitecture"
 
-			swaddle_touch_setMtimeAndAtime Contents-"$packageArchitecture"
+			swaddle_touch_setMtimeAndAtime "$timestamp" Contents-"$packageArchitecture"
 			swaddle_compress_gzip Contents-"$packageArchitecture"
 			swaddle_digest_file Contents-"$packageArchitecture".gz
 			
 			# Yes, really delete it. apt-file only looks for a gz file ordinarily.
 			rm Contents-"$packageArchitecture"
+			
+			# Clean up
+			rm Contents-"$packageArchitecture".tmp
 			
 		popd
 	}
@@ -273,8 +287,9 @@ swaddle_repository_apt_createDistsRelease()
 		popd
 		
 	} >"$releaseFilePath"
-	
-	swaddle_touch_setMtimeAndAtime "$releaseFilePath"
+
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$releaseFilePath"
 	
 	swaddle_digest_file "$releaseFilePath"
 	ln -f "$releaseFilePath".asc "$releaseFilePath".gpg
@@ -314,10 +329,10 @@ swaddle_repository_apt_createAptSourcesList()
 
 swaddle_repository_apt_createInstallScript()
 {
-	local filePath="$_swaddle_repository_deb_parentPath"/install.sh
+	local filePath="$_swaddle_repository_deb_parentPath"/dists/install.sh
 	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"
 	
-	local mktemp=$(mktemp $repositoryName.key.XXXXXXXXX)
+	local mktemp="\$(mktemp $repositoryName.key.XXXXXXXXX)"
 	local temporaryKeyFile='$temporaryKeyFile'
 	cat >"$filePath" <<-EOA
 		#!/usr/bin/env sh
@@ -365,8 +380,9 @@ _swaddle_repository_apt_sortAndConcatenateFragments()
 			done
 		fi
 	} >>"$concatenatedFileName"
-	
-	swaddle_touch_setMtimeAndAtime "$concatenatedFileName"
+
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$concatenatedFileName"
 	swaddle_digest_file "$concatenatedFileName"
 	
 	local compressor
@@ -388,8 +404,9 @@ swaddle_repository_apt_createDistsComponentReleaseFile()
 		Label: $(configure_getConfigurationSetting swaddle vendor)
 		Architecture: ${packageArchitecture}
 	EOF
-	
-	swaddle_touch_setMtimeAndAtime 'Release'
+
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_touch_setMtimeAndAtime "$timestamp" 'Release'
 	swaddle_digest_file 'Release'
 	swaddle_compress_gzip 'Release'
 }
@@ -423,8 +440,7 @@ swaddle_repository_apt_parseDeb()
 core_dependency_requires '*' ln rm
 core_usesIn swaddle configure
 swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
-{
-		
+{	
 	packageArchitecture="$(swaddle_repository_apt_parseDeb_extractField Architecture "$(_swaddle_build_package_deb_architecture)")"
 	package="$(swaddle_repository_apt_parseDeb_extractField Package "$poolSource")"
 	section="$(swaddle_repository_apt_parseDeb_extractField Section "$(configure_getConfigurationSetting swaddle_deb section)")"
@@ -510,6 +526,10 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 
 swaddle_repository_apt_parseDeb_extractContentsList()
 {
+	if [ "$packageArchitecture" = 'all' ]; then
+		return 0
+	fi
+	
 	local filePathWithLeadingDotSlash
 	tar --list --file "$dataTarFileName" | while IFS=' ' read -r filePathWithLeadingDotSlash
 	do
