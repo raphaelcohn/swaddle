@@ -3,7 +3,7 @@
 _program()
 {
 	core_usesIn core temporaryFiles variable/array
-	core_usesIn swaddle validate swaddles
+	core_usesIn swaddle swaddles
 	
 	swaddle()
 	{
@@ -91,7 +91,7 @@ _program_commandLine_processOptionWithArgument()
 		;;
 		
 		t|temporary-path)
-			swaddle_validate_temporaryPath $core_commandLine_exitCode_USAGE 'option' "$optionNameIncludingHyphens" "$optionValue"
+			core_validate_folderPathIsReadableAndSearchableAndWritableOrCanBeCreated $core_commandLine_exitCode_USAGE 'option' "$optionNameIncludingHyphens" "$optionValue"
 			swaddle_temporaryPath="$optionValue"
 		;;
 		
@@ -126,7 +126,7 @@ _program_commandLine_validate()
 	fi
 	
 	if core_variable_isSet swaddle_temporaryPath; then
-		swaddle_validate_temporaryPath $core_commandLine_exitCode_CONFIG 'configuration setting' 'swaddle_temporaryPath' "$swaddle_temporaryPath"
+		core_validate_folderPathIsReadableAndSearchableAndWritableOrCanBeCreated $core_commandLine_exitCode_CONFIG 'configuration setting' 'swaddle_temporaryPath' "$swaddle_temporaryPath"
 	fi
 	
 	local potentialSwaddle
