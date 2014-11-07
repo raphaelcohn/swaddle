@@ -1,5 +1,5 @@
 core_usesIn xmlwriter
-core_usesIn swaddle touch digest gzip
+core_usesIn swaddle touch digest compress
 core_usesIn swaddle/repository/yum primaryXmlFile otherXmlFile filelistsXmlFile compsXmlFile
 
 core_dependency_requires '*' mkdir date
