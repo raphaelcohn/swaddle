@@ -18,7 +18,7 @@ swaddle_digest_file()
 	local algo
 	for algo in md5 sha1 sha256 sha512
 	do
-		swaddle_digest_${algo} "$filePath" >"$filePath"."$algo"
+		swaddle_digest ${algo} "$filePath" >"$filePath"."$algo"
 		touch -r "$filePath" "$filePath"."$algo"
 	done
 	

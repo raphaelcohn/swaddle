@@ -9,7 +9,7 @@ swaddle_build_package_tar()
 	core_functions_execute _swaddle_build_package_tar_functions "$@"
 }
 
-core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_tar_computeTarVersion
+core_functions_register _swaddle_build_package_tar_functions swaddle_build_package_tar_computeTarVersion
 swaddle_build_package_tar_computeTarVersion()
 {
 	local epoch="$(configure_getConfigurationSetting swaddle epoch)"
@@ -28,21 +28,21 @@ core_dependency_requires '*' tar mv
 core_functions_register _swaddle_build_package_tar_functions swaddle_build_package_tar_createTarball
 swaddle_build_package_tar_createTarball()
 {
+	mkdir -m 0755 -p "$_swaddle_repository_tar_parentPath"
+	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_tar_parentPath"
+	
 	local baseName="${_swaddle_build_swaddleName}_${_swaddle_build_package_tar_version}_$(_swaddle_build_package_deb_architecture)"
 	_swaddle_build_package_tar_tarballFileName="$_swaddle_repository_tar_parentPath"/"$baseName".tar
 		
 	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_tar bomb)"; then
 		local directory="$_swaddle_build_package_root"
 	else
-		_swaddle_build_package_tar_createTarball_makeNewRoot()
-		{
-			mv "$_swaddle_build_package_root" "$_swaddle_build_package_temporaryFolderPath"/"$baseName"
-		}
-		swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" _swaddle_build_package_tar_createTarball_makeNewRoot
+		swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" mv "$_swaddle_build_package_root" "$_swaddle_build_package_temporaryFolderPath"/"$baseName"
 		
 		local directory="$_swaddle_build_package_temporaryFolderPath"/"$baseName"
 	fi
-
+	
 	swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" tar "$@" \
 		--create \
 		--file "$_swaddle_build_package_tar_tarballFileName" \

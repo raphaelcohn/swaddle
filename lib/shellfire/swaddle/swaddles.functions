@@ -268,9 +268,9 @@ core_functions_register _swaddle_swaddles_functions swaddle_swaddles_setReposito
 swaddle_swaddles_setRepositoryFolders()
 {
 	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"
-	_swaddle_repository_yum_parentPath="$swaddle_outputPath"/"$repositoryName"/rpm
-	_swaddle_repository_deb_parentPath="$swaddle_outputPath"/"$repositoryName"/deb
 	_swaddle_repository_tar_parentPath="$swaddle_outputPath"/"$repositoryName"/tar
+	_swaddle_repository_deb_parentPath="$swaddle_outputPath"/"$repositoryName"/deb
+	_swaddle_repository_yum_parentPath="$swaddle_outputPath"/"$repositoryName"/rpm
 }
 
 core_functions_register _swaddle_swaddles_functions swaddle_swaddles_buildSwaddles
@@ -282,6 +282,6 @@ swaddle_swaddles_buildSwaddles()
 core_functions_register _swaddle_swaddles_functions swaddle_swaddles_buildRepositories
 swaddle_swaddles_buildRepositories()
 {
-	swaddle_repository_yum
 	swaddle_repository_apt
+	swaddle_repository_yum
 }
