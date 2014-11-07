@@ -197,7 +197,7 @@ swaddle_repository_apt_createDistsContents()
 	{
 		local packageArchitecture="$core_variable_array_element"
 		
-		pushd "$_swaddle_repository_deb_parentPath"/dists
+		pushd "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"
 			
 			# Bug: We do not remove duplicate keys, eg for busybox:-
 			# bin/busybox                                                 shells/busybox-static,universe/utils/busybox
@@ -227,7 +227,8 @@ swaddle_repository_apt_createDistsContents()
 core_dependency_requires '*' cat date ln stat
 swaddle_repository_apt_createDistsRelease()
 {
-	local releaseFilePath="$_swaddle_repository_deb_parentPath"/dists/Release
+	local parentPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"
+	local releaseFilePath="$parentPath"/Release
 	
 	local configurationSettingValue
 	_configure_configurationSettingValue 'swaddle_deb' 'architectures'
@@ -254,7 +255,7 @@ swaddle_repository_apt_createDistsRelease()
 		_swaddle_repository_apt_createDistsRelease_callback()
 		{
 			local poolComponent="$core_variable_array_element"
-			set -f
+			set +f
 			for filePath in "$poolComponent"/binary-* "$poolComponent"/debian-installer/binary-* "$poolComponent"/i18n/* "$poolComponent"/source/*
 			do
 				set -f
@@ -262,10 +263,10 @@ swaddle_repository_apt_createDistsRelease()
 					printf ' %s%18s %s\n' "$filePath" "$(stat -c '%s' "$filePath")" "$(swaddle_digest_${digest} "$filePath")"
 				fi
 			done
-			set +f
+			set -f
 		}
 
-		pushd "$_swaddle_repository_deb_parentPath"/dists
+		pushd "$parentPath"
 		
 			local digest
 			
@@ -302,10 +303,11 @@ swaddle_repository_apt_createDistsRelease()
 swaddle_repository_apt_exportSigningKey()
 {
 	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_gpg_exportSigningKey >"$_swaddle_repository_deb_parentPath"/dists/Release.key
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_deb_parentPath"/dists/Release.key
-	swaddle_digest_file "$_swaddle_repository_deb_parentPath"/dists/Release.key
-	swaddle_compress_gzip "$_swaddle_repository_deb_parentPath"/dists/Release.key
+	local keyPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/Release.key
+	swaddle_gpg_exportSigningKey >"$keyPath"
+	swaddle_touch_setMtimeAndAtime "$timestamp" "$keyPath"
+	swaddle_digest_file "$keyPath"
+	swaddle_compress_gzip "$keyPath"
 }
 
 swaddle_repository_apt_createAptSourcesList()
@@ -318,7 +320,7 @@ swaddle_repository_apt_createAptSourcesList()
 	
 	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"
 	
-	local filePath="$_swaddle_repository_deb_parentPath"/dists/00$repositoryName.sources.list
+	local filePath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/00$repositoryName.sources.list
 	printf '%s\n' "deb $hostBaseUrl $repositoryName $(core_variable_array_string  _swaddle_repository_apt_components ' ')" >"$filePath"
 	
 	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
@@ -329,7 +331,7 @@ swaddle_repository_apt_createAptSourcesList()
 
 swaddle_repository_apt_createInstallScript()
 {
-	local filePath="$_swaddle_repository_deb_parentPath"/dists/install.sh
+	local filePath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/install.sh
 	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"
 	
 	local mktemp="\$(mktemp $repositoryName.key.XXXXXXXXX)"
