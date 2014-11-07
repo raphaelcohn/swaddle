@@ -33,7 +33,7 @@ swaddle_repository_apt_createTemporaryFolderPath()
 
 swaddle_repository_apt_createDistsFolderPath()
 {
-	mkdir -m 0755 -p "$_swaddle_repository_deb_parentPath"/dists
+	mkdir -m 0755 -p "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"
 	
 	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
 	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_deb_parentPath"/dists
@@ -260,7 +260,7 @@ swaddle_repository_apt_createDistsRelease()
 			do
 				set -f
 				if [ -f "$filePath" ]; then
-					printf ' %s%18s %s\n' "$filePath" "$(stat -c '%s' "$filePath")" "$(swaddle_digest_${digest} "$filePath")"
+					printf ' %s%18s %s\n' "$filePath" "$(stat -c '%s' "$filePath")" "$(swaddle_digest ${digest} "$filePath")"
 				fi
 			done
 			set -f
@@ -344,11 +344,11 @@ swaddle_repository_apt_createInstallScript()
 		temporaryKeyFile="${mktemp}"
 		trap 'rm -rf "$temporaryKeyFile"' EXIT
 		cat >"$temporaryKeyFile" <<EOF
-			$(cat "$_swaddle_repository_deb_parentPath"/dists/Release.key)
+			$(cat "$_swaddle_repository_deb_parentPath"/dists/"$repositoryName"/Release.key)
 		EOF
 		sudo -p "Password required to install repository "$repositoryName" public key to apt: " apt-key add "$temporaryKeyFile"
 		
-		printf '%s\n' "$(cat "$_swaddle_repository_deb_parentPath"/dists/00$repositoryName.sources.list)" | sudo -p "Password required to install repository '$repositoryName' apt sources list to '/etc/sources.list.d/00$repositoryName.sources.list': " tee /etc/sources.list.d/00$repositoryName.list >/dev/null
+		printf '%s\n' "$(cat "$_swaddle_repository_deb_parentPath"/dists/"$repositoryName"/00$repositoryName.sources.list)" | sudo -p "Password required to install repository '$repositoryName' apt sources list to '/etc/sources.list.d/00$repositoryName.sources.list': " tee /etc/sources.list.d/00$repositoryName.list >/dev/null
 	EOA
 	
 	chmod +x "$filePath"
@@ -526,11 +526,10 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 	rm "$_swaddle_repository_apt_temporaryFolderPath"/package
 }
 
+core_dependency_requires '*' cat rm
 swaddle_repository_apt_parseDeb_extractContentsList()
 {
-	if [ "$packageArchitecture" = 'all' ]; then
-		return 0
-	fi
+	local fragmentFilePath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/Contents.tmp
 	
 	local filePathWithLeadingDotSlash
 	tar --list --file "$dataTarFileName" | while IFS=' ' read -r filePathWithLeadingDotSlash
@@ -547,7 +546,22 @@ swaddle_repository_apt_parseDeb_extractContentsList()
 		fi
 		
 		printf '%-60s%s\n' "$(core_variable_allButFirstN "$filePathWithLeadingDotSlash" 2)" "$location"
-	done >>"$_swaddle_repository_deb_parentPath"/dists/Contents-"$packageArchitecture".tmp
+	done >"$fragmentFilePath"
+	
+	_swaddle_repository_apt_parseDeb_extractContentsList_callback()
+	{
+		local packageArchitecture="$core_variable_array_element"
+		cat "$fragmentFilePath" >>"$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/Contents-"$packageArchitecture".tmp
+	}
+	
+	if [ "$packageArchitecture" = 'all' ]; then
+		swaddle_repository_apt_architectures _swaddle_repository_apt_parseDeb_extractContentsList_callback
+	else
+		local core_variable_array_element="$packageArchitecture"
+		_swaddle_repository_apt_parseDeb_extractContentsList_callback
+	fi
+	
+	rm "$fragmentFilePath"
 }
 
 core_dependency_requires '*' grep
@@ -569,7 +583,7 @@ core_dependency_requires '*' grep
 swaddle_repository_apt_deb_extractFieldDescription()
 {
 	local line
-	local isFirst
+	local isFirst=0
 	grep -A 40 '^Description: ' control | while IFS='' read -r line
 	do
 		if [ $isFirst -eq 0 ]; then
@@ -583,7 +597,7 @@ swaddle_repository_apt_deb_extractFieldDescription()
 			if [ -z "$line" ]; then
 				break
 			fi
-			printf '%s\n' "$line"
+			printf '%s\n' "$(core_variable_allButFirstN "$line" 1)"
 		fi
 	done
 }
