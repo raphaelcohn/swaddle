@@ -153,7 +153,7 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 						rm -f Translation-"$languageCode"
 						_swaddle_repository_apt_sortAndConcatenateFragments Translation-"$languageCode"
 					
-						printf ' %s %7s %s' "$(swaddle_digest_sha1 Translation-"$languageCode")" "$(stat -c '%s')" Translation-"$languageCode" >>Index
+						printf ' %s %7s %s' "$(swaddle_digest sha1 Translation-"$languageCode")" "$(stat -c '%s')" Translation-"$languageCode" >>Index
 					done
 	
 					swaddle_touch_setMtimeAndAtime Index
@@ -443,9 +443,9 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 		
 		swaddle_repository_apt_parseDeb_printControlField Filename pool/"$poolComponent"/"$poolAZ"/"$poolSource"/"$poolDebFile"
 		swaddle_repository_apt_parseDeb_printControlField Size "$(stat -c '%s' "$debFilePath")"
-		swaddle_repository_apt_parseDeb_printControlField MD5sum "$(swaddle_digest_md5 "$debFilePath")"
-		swaddle_repository_apt_parseDeb_printControlField SHA1 "$(swaddle_digest_sha1 "$debFilePath")"
-		swaddle_repository_apt_parseDeb_printControlField SHA256 "$(swaddle_digest_sha256 "$debFilePath")"
+		swaddle_repository_apt_parseDeb_printControlField MD5sum "$(swaddle_digest md5 "$debFilePath")"
+		swaddle_repository_apt_parseDeb_printControlField SHA1 "$(swaddle_digest sha1 "$debFilePath")"
+		swaddle_repository_apt_parseDeb_printControlField SHA256 "$(swaddle_digest sha256 "$debFilePath")"
 		
 		local description="$(swaddle_repository_apt_deb_extractFieldDescription)"
 		swaddle_repository_apt_parseDeb_printControlField Description "$description"

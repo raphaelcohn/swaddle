@@ -84,12 +84,12 @@ swaddle_repository_yum_rpmxml_addToRepodata()
 	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
 	swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath"
 	
-	local digest="$(swaddle_digest_sha256 "$filePath")"
+	local digest="$(swaddle_digest sha256 "$filePath")"
 	local size="$(stat -c '%s' "$filePath")"
 
 	swaddle_compress_gzip "$filePath"
 	rm "$filePath"
-	local digestGz="$(swaddle_digest_sha256 "$filePath".gz)"
+	local digestGz="$(swaddle_digest sha256 "$filePath".gz)"
 	local sizeGz="$(stat -c '%s' "$filePath".gz)"
 
 	local newFileName="$digestGz"-"$fileName".xml.gz
@@ -118,7 +118,7 @@ swaddle_repository_yum_rpmxml_addToRepodataComps()
 		local dataType="$2"
 		
 		local filePath="$_swaddle_repository_yum_repodataPath"/"$fileName".xml
-		local digest="$(swaddle_digest_sha256 "$filePath")"
+		local digest="$(swaddle_digest sha256 "$filePath")"
 		local size="$(stat -c '%s' "$filePath")"
 		local digestFilePath="$digest"-"$fileName".xml
 		mv "$filePath" "$digestFilePath"
@@ -135,7 +135,7 @@ swaddle_repository_yum_rpmxml_addToRepodataComps()
 		xmlwriter_close data
 	
 		swaddle_compress_gzip "$digestFilePath"
-		local digestGz="$(swaddle_digest_sha256 "$digestFilePath".gz)"
+		local digestGz="$(swaddle_digest sha256 "$digestFilePath".gz)"
 		local sizeGz="$(stat -c '%s' "$digestFilePath".gz)"
 		swaddle_touch_setMtimeAndAtime "$timestamp" "$digestFilePath".gz
 	

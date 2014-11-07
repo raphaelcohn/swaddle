@@ -134,11 +134,11 @@ swaddle_package_rpm_rpmbuild()
 	
 	case "$(core_init_verbosity)" in
 		
-		0|1)
+		0)
 			:
 		;;
 		
-		2)
+		1|2)
 			core_variable_array_append options -v
 		;;
 		

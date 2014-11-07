@@ -6,6 +6,24 @@ swaddle_swaddles_all()
 	core_functions_execute _swaddle_swaddles_functions "$@"
 }
 
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_makeSwaddlesPathAbsolute
+swaddle_swaddles_makeSwaddlesPathAbsolute()
+{
+	pushd "$swaddle_swaddlesPath"
+		swaddle_swaddlesPath="$(pwd)"
+	popd
+}
+
+core_dependency_requires '*' mkdir
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createOutputFolder
+swaddle_swaddles_createOutputFolder()
+{
+	mkdir -m 0700 -p "$swaddle_outputPath" 2>/dev/null || true
+	pushd "$swaddle_outputPath"
+		swaddle_outputPath="$(pwd)"
+	popd
+}
+
 core_dependency_requires '*' mkdir
 core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createTemporaryFolder
 swaddle_swaddles_createTemporaryFolder()
@@ -16,6 +34,9 @@ swaddle_swaddles_createTemporaryFolder()
 		swaddle_temporaryPath="$TMP_FOLDER"
 	else
 		mkdir -m 0700 -p "$swaddle_temporaryPath" 2>/dev/null || true
+		pushd "$swaddle_temporaryPath"
+			swaddle_temporaryPath="$(pwd)"
+		popd
 	fi
 }
 
@@ -115,8 +136,6 @@ core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerCon
 swaddle_swaddles_registerConfiguration_attemptToDiscoverLicence()
 {
 	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
-		echo hello
-		exit 90
 		configure_register Value Licence swaddle licence
 		return 0
 	fi
@@ -245,13 +264,10 @@ swaddle_swaddles_sourceConfiguration()
 	configure_source "$swaddle_swaddlesPath" swaddles
 }
 
-core_dependency_requires '*' mkdir
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createOutputFolder
-swaddle_swaddles_createOutputFolder()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_setRepositoryFolders
+swaddle_swaddles_setRepositoryFolders()
 {
-	mkdir -m 0700 -p "$swaddle_outputPath" 2>/dev/null || true
 	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"
-	
 	_swaddle_repository_yum_parentPath="$swaddle_outputPath"/"$repositoryName"/rpm
 	_swaddle_repository_deb_parentPath="$swaddle_outputPath"/"$repositoryName"/deb
 	_swaddle_repository_tar_parentPath="$swaddle_outputPath"/"$repositoryName"/tar

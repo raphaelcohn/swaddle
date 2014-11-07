@@ -9,13 +9,13 @@
 %define __spec_clean_pre true
 
 # RPM sign stuff
-%_signature gpg
-%_gpg_path $(configure_getConfigurationSetting swaddle keyring)
-%_gpg_name $(swaddle_configure_signer)
-#%_gpgbin /usr/bin/gpg
+%define _signature gpg
+%define _gpg_path $(configure_getConfigurationSetting swaddle keyring)
+%define _gpg_name $(swaddle_configure_signer)
+%define _gpgbin $(core_compatibility_which gpg)
 
 # Disable checking for unpackaged files
-#%undefine __check_files
+# %undefine __check_files
 
 # Digest method is '$(configure_getConfigurationSetting swaddle_rpm digest)'
 # %define _source_fileswaddle_digest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)

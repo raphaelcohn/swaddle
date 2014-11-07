@@ -1,36 +1,13 @@
-core_dependency_requires '*' md5sum
-swaddle_digest_md5()
+swaddle_digest()
 {
+	local algo="$1"
+	local filePath="$2"
+	
 	local digest
 	local uselessFileName
-	md5sum "$1" | IFS=' ' read -r digest uselessFileName
-	printf '%s' "$digest"
-}
-
-core_dependency_requires '*' sha1sum
-swaddle_digest_sha1()
-{
-	local digest
-	local uselessFileName
-	sha1sum "$1" | IFS=' ' read -r digest uselessFileName
-	printf '%s' "$digest"
-}
-
-core_dependency_requires '*' sha256sum
-swaddle_digest_sha256()
-{
-	local digest
-	local uselessFileName
-	sha256sum "$1" | IFS=' ' read -r digest uselessFileName
-	printf '%s' "$digest"
-}
-
-core_dependency_requires '*' sha512sum
-swaddle_digest_sha512()
-{
-	local digest
-	local uselessFileName
-	sha512sum "$1" | IFS=' ' read -r digest uselessFileName
+	IFS=' ' read -r digest uselessFileName <<-EOF
+		${algo}sum "$1"
+	EOF
 	printf '%s' "$digest"
 }
 

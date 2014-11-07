@@ -29,7 +29,7 @@ swaddle_build_package_defaultFixPermissions()
 	{
 		local filePath="$1"
 		if [ -e "$filePath" ]; then
-			swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath"
+			swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath" "$fakerootEnvironmentFilePath"
 			
 			if [ -L "$filePath" ]; then
 				return 0
@@ -37,15 +37,19 @@ swaddle_build_package_defaultFixPermissions()
 			
 			if [ -d "$filePath" ]; then
 				local subPath
+				set +f
 				for subPath in "$filePath"/*
 				do
+					set -f
 					_swaddle_build_package_defaultFixPermissions_recurse "$subPath"
 				done
+				set +f
 			fi
 		fi
 	}
 
-	local pathToBodyOrSkeleton="$1"
+	local fakerootEnvironmentFilePath="$1"
+	local pathToBodyOrSkeleton="$2"
 	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
 	_swaddle_build_package_defaultFixPermissions_recurse "$pathToBodyOrSkeleton"
 }
@@ -100,9 +104,9 @@ swaddle_build_package_synchroniseToPackageRoot()
 		if [ -n "$fixPermissionsBinaryOrFunction" ]; then
 			
 			if core_functions_exists "$fixPermissionsBinaryOrFunction"; then
-				$fixPermissionsBinaryOrFunction "$folderStructurePath"
+				$fixPermissionsBinaryOrFunction "$fakerootEnvironmentFilePath" "$folderStructurePath"
 			else
-				swaddle_fakeroot "$fakerootEnvironmentFilePath" "$fakerootEnvironmentFilePath" $fixPermissionsBinaryOrFunction "$folderStructurePath"
+				swaddle_fakeroot "$fakerootEnvironmentFilePath" "$fakerootEnvironmentFilePath" $fixPermissionsBinaryOrFunction "$fakerootEnvironmentFilePath" "$folderStructurePath"
 			fi
 		fi
 		

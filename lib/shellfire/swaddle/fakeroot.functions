@@ -6,8 +6,8 @@ swaddle_fakeroot()
 	shift 2
 	
 	if [ -f "$fakerootEnvironmentInputPath" ]; then
-		fakeroot -i "$fakerootEnvironmentInputPath" -s "$fakerootEnvironmentOutputPath" -u -- "$@"
+		fakeroot -i "$fakerootEnvironmentInputPath" -s "$fakerootEnvironmentOutputPath" -- "$@"
 	else
-		fakeroot -s "$fakerootEnvironmentOutputPath" -u -- "$@"
+		fakeroot -s "$fakerootEnvironmentOutputPath" -- "$@"
 	fi	
 }
