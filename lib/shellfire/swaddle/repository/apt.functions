@@ -45,7 +45,7 @@ swaddle_repository_apt_createDistsContentsTmp()
 	{
 		local packageArchitecture="$core_variable_array_element"
 		
-		pushd "$_swaddle_repository_deb_parentPath"/dists
+		pushd "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"
 		
 			printf '' >Contents-"$packageArchitecture".tmp
 			
@@ -669,5 +669,5 @@ swaddle_repository_apt_parseDeb_createTranslationFragment()
 		printf "%s: %s\n" 'Description-md5' "$descriptionMd5"
 		printf "%s: %s\n" "Description-$languageCode" "$description"
 		printf '\n'
-	} >"$package".Translation-"$languageCode"
+	} >"$translationPath"/"$package".Translation-"$languageCode"
 }
