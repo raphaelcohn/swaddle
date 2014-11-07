@@ -71,7 +71,7 @@ swaddle_swaddles_registerConfiguration()
 	# Cranking up to 50 can produce slight improvements (24 bytes in 1 Mb) but at such a cost...
 	configure_register Value NotEmpty swaddle zopfli_iterations 15
 	
-	configure_register Value Boolean swaddle sign yes
+	configure_register Value Boolean swaddle sign no
 	
 	configure_register Array NotEmpty swaddle mirrors
 	
@@ -222,7 +222,7 @@ swaddle_swaddles_registerConfiguration_miscellany()
 	configure_register Value NotEmpty swaddle epoch '0'
 	configure_register Value NotEmpty swaddle vendor
 	configure_register Value NotEmpty swaddle description
-	configure_register Value NotEmpty swaddle fix_permissions 'swaddle_build_package_defaultFixPermissions'
+	configure_register Value Any swaddle fix_permissions 'swaddle_build_package_defaultFixPermissions'
 }
 
 core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerConfiguration_byPackageKind

@@ -78,7 +78,7 @@ swaddle_build_package_deb_createControlFolder()
 	mkdir -m 0755 -p "$_swaddle_build_package_deb_controlFolderPath"
 }
 
-core_functions_register _swaddle_build_package_rpm_functions swaddle_build_package_rpm_validateConfigFiles
+core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createConffiles
 swaddle_build_package_deb_createConffiles()
 {
 	_swaddle_build_package_deb_createConffiles_callback()

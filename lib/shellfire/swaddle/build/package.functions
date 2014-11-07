@@ -80,6 +80,7 @@ swaddle_build_package_synchroniseToPackageRoot()
 	
 	local destinationFakerootTemporaryFilePath="$_swaddle_build_package_root".fakeroot.tmp
 	rm -f "$destinationFakerootTemporaryFilePath"
+	printf '' >"$destinationFakerootTemporaryFilePath"
 
 	local fixPermissionsBinaryOrFunction="$(configure_getConfigurationSetting swaddle fix_permissions)"
 	
@@ -97,7 +98,12 @@ swaddle_build_package_synchroniseToPackageRoot()
 		
 		# We do this before checking the path exists, so they can create it, too
 		if [ -n "$fixPermissionsBinaryOrFunction" ]; then
-			swaddle_fakeroot "$fakerootEnvironmentFilePath" "$fakerootEnvironmentFilePath" $fixPermissionsBinaryOrFunction "$folderStructurePath"
+			
+			if core_functions_exists "$fixPermissionsBinaryOrFunction"; then
+				$fixPermissionsBinaryOrFunction "$folderStructurePath"
+			else
+				swaddle_fakeroot "$fakerootEnvironmentFilePath" "$fakerootEnvironmentFilePath" $fixPermissionsBinaryOrFunction "$folderStructurePath"
+			fi
 		fi
 		
 		if [ -f "$fakerootEnvironmentFilePath" ]; then
@@ -121,6 +127,7 @@ swaddle_build_package_synchroniseToPackageRoot()
 		return 0
 	fi
 
+	local destinationFakerootFilePath="$_swaddle_build_package_rootFakerootFilePath"
 	if [ -f "$destinationFakerootFilePath" ]; then
 		cat "$destinationFakerootFilePath" >>"$destinationFakerootTemporaryFilePath"
 	fi

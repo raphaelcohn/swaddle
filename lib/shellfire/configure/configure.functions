@@ -2,11 +2,18 @@ core_usesIn core variable variable/array
 
 _configure_configurationNamespace()
 {
+	if [ $# -eq 1 ]; then
+		local namespace="$1"
+	fi
 	configurationSettingNamespace="${_program_namespace}_build_configuration_namespace_${namespace}"
 }
 
 _configure_configurationSettingValue()
 {
+	if [ $# -eq 2 ]; then
+		local namespace="$1"
+		local configurationSettingName="$2"
+	fi
 	local key="${namespace}_${configurationSettingName}"
 	configurationSettingValue="${_program_namespace}_build_configuration_value_${key}"
 }

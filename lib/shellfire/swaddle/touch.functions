@@ -4,6 +4,6 @@ swaddle_touch_setMtimeAndAtime()
 	local timestampInEpochSeconds="$1"
 	local filePath="$2"
 	
-	local mtime="$(date @$timestampInEpochSeconds +'%Y%m%d%H%M.%S')"
+	local mtime="$(date -d @$timestampInEpochSeconds +'%Y%m%d%H%M.%S')"
 	touch -m -a -c -h -t "$mtime" "$filePath"
 }
