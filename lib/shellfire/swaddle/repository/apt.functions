@@ -6,10 +6,6 @@ swaddle_repository_apt()
 	configure_reset swaddle_deb
 	configure_source "$swaddle_swaddlesPath" swaddles
 	
-	# Loop over .all + .amd64, .all + .i386, etc, ie all architectures APART FROM 'all'
-	# Need a 'Release' file and a 'Packages' file
-	# Need to organise by Component - we can force this or we can take it from the Deb (more complexity)
-	
 	swaddle_repository_apt_createTemporaryFolderPath
 	swaddle_repository_apt_createDistsContentsTmp
 	swaddle_repository_apt_parseDebsInPool

@@ -16,7 +16,7 @@ configure_validateDebSection()
 	configure_validateValue section "$1"
 }
 
-https://www.debian.org/doc/manuals/debian-faq/ch-pkg_basics.en.html#s-priority
+#https://www.debian.org/doc/manuals/debian-faq/ch-pkg_basics.en.html#s-priority
 core_snippet_embed raw swaddle_deb_section
 configure_validateDebPriority()
 {

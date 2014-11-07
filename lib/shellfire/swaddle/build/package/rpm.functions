@@ -533,6 +533,7 @@ _swaddle_build_package_rpm_files_writeFile()
 	if core_variable_array_iterateShortcut "$configurationSettingValue" _swaddle_build_package_rpm_files_isSpecial; then
 		if [ $configFileCount -eq 1 ]; then
 			core_exitError $core_commandLine_exitCode_CONFIG "Config file '$rpmPath' specified in both 'unreplaceableConfigFiles' and 'replaceableConfigFiles'"
+		fi
 		printf '%%config '
 	fi
 	
