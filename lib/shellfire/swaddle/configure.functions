@@ -67,12 +67,12 @@ configure_validateTarCompression()
 {
 	case "$1" in
 
-		gzip|bzip2|lzma|xz|lzip|lzop|rzip)
+		lzop|zip|gzip|bzip2|lzma|xz|lzip|rzip|lrzip)
 			:
 		;;
 
 		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'gzip', 'bzip2', 'lzma', 'xz', 'lzip', 'lzop' or 'rzip')."
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'lzop', 'zip', 'gzip', 'bzip2', 'lzma', 'xz', 'lzip', 'rzip' or 'lrzip')."
 		;;
 		
 	esac

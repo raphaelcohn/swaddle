@@ -2,12 +2,24 @@ swaddle_compress_extension()
 {
 	case "$1" in
 		
+		lzop)
+			printf 'lzo'
+		;;
+		
+		zip)
+		 printf 'zip'
+		;;
+		
 		gzip)
 			printf 'gz'
 		;;
 		
 		bzip2)
 			printf 'bz2'
+		;;
+		
+		rzip)
+			printf 'rz'
 		;;
 		
 		lzma)
@@ -22,57 +34,15 @@ swaddle_compress_extension()
 			printf 'lz'
 		;;
 		
-		lzop)
-			printf 'lzo'
+		zpaq)
+			printf 'zpaq'
 		;;
 		
-		rzip)
-			printf 'rz'
+		lrzip)
+			printf 'lrz'
 		;;
 		
 	esac
-}
-
-core_dependency_oneOf '*' gzip zopfli
-core_dependency_requires '*' touch
-core_usesIn configure
-swaddle_compress_gzip()
-{
-	local fileName="$1"
-	if core_compatibility_whichNoOutput zopfli; then
-		zopfli -c --gzip --i"$(configure_getConfigurationSetting swaddle zopfli_iterations)" "$1"
-	else
-		gzip -9 -c -q -f -n "$1" >"$1".gz
-	fi
-	touch -r "$1" "$1".gz
-}
-
-core_dependency_requires '*' bzip2 touch
-swaddle_compress_bzip2()
-{
-	bzip2 -9 -c -q -f "$1" >"$1".bz2
-	touch -r "$1" "$1".bz2
-}
-
-core_dependency_requires '*' lzma touch
-swaddle_compress_lzma()
-{
-	lzma -9 -c -q -f "$1" >"$1".lzma
-	touch -r "$1" "$1".lzma
-}
-
-core_dependency_requires '*' xz touch
-swaddle_compress_xz()
-{
-	xz -9 -c -q -f -e "$1" >"$1".xz
-	touch -r "$1" "$1".xz
-}
-
-core_dependency_requires '*' lzip touch
-swaddle_compress_lzip()
-{
-	lzip -9 -c -q -f "$1" >"$1".lz
-	touch -r "$1" "$1".lz
 }
 
 core_dependency_requires '*' cat lzop touch
@@ -83,9 +53,93 @@ swaddle_compress_lzop()
 	touch -r "$1" "$1".lzo
 }
 
+# Strictly, zip is an archive with compression; this technique creates single-file archives, useful mostly for Windows or specialist settings.
+core_dependency_requires '*' pigz
+swaddle_compress_zip()
+{
+	pigz -K -11 -c -q -f -- "$1" >"$1".gz
+}
+
+core_dependency_requires '*' pigz zopfli gzip touch
+core_usesIn configure
+swaddle_compress_gzip()
+{
+	local fileName="$1"
+	if core_compatibility_whichNoOutput pigz; then
+		# -T strips the timestamp - not an option on gzip, it seems
+		# -I "$(configure_getConfigurationSetting swaddle zopfli_iterations)" does not work in Ubuntu 14.04
+		# Compression sizes varies from run to run... and corrupt archives seem possible
+		pigz -11 -c -q -f -n -T -- "$1" >"$1".gz
+	elif core_compatibility_whichNoOutput zopfli; then
+		zopfli -c --gzip --i"$(configure_getConfigurationSetting swaddle zopfli_iterations)" -- "$1" >"$1".gz
+	else
+		gzip -9 -c -q -f -n -- "$1" >"$1".gz
+	fi
+	touch -r "$1" "$1".gz
+}
+
+core_dependency_requires '*' pbzip2 touch
+swaddle_compress_bzip2()
+{
+	if core_compatibility_whichNoOutput bzip2; then
+		bzip2 -9 -c -q -f "$1" >"$1".bz2
+	else
+		# Parallel bzip has worse compression
+		pbzip2 -9 -c -q -f "$1" >"$1".bz2
+	fi
+	touch -r "$1" "$1".bz2
+}
+
+core_dependency_requires '*' lzma touch
+swaddle_compress_lzma()
+{
+	lzma -9 -c -q -f "$1" >"$1".lzma
+	touch -r "$1" "$1".lzma
+}
+
 core_dependency_requires '*' rzip touch
 swaddle_compress_rzip()
 {
 	rzip -9 -f -k -o "$1".rz "$1"
 	touch -r "$1" "$1".rz
 }
+
+core_dependency_requires '*' xz touch
+swaddle_compress_xz()
+{
+	# --format=raw knocks off 32 bytes+ but is not auto-detectable.
+	xz -9 -c -q -f -e "$1" >"$1".xz
+	touch -r "$1" "$1".xz
+}
+
+# lzip beats xz on tarballs, even when xz uses --format=raw
+core_dependency_requires '*' plzip lzip touch
+swaddle_compress_lzip()
+{
+	if core_compatibility_whichNoOutput lzip; then
+		lzip -9 -c -q -f "$1" >"$1".lz
+	else
+		# Parallel plzip has worse compression
+		plzip -9 -c -q -f "$1" >"$1".lz
+	fi
+	touch -r "$1" "$1".lz
+}
+
+# Works far better than tar, of course...
+core_dependency_requires '*' zpaq touch
+swaddle_compress_zpaq()
+{
+	zpaq pnsiqc "$1".zpaq "$1"
+	touch -r "$1" "$1".zpaq
+}
+
+core_dependency_requires '*' lrzip touch
+swaddle_compress_lrzip()
+{
+	lrzip -q -k -f -z -L 9 -o "$1".lrz "$1"
+	touch -r "$1" "$1".lrz
+}
+
+# Specialised: szip, for scientific data
+# Specialised: snzip, for snappy (various formats, some are obsolete)
+	
