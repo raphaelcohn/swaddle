@@ -11,7 +11,7 @@ swaddle_configure_signer()
 
 
 # Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
-core_snippet_embed raw swaddle_licence
+core_snippet_embed raw swaddle_package_licence
 configure_validateLicence()
 {
 	configure_validateValue licence "$1"
