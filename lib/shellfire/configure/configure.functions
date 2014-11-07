@@ -175,7 +175,7 @@ configure_source()
 	local configurationName="$2"
 	local configurationFilePath="$configurationPath"/"$configurationName".conf
 	if core_path_isReadableNonEmptyFilePath "$configurationFilePath"; then
-		. "$configurationFilePath" || core_exitError $core_commandLine_exitCode_DATAERR "Could not source configuration '$configurationFilePath' for swaddle '$_swaddle_build_swaddleName'"
+		. "$configurationFilePath"
 	fi
 	
 	local configurationFolderPath="$configurationPath"/"$configurationName".conf.d
@@ -186,7 +186,7 @@ configure_source()
 			do
 				set -f
 				if core_path_isReadableNonEmptyFilePath "$configurationFilePath"; then
-					. "$configurationFilePath" || core_exitError $core_commandLine_exitCode_DATAERR "Could not source configuration '$configurationFilePath' for swaddle '$_swaddle_build_swaddleName'"
+					. "$configurationFilePath"
 				fi
 			done
 			set -f
@@ -263,8 +263,14 @@ configure_validateValue()
 		fi
 	done <"$validValuesFilePath"
 	
+	if [ -n "$validValue" ]; then
+		if [ "$configurationSettingValue" = "$validValue" ]; then
+			found=1
+		fi
+	fi
+	
 	if [ $found -eq 0 ]; then
-		core_message WARN "The swaddle '$_swaddle_build_swaddleName' configuration setting '$configurationSettingName' ('$configurationSettingValue') is not a valid $valueKind."
+		core_message WARN "The configuration setting '$configurationSettingName' ('$configurationSettingValue') is not a valid $valueKind."
 	fi
 	
 	rm "$validValuesFilePath"

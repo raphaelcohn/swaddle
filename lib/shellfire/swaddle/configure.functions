@@ -25,14 +25,14 @@ configure_validateDebSection()
 }
 
 #https://www.debian.org/doc/manuals/debian-faq/ch-pkg_basics.en.html#s-priority
-core_snippet_embed raw swaddle_deb_section
+core_snippet_embed raw swaddle_deb_priority
 configure_validateDebPriority()
 {
 	configure_validateValue priority "$1"
 }
 
 core_snippet_embed raw swaddle_deb_component
-configure_DebComponent()
+configure_validateDebComponent()
 {
 	configure_validateValue component "$1"
 }
