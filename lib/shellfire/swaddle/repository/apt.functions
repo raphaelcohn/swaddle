@@ -146,6 +146,11 @@ core_dependency_requires '*' mkdir cat sort rm
 swaddle_repository_apt_createDistsComponentsTranslations()
 {
 	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	
+	local configurationSettingValue
+	_configure_configurationSettingValue 'swaddle' 'apt_translations'
+	local translationsArrayName="$configurationSettingValue"
+	
 	pushd "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"
 		set +f
 		local poolComponent
@@ -158,10 +163,10 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 					
 					{
 						printf 'SHA1:\n'
-				
-						local languageCode
-						for languageCode in ar ast bg bs ca cs da de el en en_AU en_CA en_GB eo es eu fa fi fr gl hr hu id is it ja ka km ko lt ms my nb nl oc pl pt pt_BR ro ru si sk sl sq sr sv th tr uk vi zh_CN zh_HK zh_TW
-						do
+						
+						_swaddle_repository_apt_createDistsComponentsTranslations_callback()
+						{
+							local languageCode="$core_variable_array_element"
 							rm -f Translation-"$languageCode"
 							_swaddle_repository_apt_sortAndConcatenateFragments Translation-"$languageCode"
 							
@@ -172,7 +177,14 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 								translationFile=Translation-${languageCode}${extension}
 								printf ' %s %7s %s\n' "$(swaddle_digest sha1 "$translationFile")" "$(stat -c '%s' "$translationFile")" "$translationFile"
 							done
-						done
+						}
+						
+						if core_variable_array_isEmpty "$translationsArrayName"; then
+							local core_variable_array_element="$(configure_getConfigurationSetting swaddle apt_language)"
+							_swaddle_repository_apt_createDistsComponentsTranslations_callback
+						else
+							core_variable_array_iterate "$translationsArrayName" _swaddle_repository_apt_createDistsComponentsTranslations_callback
+						fi
 	
 						swaddle_touch_setMtimeAndAtime "$timestamp" Index
 						swaddle_digest_file Index
@@ -231,7 +243,7 @@ swaddle_repository_apt_createDistsRelease()
 	local releaseFilePath="$parentPath"/Release
 	
 	local configurationSettingValue
-	_configure_configurationSettingValue 'swaddle_deb' 'architectures'
+	_configure_configurationSettingValue 'swaddle' 'apt_architectures'
 	local architectures="$configurationSettingValue"
 
 	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
@@ -648,15 +660,13 @@ swaddle_repository_apt_architectures()
 	local callback="$1"
 	
 	local configurationSettingValue
-	_configure_configurationSettingValue 'swaddle_deb' 'architectures'
+	_configure_configurationSettingValue 'swaddle' 'apt_architectures'
 	
 	if core_variable_array_isEmpty "$configurationSettingValue"; then
-		core_variable_array_append "$configurationSettingValue" amd64
-		core_variable_array_append "$configurationSettingValue" arm64
-		core_variable_array_append "$configurationSettingValue" armhf
-		core_variable_array_append "$configurationSettingValue" i386
-		core_variable_array_append "$configurationSettingValue" powerpc
-		core_variable_array_append "$configurationSettingValue" ppc64el
+		
+		local core_variable_array_element='amd64'
+		$callback
+		
 	fi
 	
 	core_variable_array_iterate "$configurationSettingValue" "$callback"
@@ -665,7 +675,7 @@ swaddle_repository_apt_architectures()
 core_dependency_requires '*' mkdir md5sum
 swaddle_repository_apt_parseDeb_createTranslationFragment()
 {
-	local languageCode='en'
+	local languageCode="$(configure_getConfigurationSetting swaddle apt_language)"
 	local translationPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/"$poolComponent"/i18n
 	
 	mkdir -m 0755 -p "$translationPath"

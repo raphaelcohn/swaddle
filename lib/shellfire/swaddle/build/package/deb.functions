@@ -44,9 +44,6 @@ swaddle_build_package_deb_registerConfiguration()
 	configure_register Array DebTask swaddle_deb tasks
 	configure_register Array NotEmpty swaddle_deb tags
 	
-	# Used as a list of architectures to build for
-	configure_register Array DebRealArchitecture swaddle_deb architectures
-	
 	core_TODO "We don't yet support debconf and templates, as, in our view, they're evil."
 }
 

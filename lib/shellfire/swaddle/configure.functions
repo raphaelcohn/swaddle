@@ -14,39 +14,52 @@ swaddle_configure_signer()
 core_snippet_embed raw swaddle_package_licence
 configure_validateLicence()
 {
-	configure_validateValue licence "$1"
+	configure_validateValue swaddle_package_licence "$1"
 }
 
 # Derived from http://packages.ubuntu.com/lucid/
 core_snippet_embed raw swaddle_deb_section
 configure_validateDebSection()
 {
-	configure_validateValue section "$1"
+	configure_validateValue swaddle_deb_section "$1"
 }
 
 #https://www.debian.org/doc/manuals/debian-faq/ch-pkg_basics.en.html#s-priority
 core_snippet_embed raw swaddle_deb_priority
 configure_validateDebPriority()
 {
-	configure_validateValue priority "$1"
+	configure_validateValue swaddle_deb_priority "$1"
 }
 
 core_snippet_embed raw swaddle_deb_component
 configure_validateDebComponent()
 {
-	configure_validateValue component "$1"
+	configure_validateValue swaddle_deb_component "$1"
 }
 
 core_snippet_embed raw swaddle_deb_multiarch
 configure_validateDebMultiArch()
 {
-	configure_validateValue multiarch "$1"
+	configure_validateValue swaddle_deb_multiarch "$1"
 }
 
 core_snippet_embed raw swaddle_deb_task
 configure_validateDebTask()
 {
-	configure_validateValue task "$1"
+	configure_validateValue swaddle_deb_task "$1"
+}
+
+core_snippet_embed raw swaddle_apt_language
+configure_validateAptLanguage()
+{
+	configure_validateValue swaddle_apt_language "$1"
+}
+
+core_snippet_embed raw swaddle_deb_architecture
+configure_validateDebRealArchitecture()
+{
+	local namespace='swaddle'
+	configure_validateValue swaddle_deb_architecture "$1"
 }
 
 # Some rules on the GROUP TAG: https://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/Packagers_Guide/chap-Packagers_Guide-Spec_File_Reference-Preamble.html
@@ -54,7 +67,7 @@ configure_validateDebTask()
 core_snippet_embed raw swaddle_rpm_group
 configure_validateRpmGroup()
 {
-	configure_validateValue group "$1"
+	configure_validateValue swaddle_rpm_group "$1"
 	
 	if core_variable_isSet _swaddle_build_swaddleName; then
 		if core_variable_endsWith "$_swaddle_build_swaddleName" '-doc'; then
@@ -91,33 +104,6 @@ configure_validateArchitecture()
 
 		*)
 			configure_validateDebRealArchitecture "$1"
-		;;
-		
-	esac
-}
-
-
-configure_validateDebRealArchitecture()
-{
-	case "$1" in
-		
-		# Ubuntu 14.04
-		amd64|arm64|armhf|i386|powerpc|ppc64el)
-			:
-		;;
-		
-		# Debian Official
-		armel|ia64|kfreebsd-amd64|kfreebsd-i386|mips|mipsel|s390|s390x|sparc)
-			:
-		;;
-		
-		# Debian Unofficial (excludes 'arm' as it is dead)
-		arm|alpha|AVR32|hppa|hurd-i386|m32|m68k|netbsd-i386|netbsd-alpha|or1k|sh)
-			:
-		;;
-		
-		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid architecture (it must be one of 'amd64', 'arm64', 'armhf', 'i386', 'powerpc' or 'ppc64el' for Ubuntu/Debian. For Debian only, it may also be 'arm', 'armel', 'ia64', 'kfreebsd-amd64', 'kfreebsd-i386', 'mips', 'mipsel', 's390', 's390x', 'sparc', 'alpha', 'AVR32', 'hppa', 'hurd-i386', 'm32', 'm68k', 'netbsd-i386', 'netbsd-alpha', 'or1k' and 'sh'. 'arm' is dead)."
 		;;
 		
 	esac

@@ -97,7 +97,11 @@ swaddle_swaddles_registerConfiguration()
 	
 	configure_register Array NotEmpty swaddle mirrors
 	
-	configure_register Array NotEmpty swaddle apt_architectures
+	configure_register Array DebRealArchitecture swaddle apt_architectures
+	# amd64, arm64, armhf, i386, powerpc, ppc64el for Ubuntu 14.04
+	
+	configure_register Value AptLanguage swaddle apt_language 'en'
+	configure_register Array AptLanguage swaddle apt_translations
 }
 
 core_dependency_requires '*' git date awk

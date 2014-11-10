@@ -255,10 +255,8 @@ configure_validateReadableSearchableFolderPath()
 
 configure_validateValue()
 {
-	local valueKind="$1"
+	local snippetName="$1"
 	local configurationSettingValue="$2"
-	
-	local snippetName="${namespace}_${valueKind}"
 	
 	local TMP_FILE
 	core_temporaryFiles_newFileToRemoveOnExit
@@ -282,7 +280,7 @@ configure_validateValue()
 	fi
 	
 	if [ $found -eq 0 ]; then
-		core_message WARN "The configuration setting '$configurationSettingName' ('$configurationSettingValue') is not a valid $valueKind."
+		core_message WARN "The configuration setting '$configurationSettingName' ('$configurationSettingValue') is not a valid '$snippetName'."
 	fi
 	
 	rm "$validValuesFilePath"
