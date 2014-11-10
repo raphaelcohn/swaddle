@@ -43,10 +43,10 @@ configure_validateDebTask()
 	configure_validateValue swaddle_deb_task "$1"
 }
 
-core_snippet_embed raw configure_apt_repository_language
+core_snippet_embed raw validate_apt_language
 configure_validateAptLanguage()
 {
-	configure_validateValue configure_apt_repository_language "$1"
+	configure_validateValue validate_apt_language "$1"
 }
 
 core_snippet_embed raw validate_apt_architecture
