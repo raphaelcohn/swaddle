@@ -25,18 +25,18 @@
 # %define _source_payload $(_swaddle_build_package_rpm_compression)
 %define _binary_payload $(_swaddle_build_package_rpm_compression)
 
-$(_swaddle_build_package_rpm_filterFrom requires regexFilterFromProvides)
-$(_swaddle_build_package_rpm_filterFrom provides regexFilterFromRequires)
-$(_swaddle_build_package_rpm_filterSetup regexFilterFromProvides regexFilterFromRequires)
+$(_swaddle_build_package_rpm_filterFrom requires regex_filter_from_provides)
+$(_swaddle_build_package_rpm_filterFrom provides regex_filter_from_requires)
+$(_swaddle_build_package_rpm_filterSetup regex_filter_from_provides regex_filter_from_requires)
 
 Name: ${_swaddle_build_swaddleName}
 Version: $(configure_getConfigurationSetting swaddle version)
 Epoch: $(configure_getConfigurationSetting swaddle epoch)
 Release: $(_swaddle_build_package_rpm_release)
 Summary: $(_swaddle_build_package_rpm_summaryDescription)
-AutoReqProv: $(_swaddle_build_package_rpm_yesNo autoReqProv)
-AutoReq: $(_swaddle_build_package_rpm_yesNo autoReq)
-AutoProv: $(_swaddle_build_package_rpm_yesNo autoProv)
+AutoReqProv: $(_swaddle_build_package_rpm_yesNo auto_req_prov)
+AutoReq: $(_swaddle_build_package_rpm_yesNo auto_req)
+AutoProv: $(_swaddle_build_package_rpm_yesNo auto_prov)
 # BuildRoot is required on old rpmbuild versions (eg CentOS 5, AIX)
 # CentOS 5 is now on life-support and will be dead after 31st March 2017
 BuildRoot: %buildroot

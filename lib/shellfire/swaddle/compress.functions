@@ -7,7 +7,7 @@ swaddle_compress_extension()
 		;;
 		
 		zip)
-		 printf 'zip'
+			printf 'zip'
 		;;
 		
 		gzip)
