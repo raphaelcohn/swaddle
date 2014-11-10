@@ -25,7 +25,7 @@ swaddle_build_package_rpm_registerConfiguration()
 	configure_register Array NotEmpty swaddle_rpm packageFolderPaths
 
 	configure_register Value RpmDigest swaddle_rpm digest 'sha512'
-	configure_register Value Compression swaddle_rpm compression 'xz'
+	configure_register Value RpmCompression swaddle_rpm compression 'xz'
 	configure_register Value RpmGroup swaddle_rpm category 'Applications/System'
 	configure_register Value Boolean swaddle_rpm autoReqProv 'yes'
 	configure_register Value Boolean swaddle_rpm autoReq 'yes'

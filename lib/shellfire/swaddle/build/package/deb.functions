@@ -12,7 +12,7 @@ swaddle_build_package_deb_registerConfiguration()
 	configure_register Value DebComponent swaddle_deb component 'multiverse'
 		
 	configure_register Value DebMultiArch swaddle_deb multiarch 'allowed'
-	configure_register Value Compression swaddle_deb compression 'xz'
+	configure_register Value DebCompression swaddle_deb compression 'xz'
 	configure_register Value Any swaddle_deb bugs_url ''
 		
 	configure_register Value Boolean swaddle_deb essential 'no'

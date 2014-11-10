@@ -78,18 +78,18 @@ configure_validateRpmPackageArchitecture()
 }
 
 # Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
-core_snippet_embed raw swaddle_rpm_licence
+core_snippet_embed raw validate_rpm_licence
 configure_validateRpmLicence()
 {
-	configure_validateValue swaddle_rpm_licence "$1"
+	configure_validateValue validate_rpm_licence "$1"
 }
 
 # Some rules on the GROUP TAG: https://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/Packagers_Guide/chap-Packagers_Guide-Spec_File_Reference-Preamble.html
 # Derived from /usr/share/doc/rpm-4.8.0/ on Centos 6.5
-core_snippet_embed raw swaddle_rpm_group
+core_snippet_embed raw validate_rpm_group
 configure_validateRpmGroup()
 {
-	configure_validateValue swaddle_rpm_group "$1"
+	configure_validateValue validate_rpm_group "$1"
 	
 	if core_variable_isSet _swaddle_build_swaddleName; then
 		if core_variable_endsWith "$_swaddle_build_swaddleName" '-doc'; then
@@ -115,8 +115,22 @@ configure_validateRpmDigest()
 	esac
 }
 
-# Happens to be the same list for RPM and Deb currently
-configure_validateCompression()
+configure_validateRpmCompression()
+{
+	case "$1" in
+
+		none|gzip|bzip2|lzma|xz)
+			:
+		;;
+
+		*)
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'none', 'gzip', 'bzip2', 'lzma' or 'xz')."
+		;;
+		
+	esac
+}
+
+configure_validateDebCompression()
 {
 	case "$1" in
 

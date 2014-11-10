@@ -179,13 +179,7 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 							done
 						}
 						
-						if core_variable_array_isEmpty "$translationsArrayName"; then
-							local core_variable_array_element="$(configure_getConfigurationSetting swaddle apt_language)"
-							_swaddle_repository_apt_createDistsComponentsTranslations_callback
-						else
-							core_variable_array_iterate "$translationsArrayName" _swaddle_repository_apt_createDistsComponentsTranslations_callback
-						fi
-	
+						configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' 'apt_architectures' "$callback" "$(configure_getConfigurationSetting swaddle apt_language)"
 						swaddle_touch_setMtimeAndAtime "$timestamp" Index
 						swaddle_digest_file Index
 						swaddle_compress_gzip Index
@@ -658,16 +652,7 @@ swaddle_repository_apt_parseDeb_printControlField()
 swaddle_repository_apt_architectures()
 {
 	local callback="$1"
-	
-	local configurationSettingValue
-	_configure_configurationSettingValue 'swaddle' 'apt_architectures'
-	
-	if core_variable_array_isEmpty "$configurationSettingValue"; then
-		local core_variable_array_element='amd64'
-		$callback
-	else
-		core_variable_array_iterate "$configurationSettingValue" "$callback"
-	fi
+	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' 'apt_architectures' "$callback" 'amd64'
 }
 
 core_dependency_requires '*' mkdir md5sum
