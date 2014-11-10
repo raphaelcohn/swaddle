@@ -67,11 +67,11 @@ swaddle_compress_gzip()
 	local fileName="$1"
 	if core_compatibility_whichNoOutput pigz; then
 		# -T strips the timestamp - not an option on gzip, it seems
-		# -I "$(configure_getConfigurationSetting swaddle zopfli_iterations)" does not work in Ubuntu 14.04
+		# -I <iterations> does not work in Ubuntu 14.04
 		# Compression sizes varies from run to run... and corrupt archives seem possible
 		pigz -11 -c -q -f -n -T -- "$1" >"$1".gz
 	elif core_compatibility_whichNoOutput zopfli; then
-		zopfli -c --gzip --i"$(configure_getConfigurationSetting swaddle zopfli_iterations)" -- "$1" >"$1".gz
+		zopfli -c --gzip --i15 -- "$1" >"$1".gz
 	else
 		gzip -9 -c -q -f -n -- "$1" >"$1".gz
 	fi

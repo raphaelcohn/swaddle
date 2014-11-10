@@ -4,17 +4,19 @@ core_usesIn swaddle configure
 
 swaddle_build_package_deb_registerConfiguration()
 {
-	configure_register Value DebPackageArchitecture swaddle_deb architecture 'all'
-	# Needed for both packages and repositories!
+	# Also used by apt as defaults for when values are missing
 	# common other values are 18m, 5y and 3y
 	configure_register Value NotEmpty swaddle_deb supported '9m'
 	configure_register Value DebSection swaddle_deb section 'misc'
 	configure_register Value DebPriority swaddle_deb priority 'extra'
+	configure_register Value Any swaddle_deb bugs_url ''
+	
+	configure_register Value DebPackageArchitecture swaddle_deb architecture 'all'
+	
 	configure_register Value DebComponent swaddle_deb component 'multiverse'
 		
 	configure_register Value DebMultiArch swaddle_deb multiarch 'allowed'
 	configure_register Value DebCompression swaddle_deb compression 'xz'
-	configure_register Value Any swaddle_deb bugs_url ''
 		
 	configure_register Value Boolean swaddle_deb essential 'no'
 	configure_register Value Boolean swaddle_deb build_essential 'no'
@@ -420,7 +422,7 @@ swaddle_build_package_deb_createDeb()
 	_swaddle_build_package_deb_poolAZ
 	local poolComponent="$(configure_getConfigurationSetting swaddle_deb component)"
 	
-	local parentPath="$_swaddle_repository_deb_parentPath"/pool/"$poolComponent"/"$poolAZ"/"$poolSource"
+	local parentPath="$_swaddle_repository_parentPath"/pool/"$poolComponent"/"$poolAZ"/"$poolSource"
 	mkdir -m 0755 -p "$parentPath"
 	
 	local debFilePath="$parentPath"/"$poolDebFile"

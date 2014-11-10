@@ -3,12 +3,16 @@ core_usesIn swaddle digest
 swaddle_repository_apt()
 {
 	configure_reset swaddle
+	configure_reset swaddle_apt
 	configure_reset swaddle_deb
+	
 	configure_source "$swaddle_swaddlesPath" swaddles
+	
 	configure_validate swaddle
+	configure_validate swaddle_apt
 	configure_validate swaddle_deb
 	
-	local repositoryPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
+	local repositoryPath="$_swaddle_repository_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
 	
 	swaddle_repository_apt_createTemporaryFolderPath
 	swaddle_repository_apt_createDistsFolderPath
@@ -25,6 +29,14 @@ swaddle_repository_apt()
 	swaddle_repository_apt_createInstallScript
 }
 
+swaddle_repository_apt_registerConfiguration()
+{
+	# amd64, arm64, armhf, i386, powerpc, ppc64el for Ubuntu 14.04
+	configure_register Array AptArchitecture swaddle_apt architectures
+	configure_register Value AptLanguage swaddle_apt language 'en'
+	configure_register Array AptLanguage swaddle_apt translations
+}
+
 core_dependency_requires '*' rm mkdir
 swaddle_repository_apt_createTemporaryFolderPath()
 {
@@ -37,7 +49,7 @@ swaddle_repository_apt_createDistsFolderPath()
 {
 	mkdir -m 0755 -p "$repositoryPath"
 	
-	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_deb_parentPath"/dists
+	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_parentPath"/dists
 }
 
 swaddle_repository_apt_createDistsContentsTmp()
@@ -60,7 +72,7 @@ swaddle_repository_apt_parseDebsInPool()
 {
 	core_variable_array_initialise _swaddle_repository_apt_components 
 	
-	pushd "$_swaddle_repository_deb_parentPath"/pool
+	pushd "$_swaddle_repository_parentPath"/pool
 	set +f
 	local poolComponent
 	for poolComponent in *
@@ -118,7 +130,7 @@ swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile()
 	{
 		local packageArchitecture="$core_variable_array_element"
 	
-		pushd "$_swaddle_repository_deb_parentPath"/pool
+		pushd "$_swaddle_repository_parentPath"/pool
 		set +f
 		for poolComponent in *
 		do
@@ -147,7 +159,7 @@ core_dependency_requires '*' mkdir cat sort rm
 swaddle_repository_apt_createDistsComponentsTranslations()
 {
 	local configurationSettingValue
-	_configure_configurationSettingValue 'swaddle' 'apt_translations'
+	_configure_configurationSettingValue 'swaddle_apt' 'translations'
 	local translationsArrayName="$configurationSettingValue"
 	
 	pushd "$repositoryPath"
@@ -177,7 +189,7 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 								printf ' %s %7s %s\n' "$(swaddle_digest sha1 "$translationFile")" "$(stat -c '%s' "$translationFile")" "$translationFile"
 							done
 						}
-						configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' 'apt_architectures' _swaddle_repository_apt_createDistsComponentsTranslations_callback "$(configure_getConfigurationSetting swaddle apt_language)"
+						configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' 'apt_architectures' _swaddle_repository_apt_createDistsComponentsTranslations_callback "$(configure_getConfigurationSetting swaddle_apt language)"
 					} >Index
 
 					swaddle_touch_setMtimeAndAtime Index
@@ -350,11 +362,11 @@ swaddle_repository_apt_createInstallScript()
 		temporaryKeyFile="${mktemp}"
 		trap 'rm -rf "$temporaryKeyFile"' EXIT
 		cat >"$temporaryKeyFile" <<EOF
-			$(cat "$_swaddle_repository_deb_parentPath"/dists/"$repositoryName"/Release.key)
+			$(cat "$_swaddle_repository_parentPath"/dists/"$repositoryName"/Release.key)
 		EOF
 		sudo -p "Password required to install repository "$repositoryName" public key to apt: " apt-key add "$temporaryKeyFile"
 		
-		printf '%s\n' "$(cat "$_swaddle_repository_deb_parentPath"/dists/"$repositoryName"/00$repositoryName.sources.list)" | sudo -p "Password required to install repository '$repositoryName' apt sources list to '/etc/sources.list.d/00$repositoryName.sources.list': " tee /etc/sources.list.d/00$repositoryName.list >/dev/null
+		printf '%s\n' "$(cat "$_swaddle_repository_parentPath"/dists/"$repositoryName"/00$repositoryName.sources.list)" | sudo -p "Password required to install repository '$repositoryName' apt sources list to '/etc/sources.list.d/00$repositoryName.sources.list': " tee /etc/sources.list.d/00$repositoryName.list >/dev/null
 	EOA
 	
 	chmod +x "$filePath"
@@ -659,13 +671,13 @@ swaddle_repository_apt_parseDeb_printControlField()
 swaddle_repository_apt_architectures()
 {
 	local callback="$1"
-	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' 'apt_architectures' "$callback" 'amd64'
+	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_apt' 'architectures' "$callback" 'amd64'
 }
 
 core_dependency_requires '*' mkdir md5sum
 swaddle_repository_apt_parseDeb_createTranslationFragment()
 {
-	local languageCode="$(configure_getConfigurationSetting swaddle apt_language)"
+	local languageCode="$(configure_getConfigurationSetting swaddle_apt language)"
 	local translationPath="$repositoryPath"/"$poolComponent"/i18n
 	
 	mkdir -m 0755 -p "$translationPath"

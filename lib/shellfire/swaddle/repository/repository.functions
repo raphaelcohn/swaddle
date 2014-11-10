@@ -1,0 +1,31 @@
+core_usesIn swaddle/repository apt yum
+
+swaddle_repository()
+{
+	local repositoryKind="$1"
+	local packageKind="$2"
+	
+	swaddle_repository_configure "$@"
+	
+	local _swaddle_repository_parentPath="$swaddle_outputPath"/"$repositoryKind"
+	
+	swaddle_repository_${repositoryKind}
+}
+
+swaddle_repository_configure()
+{
+	local reset
+	for reset in swaddle swaddle_${repositoryKind} swaddle_${packageKind}
+	do
+		configure_reset "$reset"
+	done
+	
+	configure_source "$swaddle_swaddlesPath" swaddles
+
+	# swaddle_deb used for section, priority, supports, bugs_url if missing when generating packages
+	local reset
+	for reset in swaddle swaddle_${repositoryKind} swaddle_${packageKind}
+	do
+		configure_validate "$reset"
+	done
+}

@@ -43,11 +43,31 @@ swaddle_build_packages()
 {
 	local count=0
 	local _swaddle_build_package_kind
-	for _swaddle_build_package_kind in tar rpm deb
+	for _swaddle_build_package_kind in tar deb rpm
 	do
 		if ! core_path_isReadableAndSearchableFolderPath "$_swaddle_build_templatesPath"/"$_swaddle_build_package_kind"; then
 			continue
 		fi
+
+		local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+		local repositoryKind
+		case "$_swaddle_build_package_kind" in
+			
+			tar)
+				repositoryKind=tar
+			;;
+			
+			deb)
+				repositoryKind=apt
+			;;
+			
+			rpm)
+				repositoryKind=yum
+			;;
+			
+		esac
+		
+		_swaddle_repository_parentPath="$swaddle_outputPath"/"$repositoryKind"
 		
 		swaddle_build_package
 				

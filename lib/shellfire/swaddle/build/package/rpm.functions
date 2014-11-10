@@ -120,7 +120,7 @@ core_dependency_requires '*' rpmbuild mkdir mv
 core_functions_register _swaddle_build_package_rpm_functions swaddle_package_rpm_rpmbuild
 swaddle_package_rpm_rpmbuild()
 {
-	mkdir -m 0755 -p "$_swaddle_repository_yum_parentPath"
+	mkdir -m 0755 -p "$_swaddle_repository_parentPath"
 	
 	local rpmbuildTemporaryScriptsPath="$_swaddle_build_package_temporaryFolderPath"/rpmbuild.tmp
 	mkdir -m 0700 -p "$rpmbuildTemporaryScriptsPath"
@@ -157,7 +157,7 @@ swaddle_package_rpm_rpmbuild()
 		--define "buildroot $_swaddle_build_package_root" \
 		--define "_topdir $_swaddle_build_package_temporaryFolderPath" \
 		--define "_sourcedir $_swaddle_build_package_temporaryFolderPath" \
-		--define "_rpmdir $_swaddle_repository_yum_parentPath" \
+		--define "_rpmdir $_swaddle_repository_parentPath" \
 		--define "_tmppath $rpmbuildTemporaryScriptsPath"
 	core_variable_array_append options "$_swaddle_build_package_rpm_specFile"
 	
@@ -168,13 +168,13 @@ swaddle_package_rpm_rpmbuild()
 	fi
 	
 	set +f
-	set -- "$_swaddle_repository_yum_parentPath"/"$packageArchitecture"/"$_swaddle_build_swaddleName"-*."$packageArchitecture".rpm
+	set -- "$_swaddle_repository_parentPath"/"$packageArchitecture"/"$_swaddle_build_swaddleName"-*."$packageArchitecture".rpm
 	set -f
 	local rpmFilePath="$1"
 	
 	swaddle_touch_setMtimeAndAtime "$rpmFilePath"
-	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_parentPath"/"$packageArchitecture"
-	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_parentPath"
+	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_parentPath"/"$packageArchitecture"
+	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_parentPath"
 }
 
 _swaddle_build_package_rpm_digestAlgorithm()
