@@ -12,35 +12,35 @@ swaddle_configure_signer()
 
 
 # Derived from http://packages.ubuntu.com/lucid/
-core_snippet_embed raw swaddle_deb_section
+core_snippet_embed raw validate_deb_section
 configure_validateDebSection()
 {
-	configure_validateValue swaddle_deb_section "$1"
+	configure_validateValue validate_deb_section "$1"
 }
 
 #https://www.debian.org/doc/manuals/debian-faq/ch-pkg_basics.en.html#s-priority
-core_snippet_embed raw swaddle_deb_priority
+core_snippet_embed raw validate_deb_priority
 configure_validateDebPriority()
 {
-	configure_validateValue swaddle_deb_priority "$1"
+	configure_validateValue validate_deb_priority "$1"
 }
 
-core_snippet_embed raw swaddle_deb_component
+core_snippet_embed raw validate_deb_component
 configure_validateDebComponent()
 {
-	configure_validateValue swaddle_deb_component "$1"
+	configure_validateValue validate_deb_component "$1"
 }
 
-core_snippet_embed raw swaddle_deb_multiarch
+core_snippet_embed raw validate_deb_multiarch
 configure_validateDebMultiArch()
 {
-	configure_validateValue swaddle_deb_multiarch "$1"
+	configure_validateValue validate_deb_multiarch "$1"
 }
 
-core_snippet_embed raw swaddle_deb_task
+core_snippet_embed raw validate_deb_task
 configure_validateDebTask()
 {
-	configure_validateValue swaddle_deb_task "$1"
+	configure_validateValue validate_deb_task "$1"
 }
 
 core_snippet_embed raw validate_apt_language
