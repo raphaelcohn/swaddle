@@ -24,7 +24,7 @@ swaddle_build_package_rpm_registerConfiguration()
 	configure_register Array NotEmpty swaddle_rpm replaceableConfigFiles
 	configure_register Array NotEmpty swaddle_rpm packageFolderPaths
 
-	configure_register Value Digest swaddle_rpm digest 'sha512'
+	configure_register Value RpmDigest swaddle_rpm digest 'sha512'
 	configure_register Value Compression swaddle_rpm compression 'xz'
 	configure_register Value RpmGroup swaddle_rpm category 'Applications/System'
 	configure_register Value Boolean swaddle_rpm autoReqProv 'yes'
@@ -182,15 +182,23 @@ swaddle_package_rpm_rpmbuild()
 
 _swaddle_build_package_rpm_architecture()
 {
-	local architecture="$(configure_getConfigurationSetting swaddle architecture)"
+	local architecture="$(configure_getConfigurationSetting swaddle_rpm architecture)"
 	case "$architecture" in
 		
-		all|noarch)
+		all)
 			printf '%s' 'noarch'
 		;;
 		
-		amd64|x86_64)
+		amd64)
 			printf '%s' 'x86_64'
+		;;
+		
+		powerpc)
+			printf '%s' 'ppc'
+		;;
+		
+		*)
+			# RPM also defines i586 and i686
 		;;
 		
 		*)

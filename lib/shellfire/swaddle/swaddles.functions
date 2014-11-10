@@ -69,7 +69,7 @@ swaddle_swaddles_registerConfiguration()
 {
 	# derive name from folderpath
 	local repositoryName="$(core_compatibility_basename "$swaddle_swaddlesPath")"
-	configure_register Value NotEmpty swaddle repositoryName "$repositoryName"
+	configure_register Value NotEmpty swaddle repository_name "$repositoryName"
 	
 	# Might want to use github pages going forward...
 	#http://blog.teamtreehouse.com/using-github-pages-to-host-your-website
@@ -97,7 +97,7 @@ swaddle_swaddles_registerConfiguration()
 	
 	configure_register Array NotEmpty swaddle mirrors
 	
-	configure_register Array DebRealArchitecture swaddle apt_architectures
+	configure_register Array DebRepositoryArchitecture swaddle apt_architectures
 	# amd64, arm64, armhf, i386, powerpc, ppc64el for Ubuntu 14.04
 	
 	configure_register Value AptLanguage swaddle apt_language 'en'
@@ -137,11 +137,11 @@ swaddle_swaddles_registerConfiguration_attemptToDiscoverVersionAndMtime()
 }
 
 core_dependency_requires '*' head
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerConfiguration_attemptToDiscoverLicence
-swaddle_swaddles_registerConfiguration_attemptToDiscoverLicence()
+core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerConfiguration_attemptToDiscoverRpmLicence
+swaddle_swaddles_registerConfiguration_attemptToDiscoverRpmLicence()
 {
 	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
-		configure_register Value Licence swaddle_package licence
+		configure_register Value RpmLicence swaddle_rpm licence
 		return 0
 	fi
 	
@@ -160,7 +160,7 @@ swaddle_swaddles_registerConfiguration_attemptToDiscoverLicence()
 		fi
 		
 		if [ -d "$currentPath"/.git ]; then
-			configure_register Value Licence swaddle_package licence
+			configure_register Value RpmLicence swaddle_rpm licence
 			return 0
 		fi
 		
@@ -176,13 +176,13 @@ swaddle_swaddles_registerConfiguration_attemptToDiscoverLicence()
 		
 		*)
 			core_message NOTICE "Could not determine your licence automatically, please submit a pull request for swaddle"
-			configure_register Value Licence swaddle_package licence
+			configure_register Value RpmLicence swaddle_rpm licence
 			return 0
 		;;
 		
 	esac
 
-	configure_register Value Licence swaddle_package licence "$licence"
+	configure_register Value RpmLicence swaddle_rpm licence "$licence"
 }
 
 core_dependency_requires '*' git awk
@@ -242,7 +242,8 @@ swaddle_swaddles_registerConfiguration_attemptToDiscoverRpmChangelog()
 core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerConfiguration_miscellany
 swaddle_swaddles_registerConfiguration_miscellany()
 {
-	configure_register Value Architecture swaddle architecture  'all'
+	configure_register Value RpmPackageArchitecture swaddle_rpm architecture 'noarch'
+	configure_register Value DebPackageArchitecture swaddle_deb architecture 'all'
 	configure_register Value NotEmpty swaddle epoch '0'
 	configure_register Value NotEmpty swaddle vendor
 	configure_register Value NotEmpty swaddle_package description
@@ -272,7 +273,7 @@ swaddle_swaddles_sourceConfiguration()
 core_functions_register _swaddle_swaddles_functions swaddle_swaddles_setRepositoryFolders
 swaddle_swaddles_setRepositoryFolders()
 {
-	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"
+	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
 	_swaddle_repository_tar_parentPath="$swaddle_outputPath"/"$repositoryName"/tar
 	_swaddle_repository_deb_parentPath="$swaddle_outputPath"/"$repositoryName"/deb
 	_swaddle_repository_yum_parentPath="$swaddle_outputPath"/"$repositoryName"/rpm

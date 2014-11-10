@@ -33,7 +33,7 @@ swaddle_repository_apt_createTemporaryFolderPath()
 
 swaddle_repository_apt_createDistsFolderPath()
 {
-	mkdir -m 0755 -p "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"
+	mkdir -m 0755 -p "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
 	
 	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
 	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_deb_parentPath"/dists
@@ -45,7 +45,7 @@ swaddle_repository_apt_createDistsContentsTmp()
 	{
 		local packageArchitecture="$core_variable_array_element"
 		
-		pushd "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"
+		pushd "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
 		
 			printf '' >Contents-"$packageArchitecture".tmp
 			
@@ -123,7 +123,7 @@ swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile()
 		do
 			set -f
 			if [ -d "$poolComponent" ]; then
-				local componentFilesFolderPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/"$poolComponent"/binary-"$packageArchitecture"
+				local componentFilesFolderPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/"$poolComponent"/binary-"$packageArchitecture"
 				
 				pushd "$componentFilesFolderPath"
 				
@@ -151,7 +151,7 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 	_configure_configurationSettingValue 'swaddle' 'apt_translations'
 	local translationsArrayName="$configurationSettingValue"
 	
-	pushd "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"
+	pushd "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
 		set +f
 		local poolComponent
 		for poolComponent in *
@@ -209,7 +209,7 @@ swaddle_repository_apt_createDistsContents()
 	{
 		local packageArchitecture="$core_variable_array_element"
 		
-		pushd "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"
+		pushd "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
 			
 			# Bug: We do not remove duplicate keys, eg for busybox:-
 			# bin/busybox                                                 shells/busybox-static,universe/utils/busybox
@@ -239,7 +239,7 @@ swaddle_repository_apt_createDistsContents()
 core_dependency_requires '*' cat date ln stat
 swaddle_repository_apt_createDistsRelease()
 {
-	local parentPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"
+	local parentPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
 	local releaseFilePath="$parentPath"/Release
 	
 	local configurationSettingValue
@@ -253,13 +253,13 @@ swaddle_repository_apt_createDistsRelease()
 		cat <<-EOF
 			Origin: $(configure_getConfigurationSetting swaddle vendor)
 			Label: $(configure_getConfigurationSetting swaddle vendor)
-			Suite: $(configure_getConfigurationSetting swaddle repositoryName)
+			Suite: $(configure_getConfigurationSetting swaddle repository_name)
 			Version: $(configure_getConfigurationSetting swaddle version)
-			Codename: $(configure_getConfigurationSetting swaddle repositoryName)
+			Codename: $(configure_getConfigurationSetting swaddle repository_name)
 			Date: ${releaseDate}
 			Architectures: $(core_variable_array_string "$architectures" ' ')
 			Components: $(core_variable_array_string  _swaddle_repository_apt_components ' ')
-			Description: $(configure_getConfigurationSetting swaddle vendor) $(configure_getConfigurationSetting swaddle repositoryName) $(configure_getConfigurationSetting swaddle version)
+			Description: $(configure_getConfigurationSetting swaddle vendor) $(configure_getConfigurationSetting swaddle repository_name) $(configure_getConfigurationSetting swaddle version)
 			NotAutomatic: no
 			ButAutomaticUpgrades: no
 		EOF
@@ -315,7 +315,7 @@ swaddle_repository_apt_createDistsRelease()
 swaddle_repository_apt_exportSigningKey()
 {
 	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	local keyPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/Release.key
+	local keyPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/Release.key
 	swaddle_gpg_exportSigningKey >"$keyPath"
 	swaddle_touch_setMtimeAndAtime "$timestamp" "$keyPath"
 	swaddle_digest_file "$keyPath"
@@ -330,9 +330,9 @@ swaddle_repository_apt_createAptSourcesList()
 		hostBaseUrl="$(core_variable_allButLastN "$hostBaseUrl" $((length-1)))"
 	fi
 	
-	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"
+	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
 	
-	local filePath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/00$repositoryName.sources.list
+	local filePath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/00$repositoryName.sources.list
 	printf '%s\n' "deb $hostBaseUrl $repositoryName $(core_variable_array_string  _swaddle_repository_apt_components ' ')" >"$filePath"
 	
 	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
@@ -343,8 +343,8 @@ swaddle_repository_apt_createAptSourcesList()
 
 swaddle_repository_apt_createInstallScript()
 {
-	local filePath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/install.sh
-	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"
+	local filePath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/install.sh
+	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
 	
 	local mktemp="\$(mktemp $repositoryName.key.XXXXXXXXX)"
 	local temporaryKeyFile='$temporaryKeyFile'
@@ -411,7 +411,7 @@ core_dependency_requires '*' cat
 swaddle_repository_apt_createDistsComponentReleaseFile()
 {
 	cat >Release <<-EOF
-		Archive: $(configure_getConfigurationSetting swaddle repositoryName)
+		Archive: $(configure_getConfigurationSetting swaddle repository_name)
 		Version: $(configure_getConfigurationSetting swaddle version)
 		Component: ${poolComponent}
 		Origin: $(configure_getConfigurationSetting swaddle vendor)
@@ -522,7 +522,7 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 	_swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry_callback()
 	{
 		local packageArchitecture="$core_variable_array_element"
-		local packagesFolderPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/"$poolComponent"/binary-"$packageArchitecture"
+		local packagesFolderPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/"$poolComponent"/binary-"$packageArchitecture"
 		mkdir -m 0755 -p "$packagesFolderPath"
 		
 		ln -f "$_swaddle_repository_apt_temporaryFolderPath"/package "$packagesFolderPath"/"$poolDebFile".Packages
@@ -541,7 +541,7 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 core_dependency_requires '*' cat rm
 swaddle_repository_apt_parseDeb_extractContentsList()
 {
-	local fragmentFilePath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/Contents.tmp
+	local fragmentFilePath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/Contents.tmp
 	
 	local filePathWithLeadingDotSlash
 	tar --list --file "$dataTarFileName" | while IFS=' ' read -r filePathWithLeadingDotSlash
@@ -563,7 +563,7 @@ swaddle_repository_apt_parseDeb_extractContentsList()
 	_swaddle_repository_apt_parseDeb_extractContentsList_callback()
 	{
 		local packageArchitecture="$core_variable_array_element"
-		cat "$fragmentFilePath" >>"$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/Contents-"$packageArchitecture".tmp
+		cat "$fragmentFilePath" >>"$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/Contents-"$packageArchitecture".tmp
 	}
 	
 	if [ "$packageArchitecture" = 'all' ]; then
@@ -676,7 +676,7 @@ core_dependency_requires '*' mkdir md5sum
 swaddle_repository_apt_parseDeb_createTranslationFragment()
 {
 	local languageCode="$(configure_getConfigurationSetting swaddle apt_language)"
-	local translationPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repositoryName)"/"$poolComponent"/i18n
+	local translationPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/"$poolComponent"/i18n
 	
 	mkdir -m 0755 -p "$translationPath"
 	

@@ -12,7 +12,7 @@ swaddle_repository_yum()
 	configure_validate swaddle_rpm
 	
 	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"
+	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
 	local hostBaseUrl
 	swaddle_repository_yum_adjustUrl hostBaseUrl "$(configure_getConfigurationSetting swaddle hostBaseUrl)"
 	

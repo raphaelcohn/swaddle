@@ -462,22 +462,7 @@ _swaddle_build_package_deb_poolAZ()
 
 _swaddle_build_package_deb_architecture()
 {
-	local architecture="$(configure_getConfigurationSetting swaddle architecture)"
-	case "$architecture" in
-		
-		all|noarch)
-			printf '%s' 'all'
-		;;
-		
-		amd64|x86_64)
-			printf '%s' 'amd64'
-		;;
-		
-		*)
-			printf '%s' "$architecture"
-		;;
-		
-	esac
+	configure_getConfigurationSetting swaddle_deb architecture
 }
 
 _swaddle_build_package_deb_installedSize()

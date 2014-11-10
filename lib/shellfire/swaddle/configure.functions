@@ -10,12 +10,6 @@ swaddle_configure_signer()
 
 
 
-# Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
-core_snippet_embed raw swaddle_package_licence
-configure_validateLicence()
-{
-	configure_validateValue swaddle_package_licence "$1"
-}
 
 # Derived from http://packages.ubuntu.com/lucid/
 core_snippet_embed raw swaddle_deb_section
@@ -55,11 +49,39 @@ configure_validateAptLanguage()
 	configure_validateValue swaddle_apt_language "$1"
 }
 
-core_snippet_embed raw swaddle_deb_architecture
-configure_validateDebRealArchitecture()
+core_snippet_embed raw validate_apt_repository_architecture
+configure_validateAptRepositoryArchitecture()
 {
-	local namespace='swaddle'
-	configure_validateValue swaddle_deb_architecture "$1"
+	configure_validateValue validate_apt_repository_architecture "$1"
+}
+
+configure_validateDebPackageArchitecture()
+{
+	if [ "$1" = 'all' ]; then
+		return 0
+	fi
+	configure_validateAptRepositoryArchitecture "$1"
+}
+
+core_snippet_embed raw validate_yum_repository_architecture
+configure_validateYumRepositoryArchitecture()
+{
+	configure_validateValue validate_yum_repository_architecture "$1"
+}
+
+configure_validateRpmPackageArchitecture()
+{
+	if [ "$1" = 'noarch' ]; then
+		return 0
+	fi
+	configure_validateRpmRepositoryArchitecture "$1"
+}
+
+# Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
+core_snippet_embed raw swaddle_rpm_licence
+configure_validateRpmLicence()
+{
+	configure_validateValue swaddle_rpm_licence "$1"
 }
 
 # Some rules on the GROUP TAG: https://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/Packagers_Guide/chap-Packagers_Guide-Spec_File_Reference-Preamble.html
@@ -78,38 +100,7 @@ configure_validateRpmGroup()
 	fi
 }
 
-configure_validateTarCompression()
-{
-	case "$1" in
-
-		lzop|zip|gzip|bzip2|lzma|xz|lzip|rzip|lrzip)
-			:
-		;;
-
-		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'lzop', 'zip', 'gzip', 'bzip2', 'lzma', 'xz', 'lzip', 'rzip' or 'lrzip')."
-		;;
-		
-	esac
-}
-
-configure_validateArchitecture()
-{
-	case "$1" in
-		
-		# Currently, we only support these
-		all|noarch|x86_64|amd64)
-			:
-		;;
-
-		*)
-			configure_validateDebRealArchitecture "$1"
-		;;
-		
-	esac
-}
-
-configure_validateDigest()
+configure_validateRpmDigest()
 {
 	case "$1" in
 
@@ -124,6 +115,7 @@ configure_validateDigest()
 	esac
 }
 
+# Happens to be the same list for RPM and Deb currently
 configure_validateCompression()
 {
 	case "$1" in
@@ -134,6 +126,21 @@ configure_validateCompression()
 
 		*)
 			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'none', 'gzip', 'bzip2', 'lzma' or 'xz')."
+		;;
+		
+	esac
+}
+
+configure_validateTarCompression()
+{
+	case "$1" in
+
+		lzop|zip|gzip|bzip2|lzma|xz|lzip|rzip|lrzip)
+			:
+		;;
+
+		*)
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression for a tar (it must be one of 'lzop', 'zip', 'gzip', 'bzip2', 'lzma', 'xz', 'lzip', 'rzip' or 'lrzip')."
 		;;
 		
 	esac

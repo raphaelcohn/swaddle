@@ -144,8 +144,6 @@ configure_reset()
 	core_variable_array_iterate "$configurationSettingNamespace" _configure_reset_callback
 }
 
-# eg  configure swaddle architecture amd64
-# eg  configure swaddle_package description <<EOF stuff EOF
 configure()
 {
 	local namespace="$1"
