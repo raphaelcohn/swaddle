@@ -2,13 +2,13 @@ core_usesIn swaddle digest
 
 swaddle_repository_apt()
 {
-	echo HELLO 1>&2
-	
 	configure_reset swaddle
 	configure_reset swaddle_deb
 	configure_source "$swaddle_swaddlesPath" swaddles
 	configure_validate swaddle
 	configure_validate swaddle_deb
+	
+	local repositoryPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
 	
 	swaddle_repository_apt_createTemporaryFolderPath
 	swaddle_repository_apt_createDistsFolderPath
@@ -35,7 +35,7 @@ swaddle_repository_apt_createTemporaryFolderPath()
 
 swaddle_repository_apt_createDistsFolderPath()
 {
-	mkdir -m 0755 -p "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
+	mkdir -m 0755 -p "$repositoryPath"
 	
 	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_deb_parentPath"/dists
 }
@@ -46,7 +46,7 @@ swaddle_repository_apt_createDistsContentsTmp()
 	{
 		local packageArchitecture="$core_variable_array_element"
 		
-		pushd "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
+		pushd "$repositoryPath"
 		
 			printf '' >Contents-"$packageArchitecture".tmp
 			
@@ -124,7 +124,7 @@ swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile()
 		do
 			set -f
 			if [ -d "$poolComponent" ]; then
-				local componentFilesFolderPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/"$poolComponent"/binary-"$packageArchitecture"
+				local componentFilesFolderPath="$repositoryPath"/"$poolComponent"/binary-"$packageArchitecture"
 				
 				pushd "$componentFilesFolderPath"
 				
@@ -150,7 +150,7 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 	_configure_configurationSettingValue 'swaddle' 'apt_translations'
 	local translationsArrayName="$configurationSettingValue"
 	
-	pushd "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
+	pushd "$repositoryPath"
 		set +f
 		local poolComponent
 		for poolComponent in *
@@ -166,7 +166,7 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 						_swaddle_repository_apt_createDistsComponentsTranslations_callback()
 						{
 							local languageCode="$core_variable_array_element"
-							rm -f Translation-"$languageCode"
+							
 							_swaddle_repository_apt_sortAndConcatenateFragments Translation-"$languageCode"
 							
 							local extension
@@ -177,13 +177,12 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 								printf ' %s %7s %s\n' "$(swaddle_digest sha1 "$translationFile")" "$(stat -c '%s' "$translationFile")" "$translationFile"
 							done
 						}
-						
-						configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' 'apt_architectures' "$callback" "$(configure_getConfigurationSetting swaddle apt_language)"
-						swaddle_touch_setMtimeAndAtime Index
-						swaddle_digest_file Index
-						swaddle_compress_gzip Index
+						configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' 'apt_architectures' _swaddle_repository_apt_createDistsComponentsTranslations_callback "$(configure_getConfigurationSetting swaddle apt_language)"
 					} >Index
-				
+
+					swaddle_touch_setMtimeAndAtime Index
+					swaddle_digest_file Index
+					swaddle_compress_gzip Index
 				popd
 			fi
 		done
@@ -200,7 +199,7 @@ swaddle_repository_apt_createDistsContents()
 	{
 		local packageArchitecture="$core_variable_array_element"
 		
-		pushd "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
+		pushd "$repositoryPath"
 			
 			# Bug: We do not remove duplicate keys, eg for busybox:-
 			# bin/busybox                                                 shells/busybox-static,universe/utils/busybox
@@ -230,7 +229,7 @@ swaddle_repository_apt_createDistsContents()
 core_dependency_requires '*' cat date ln stat
 swaddle_repository_apt_createDistsRelease()
 {
-	local parentPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
+	local parentPath="$repositoryPath"
 	local releaseFilePath="$parentPath"/Release
 	
 	local configurationSettingValue
@@ -304,7 +303,7 @@ swaddle_repository_apt_createDistsRelease()
 
 swaddle_repository_apt_exportSigningKey()
 {
-	local keyPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/Release.key
+	local keyPath="$repositoryPath"/Release.key
 	swaddle_gpg_exportSigningKey >"$keyPath"
 	swaddle_touch_setMtimeAndAtime "$keyPath"
 	swaddle_digest_file "$keyPath"
@@ -321,7 +320,7 @@ swaddle_repository_apt_createAptSourcesList()
 	
 	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
 	
-	local filePath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/00$repositoryName.sources.list
+	local filePath="$repositoryPath"/00$repositoryName.sources.list
 	printf '%s\n' "deb $hostBaseUrl $repositoryName $(core_variable_array_string  _swaddle_repository_apt_components ' ')" >"$filePath"
 	
 	swaddle_touch_setMtimeAndAtime "$filePath"
@@ -331,7 +330,7 @@ swaddle_repository_apt_createAptSourcesList()
 
 swaddle_repository_apt_createInstallScript()
 {
-	local filePath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/install.sh
+	local filePath="$repositoryPath"/install.sh
 	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
 	
 	local mktemp="\$(mktemp $repositoryName.key.XXXXXXXXX)"
@@ -361,6 +360,16 @@ core_dependency_requires '*' sort cat rm
 _swaddle_repository_apt_sortAndConcatenateFragments()
 {
 	local concatenatedFileName="$1"
+	
+	local extension
+	local existingConcatenatedFile
+	for extension in '' gz bz2 lzma xz
+	do
+		existingConcatenatedFile="$concatenatedFileName"${extension}
+		if [ -e "$existingConcatenatedFile" ]; then
+			rm "$existingConcatenatedFile"
+		fi
+	done
 	
 	set +f
 	set -- *."$concatenatedFileName"
@@ -507,7 +516,7 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 	_swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry_callback()
 	{
 		local packageArchitecture="$core_variable_array_element"
-		local packagesFolderPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/"$poolComponent"/binary-"$packageArchitecture"
+		local packagesFolderPath="$repositoryPath"/"$poolComponent"/binary-"$packageArchitecture"
 		mkdir -m 0755 -p "$packagesFolderPath"
 		
 		ln -f "$_swaddle_repository_apt_temporaryFolderPath"/package "$packagesFolderPath"/"$poolDebFile".Packages
@@ -526,7 +535,7 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 core_dependency_requires '*' cat rm
 swaddle_repository_apt_parseDeb_extractContentsList()
 {
-	local fragmentFilePath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/Contents.tmp
+	local fragmentFilePath="$repositoryPath"/Contents.tmp
 	
 	local filePathWithLeadingDotSlash
 	tar --list --file "$dataTarFileName" | while IFS=' ' read -r filePathWithLeadingDotSlash
@@ -548,7 +557,7 @@ swaddle_repository_apt_parseDeb_extractContentsList()
 	_swaddle_repository_apt_parseDeb_extractContentsList_callback()
 	{
 		local packageArchitecture="$core_variable_array_element"
-		cat "$fragmentFilePath" >>"$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/Contents-"$packageArchitecture".tmp
+		cat "$fragmentFilePath" >>"$repositoryPath"/Contents-"$packageArchitecture".tmp
 	}
 	
 	if [ "$packageArchitecture" = 'all' ]; then
@@ -650,7 +659,7 @@ core_dependency_requires '*' mkdir md5sum
 swaddle_repository_apt_parseDeb_createTranslationFragment()
 {
 	local languageCode="$(configure_getConfigurationSetting swaddle apt_language)"
-	local translationPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/"$poolComponent"/i18n
+	local translationPath="$repositoryPath"/"$poolComponent"/i18n
 	
 	mkdir -m 0755 -p "$translationPath"
 	

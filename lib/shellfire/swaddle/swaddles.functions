@@ -281,13 +281,6 @@ core_functions_register _swaddle_swaddles_functions swaddle_swaddles_buildSwaddl
 swaddle_swaddles_buildSwaddles()
 {
 	core_variable_array_iterate swaddle_swaddles swaddle_build_all
+	swaddle_repository_apt
 	swaddle_repository_yum
 }
-
-#core_functions_register _swaddle_swaddles_functions swaddle_swaddles_buildRepositories
-#swaddle_swaddles_buildRepositories()
-#{
-#	echo HELLOXXX 1>&2
-#	swaddle_repository_apt
-#	swaddle_repository_yum
-#}
