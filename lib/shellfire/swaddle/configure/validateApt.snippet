@@ -1,0 +1,13 @@
+core_usesIn configure
+
+core_snippet_embed raw validate_apt_language
+configure_validateAptLanguage()
+{
+	configure_validateValue validate_apt_language "$1"
+}
+
+core_snippet_embed raw validate_apt_architecture
+configure_validateAptArchitecture()
+{
+	configure_validateValue validate_apt_architecture "$1"
+}

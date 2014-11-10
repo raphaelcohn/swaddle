@@ -327,7 +327,6 @@ core_dependency_requires '*' tar rm
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_tarControl
 swaddle_build_package_deb_tarControl()
 {
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
 	local filePath
 	set +f
 	for filePath in "$_swaddle_build_package_deb_controlFolderPath"/*
@@ -344,7 +343,7 @@ swaddle_build_package_deb_tarControl()
 			chmod 0644 "$filePath"
 		fi
 		
-		swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath"
+		swaddle_touch_setMtimeAndAtime "$filePath"
 		
 	done
 	set -f
@@ -405,8 +404,7 @@ _swaddle_build_package_deb_permissionsForAr()
 {
 	local filePath="$1"
 	
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath"
+	swaddle_touch_setMtimeAndAtime "$filePath"
 	chmod 0644 "$filePath"
 	swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" chown 0:0 "$filePath"
 }
@@ -439,8 +437,7 @@ swaddle_build_package_deb_createDeb()
 			"$_swaddle_build_package_deb_dataTarballFileName"
 	popd
 	
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$debFilePath"
+	swaddle_touch_setMtimeAndAtime "$debFilePath"
 }
 
 _swaddle_build_package_deb_poolAZ()

@@ -29,7 +29,7 @@ core_dependency_requires '*' touch
 core_usesIn swaddle gpg compress
 swaddle_digest_signFile()
 {
-	if core_variable_isFalse "$(configure_getConfigurationSetting swaddle sign)"; then
+	if core_variable_isFalse "$(swaddle_configure_sign)"; then
 		return 0
 	fi
 	

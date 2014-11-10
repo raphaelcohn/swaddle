@@ -1,0 +1,58 @@
+
+
+
+
+# Derived from http://packages.ubuntu.com/lucid/
+core_snippet_embed raw validate_deb_section
+configure_validateDebSection()
+{
+	configure_validateValue validate_deb_section "$1"
+}
+
+#https://www.debian.org/doc/manuals/debian-faq/ch-pkg_basics.en.html#s-priority
+core_snippet_embed raw validate_deb_priority
+configure_validateDebPriority()
+{
+	configure_validateValue validate_deb_priority "$1"
+}
+
+core_snippet_embed raw validate_deb_component
+configure_validateDebComponent()
+{
+	configure_validateValue validate_deb_component "$1"
+}
+
+core_snippet_embed raw validate_deb_multiarch
+configure_validateDebMultiArch()
+{
+	configure_validateValue validate_deb_multiarch "$1"
+}
+
+core_snippet_embed raw validate_deb_task
+configure_validateDebTask()
+{
+	configure_validateValue validate_deb_task "$1"
+}
+
+configure_validateDebPackageArchitecture()
+{
+	if [ "$1" = 'all' ]; then
+		return 0
+	fi
+	configure_validateAptArchitecture "$1"
+}
+
+configure_validateDebCompression()
+{
+	case "$1" in
+
+		none|gzip|bzip2|lzma|xz)
+			:
+		;;
+
+		*)
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'none', 'gzip', 'bzip2', 'lzma' or 'xz')."
+		;;
+		
+	esac
+}

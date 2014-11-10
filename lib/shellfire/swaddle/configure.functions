@@ -1,3 +1,5 @@
+core_usesIn swaddle/configure validateApt validateDeb validateRpm validateTar validateYum
+
 swaddle_configure_maintainer()
 {
 	printf '%s <%s>' "$(configure_getConfigurationSetting swaddle maintainer_name)" "$(configure_getConfigurationSetting swaddle maintainer_email)"
@@ -8,154 +10,12 @@ swaddle_configure_signer()
 	printf '%s (%s) <%s>' "$(configure_getConfigurationSetting swaddle maintainer_name)" "$(configure_getConfigurationSetting swaddle maintainer_comment)" "$(configure_getConfigurationSetting swaddle maintainer_email)"
 }
 
-
-
-
-# Derived from http://packages.ubuntu.com/lucid/
-core_snippet_embed raw validate_deb_section
-configure_validateDebSection()
+swaddle_configure_sign()
 {
-	configure_validateValue validate_deb_section "$1"
+	configure_getConfigurationSetting swaddle sign
 }
 
-#https://www.debian.org/doc/manuals/debian-faq/ch-pkg_basics.en.html#s-priority
-core_snippet_embed raw validate_deb_priority
-configure_validateDebPriority()
+swaddle_configure_timestamp()
 {
-	configure_validateValue validate_deb_priority "$1"
-}
-
-core_snippet_embed raw validate_deb_component
-configure_validateDebComponent()
-{
-	configure_validateValue validate_deb_component "$1"
-}
-
-core_snippet_embed raw validate_deb_multiarch
-configure_validateDebMultiArch()
-{
-	configure_validateValue validate_deb_multiarch "$1"
-}
-
-core_snippet_embed raw validate_deb_task
-configure_validateDebTask()
-{
-	configure_validateValue validate_deb_task "$1"
-}
-
-core_snippet_embed raw validate_apt_language
-configure_validateAptLanguage()
-{
-	configure_validateValue validate_apt_language "$1"
-}
-
-core_snippet_embed raw validate_apt_architecture
-configure_validateAptArchitecture()
-{
-	configure_validateValue validate_apt_architecture "$1"
-}
-
-configure_validateDebPackageArchitecture()
-{
-	if [ "$1" = 'all' ]; then
-		return 0
-	fi
-	configure_validateAptArchitecture "$1"
-}
-
-core_snippet_embed raw validate_yum_architecture
-configure_validateYumArchitecture()
-{
-	configure_validateValue validate_yum_architecture "$1"
-}
-
-configure_validateRpmPackageArchitecture()
-{
-	if [ "$1" = 'noarch' ]; then
-		return 0
-	fi
-	configure_validateYumArchitecture "$1"
-}
-
-# Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
-core_snippet_embed raw validate_rpm_licence
-configure_validateRpmLicence()
-{
-	configure_validateValue validate_rpm_licence "$1"
-}
-
-# Some rules on the GROUP TAG: https://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/Packagers_Guide/chap-Packagers_Guide-Spec_File_Reference-Preamble.html
-# Derived from /usr/share/doc/rpm-4.8.0/ on Centos 6.5
-core_snippet_embed raw validate_rpm_group
-configure_validateRpmGroup()
-{
-	configure_validateValue validate_rpm_group "$1"
-	
-	if core_variable_isSet _swaddle_build_swaddleName; then
-		if core_variable_endsWith "$_swaddle_build_swaddleName" '-doc'; then
-			if [ "$1" != 'Documentation' ]; then
-				core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') ends in '-doc' so its rpm_group must be 'Documentation', not '$1'."
-			fi
-		fi
-	fi
-}
-
-configure_validateRpmDigest()
-{
-	case "$1" in
-
-		md5|sha1|sha256|sha384|sha512)
-			:
-		;;
-
-		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid digest (it must be one of 'md5', 'sha1', 'sha256', 'sha384' or 'sha512')."
-		;;
-		
-	esac
-}
-
-configure_validateRpmCompression()
-{
-	case "$1" in
-
-		none|gzip|bzip2|lzma|xz)
-			:
-		;;
-
-		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'none', 'gzip', 'bzip2', 'lzma' or 'xz')."
-		;;
-		
-	esac
-}
-
-configure_validateDebCompression()
-{
-	case "$1" in
-
-		none|gzip|bzip2|lzma|xz)
-			:
-		;;
-
-		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'none', 'gzip', 'bzip2', 'lzma' or 'xz')."
-		;;
-		
-	esac
-}
-
-configure_validateTarCompression()
-{
-	case "$1" in
-
-		lzop|zip|gzip|bzip2|lzma|xz|lzip|rzip|lrzip)
-			:
-		;;
-
-		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression for a tar (it must be one of 'lzop', 'zip', 'gzip', 'bzip2', 'lzma', 'xz', 'lzip', 'rzip' or 'lrzip')."
-		;;
-		
-	esac
+	configure_getConfigurationSetting swaddle timestamp
 }

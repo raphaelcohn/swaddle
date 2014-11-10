@@ -29,7 +29,7 @@ swaddle_build_package_defaultFixPermissions()
 	{
 		local filePath="$1"
 		if [ -e "$filePath" ]; then
-			swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath"
+			swaddle_touch_setMtimeAndAtime "$filePath"
 			
 			if [ -L "$filePath" ]; then
 				return 0
@@ -50,7 +50,6 @@ swaddle_build_package_defaultFixPermissions()
 
 	local fakerootEnvironmentFilePath="$1"
 	local pathToBodyOrSkeleton="$2"
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
 	_swaddle_build_package_defaultFixPermissions_recurse "$pathToBodyOrSkeleton"
 }
 

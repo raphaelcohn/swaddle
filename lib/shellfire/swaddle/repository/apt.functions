@@ -35,8 +35,7 @@ swaddle_repository_apt_createDistsFolderPath()
 {
 	mkdir -m 0755 -p "$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
 	
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_deb_parentPath"/dists
+	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_deb_parentPath"/dists
 }
 
 swaddle_repository_apt_createDistsContentsTmp()
@@ -145,8 +144,6 @@ core_usesIn swaddle digest
 core_dependency_requires '*' mkdir cat sort rm
 swaddle_repository_apt_createDistsComponentsTranslations()
 {
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	
 	local configurationSettingValue
 	_configure_configurationSettingValue 'swaddle' 'apt_translations'
 	local translationsArrayName="$configurationSettingValue"
@@ -180,7 +177,7 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 						}
 						
 						configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' 'apt_architectures' "$callback" "$(configure_getConfigurationSetting swaddle apt_language)"
-						swaddle_touch_setMtimeAndAtime "$timestamp" Index
+						swaddle_touch_setMtimeAndAtime Index
 						swaddle_digest_file Index
 						swaddle_compress_gzip Index
 					} >Index
@@ -197,8 +194,6 @@ core_usesIn core snippet
 core_snippet_embed raw swaddle_apt_contents
 swaddle_repository_apt_createDistsContents()
 {
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	
 	_swaddle_repository_apt_createDistsContents_callback()
 	{
 		local packageArchitecture="$core_variable_array_element"
@@ -214,7 +209,7 @@ swaddle_repository_apt_createDistsContents()
 			core_snippet_retrieve 'swaddle_apt_contents' no Contents-"$packageArchitecture"
 			sort -d Contents-"$packageArchitecture".tmp >>Contents-"$packageArchitecture"
 
-			swaddle_touch_setMtimeAndAtime "$timestamp" Contents-"$packageArchitecture"
+			swaddle_touch_setMtimeAndAtime Contents-"$packageArchitecture"
 			swaddle_compress_gzip Contents-"$packageArchitecture"
 			swaddle_digest_file Contents-"$packageArchitecture".gz
 			
@@ -240,7 +235,7 @@ swaddle_repository_apt_createDistsRelease()
 	_configure_configurationSettingValue 'swaddle' 'apt_architectures'
 	local architectures="$configurationSettingValue"
 
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
+	local timestamp="$(swaddle_configure_timestamp)"
 	local releaseDate="$(date -u -d @$timestamp +'%a, %d %h %Y %H:%M:%S %Z')"
 	
 	{
@@ -295,8 +290,7 @@ swaddle_repository_apt_createDistsRelease()
 		
 	} >"$releaseFilePath"
 
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$releaseFilePath"
+	swaddle_touch_setMtimeAndAtime "$releaseFilePath"
 	
 	swaddle_digest_file "$releaseFilePath"
 	ln -f "$releaseFilePath".asc "$releaseFilePath".gpg
@@ -308,10 +302,9 @@ swaddle_repository_apt_createDistsRelease()
 
 swaddle_repository_apt_exportSigningKey()
 {
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
 	local keyPath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/Release.key
 	swaddle_gpg_exportSigningKey >"$keyPath"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$keyPath"
+	swaddle_touch_setMtimeAndAtime "$keyPath"
 	swaddle_digest_file "$keyPath"
 	swaddle_compress_gzip "$keyPath"
 }
@@ -329,8 +322,7 @@ swaddle_repository_apt_createAptSourcesList()
 	local filePath="$_swaddle_repository_deb_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"/00$repositoryName.sources.list
 	printf '%s\n' "deb $hostBaseUrl $repositoryName $(core_variable_array_string  _swaddle_repository_apt_components ' ')" >"$filePath"
 	
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath"
+	swaddle_touch_setMtimeAndAtime "$filePath"
 	swaddle_digest_file "$filePath"
 	swaddle_compress_gzip "$filePath"
 }
@@ -358,8 +350,7 @@ swaddle_repository_apt_createInstallScript()
 	EOA
 	
 	chmod +x "$filePath"
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$filePath"
+	swaddle_touch_setMtimeAndAtime "$filePath"
 	swaddle_digest_file "$filePath"
 	swaddle_compress_gzip "$filePath"
 }
@@ -388,9 +379,8 @@ _swaddle_repository_apt_sortAndConcatenateFragments()
 			done
 		fi
 	} >>"$concatenatedFileName"
-
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$concatenatedFileName"
+	
+	swaddle_touch_setMtimeAndAtime "$concatenatedFileName"
 	swaddle_digest_file "$concatenatedFileName"
 	
 	local compressor
@@ -412,9 +402,8 @@ swaddle_repository_apt_createDistsComponentReleaseFile()
 		Label: $(configure_getConfigurationSetting swaddle vendor)
 		Architecture: ${packageArchitecture}
 	EOF
-
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_touch_setMtimeAndAtime "$timestamp" 'Release'
+	
+	swaddle_touch_setMtimeAndAtime 'Release'
 	swaddle_digest_file 'Release'
 	swaddle_compress_gzip 'Release'
 }

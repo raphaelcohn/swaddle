@@ -1,9 +1,10 @@
+core_usesIn swaddle configure
 core_dependency_requires '*' touch date
 swaddle_touch_setMtimeAndAtime()
 {
-	local timestampInEpochSeconds="$1"
-	local filePath="$2"
-	
+	local filePath="$1"
+
+	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"	
 	local mtime="$(date -d @$timestampInEpochSeconds +'%Y%m%d%H%M.%S')"
 	touch -m -a -c -h -t "$mtime" "$filePath"
 }

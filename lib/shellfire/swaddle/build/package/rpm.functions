@@ -112,8 +112,7 @@ swaddle_build_package_rpm_generateSpecFile()
 {
 	core_snippet_retrieveAndSourceAsHereDoc swaddle_rpm_spec_template >"$_swaddle_build_package_rpm_specFile"
 	
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_build_package_rpm_specFile"
+	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_rpm_specFile"
 }
 
 core_dependency_requires '*' rpmbuild mkdir mv
@@ -147,7 +146,7 @@ swaddle_package_rpm_rpmbuild()
 		
 	esac
 	
-	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle sign)"; then
+	if core_variable_isTrue "$(swaddle_configure_sign)"; then
 		core_variable_array_append options --sign
 	fi
 	
@@ -173,10 +172,9 @@ swaddle_package_rpm_rpmbuild()
 	set -f
 	local rpmFilePath="$1"
 	
-	local timestamp="$(configure_getConfigurationSetting swaddle timestamp)"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$rpmFilePath"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_yum_parentPath"/"$architecture"
-	swaddle_touch_setMtimeAndAtime "$timestamp" "$_swaddle_repository_yum_parentPath"
+	swaddle_touch_setMtimeAndAtime "$rpmFilePath"
+	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_parentPath"/"$architecture"
+	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_parentPath"
 }
 
 _swaddle_build_package_rpm_architecture()
