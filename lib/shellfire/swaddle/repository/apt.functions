@@ -178,6 +178,7 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 							for extension in '' .gz .bz2 .lzma .xz
 							do
 								translationFile=Translation-${languageCode}${extension}
+								swaddle_webserverFiles_createFrom "$translationFile"
 								printf ' %s %7s %s\n' "$(swaddle_digest sha1 "$translationFile")" "$(stat -c '%s' "$translationFile")" "$translationFile"
 							done
 						}
@@ -397,12 +398,14 @@ _swaddle_repository_apt_sortAndConcatenateFragments()
 	} >>"$concatenatedFileName"
 	
 	swaddle_touch_setMtimeAndAtime "$concatenatedFileName"
+	swaddle_webserverFiles_createFrom "$concatenatedFileName"
 	swaddle_webserverFiles_digest "$concatenatedFileName"
 	
 	local compressor
 	for compressor in gzip bzip2 lzma xz
 	do
 		swaddle_compress_${compressor} "$concatenatedFileName"
+		swaddle_webserverFiles_createFrom "$concatenatedFileName".$(swaddle_compress_extension "$compressor")
 		swaddle_webserverFiles_digest "$concatenatedFileName".$(swaddle_compress_extension "$compressor")
 	done
 }

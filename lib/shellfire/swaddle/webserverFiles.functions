@@ -95,8 +95,8 @@ swaddle_webserverFiles_index()
 			% Index of $folderName
 			% $(swaddle_configure_maintainer)
 			% ${releaseDate}
-			|Name|Last Modified|Size|MD5|SHA-1|SHA-256|SHA-512|
-			|:---|:-----------:|---:|---|----|------|------|
+			|Name|Last Modified|Size|SHA-1|SHA-256|
+			|:---|:------------|---:|:----|:------|
 		EOF
 	fi
 	
@@ -110,14 +110,18 @@ swaddle_webserverFiles_index()
 		url="$fileName"
 	fi
 	
-	local date="$(stat -c '%y' "$filePath")"
+	local timestamp="$(stat -c '%Y' "$filePath")"
+	local date="$(date -u -d @$timestamp +'%a, %d %h %Y %H:%M:%S %Z')"
 	if [ $# -eq 2 ]; then
-		local size="$2"
+		local statFilePath="$filePath"/"$(configure_getConfigurationSetting swaddle_web index_name)"
 	else
-		local size="$(stat -c '%s' "$filePath")"
+		local statFilePath="$filePath"
 	fi
+	local size="$(stat -c '%s' "$statFilePath")"
+	local sha1="$(swaddle_digest sha1 "$statFilePath")"
+	local sha256="$(swaddle_digest sha256 "$statFilePath")"
 	
-	printf '|[%s](%s "%s")|%s|%s|\n' "$fileName" "$url" "$title" "$date" "$size" >>"$indexFilePath"
+	printf '|[`%s`](%s "%s")|`%s`|`%s`|`%s`|`%s`|\n' "$fileName" "$url" "$title" "$date" "$size" "$sha1" "$sha256" >>"$indexFilePath"
 }
 
 swaddle_webserverFiles_compressForNginx()
