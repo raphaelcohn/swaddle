@@ -1,0 +1,13 @@
+core_usesIn swaddle webserverFiles
+
+swaddle_repository_tar()
+{
+	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	local tarballParentPath="$_swaddle_repository_parentPath"/"$repositoryName"
+	swaddle_webserverFiles_createIndices "$tarballParentPath"
+}
+
+swaddle_repository_tar_registerConfiguration()
+{
+	:
+}

@@ -18,6 +18,8 @@ swaddle_repository_yum()
 	swaddle_repository_yum_exportSigningKey
 	swaddle_repository_yum_signRepomdForSuse
 	swaddle_repository_yum_createInstallScript
+
+	swaddle_webserverFiles_createIndices "$_swaddle_repository_yum_repositoryPath"
 }
 
 swaddle_repository_yum_registerConfiguration()

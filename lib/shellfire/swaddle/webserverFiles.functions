@@ -1,12 +1,123 @@
 core_usesIn swaddle compress digest
 
+swaddle_webserverFiles_registerConfiguration()
+{
+	configure_register Array WebserverFilesDigest swaddle_web digests
+	configure_register Value Boolean swaddle_web nginx 'no'
+	configure_register Value NotEmpty swaddle_web pandoc_format 'html5'
+	configure_register Value Any swaddle_web pandoc_template ''
+	configure_register Value NotEmpty swaddle_web index_name 'index.html'
+}
+
 swaddle_webserverFiles_createFrom()
 {
 	local filePath="$1"
 	
+	swaddle_webserverFiles_index "$filePath"
+	
 	swaddle_webserverFiles_digest "$filePath"
 	
 	swaddle_webserverFiles_compressForNginx "$filePath"
+}
+
+core_dependency_requires '*' pandoc rm mv
+swaddle_webserverFiles_createIndices()
+{
+	local folderPath="$1"
+	
+	local inputFilePath="$folderPath"/index.md
+	
+	pushd "$folderPath"
+		
+		set +f
+		local childFolder
+		for childFolder in *
+		do
+			set -f
+			if [ -d "$childFolder" ]; then
+				if [ ! -L "$childFolder" ]; then
+					swaddle_webserverFiles_createIndices "$childFolder"
+				fi
+				swaddle_webserverFiles_index "$childFolder" '-'
+			fi
+		done
+		set -f
+		
+	popd
+	
+	if [ ! -f "$inputFilePath" ]; then
+		printf '' >"$inputFilePath"
+	fi
+	
+	local toFormat="$(configure_getConfigurationSetting swaddle_web pandoc_format)"
+	local template="$(configure_getConfigurationSetting swaddle_web pandoc_template)"
+	local destinationFileName="$(configure_getConfigurationSetting swaddle_web index_name)"
+	local outputFilePath="$folderPath"/"$destinationFileName"
+	
+	local options
+	local options_initialised
+	
+	core_variable_array_initialise options
+	
+	core_variable_array_append options \
+		--from=markdown \
+		--to="$toFormat" \
+		--standalone \
+		-o "$outputFilePath".tmp
+	
+	if [ -n "$template" ]; then
+		core_variable_array_append options --template="$template"
+	fi
+	
+	core_variable_array_append options "$inputFilePath"
+	
+	core_variable_array_passToFunctionAsArguments options pandoc
+	
+	rm "$inputFilePath"
+	mv "$outputFilePath".tmp "$outputFilePath"
+	swaddle_touch_setMtimeAndAtime "$outputFilePath"
+	swaddle_webserverFiles_compressForNginx "$outputFilePath"
+}
+
+core_dependency_requires '*' date stat cat
+swaddle_webserverFiles_index()
+{
+	local filePath="$1"
+	local dirname="$(core_compatibility_dirname "$filePath")"
+	local indexFilePath="$dirname"/index.md
+	if [ ! -f "$indexFilePath" ]; then
+		pushd "$dirname"
+			local folderName="$(core_compatibility_basename "$(pwd)")"
+		popd
+		local timestamp="$(swaddle_configure_timestamp)"
+		local releaseDate="$(date -u -d @$timestamp +'%a, %d %h %Y %H:%M:%S %Z')"
+		cat >"$indexFilePath" <<-EOF
+			% Index of $folderName
+			% $(swaddle_configure_maintainer)
+			% ${releaseDate}
+			|Name|Last Modified|Size|MD5|SHA-1|SHA-256|SHA-512|
+			|:---|:-----------:|---:|---|----|------|------|
+		EOF
+	fi
+	
+	local fileName="$(core_compatibility_basename "$filePath")"
+
+	local title="$fileName"
+	if [ -d "$filePath" ]; then
+		local url="${fileName}"/
+		local fileName="${fileName}"/
+	else
+		url="$fileName"
+	fi
+	
+	local date="$(stat -c '%y' "$filePath")"
+	if [ $# -eq 2 ]; then
+		local size="$2"
+	else
+		local size="$(stat -c '%s' "$filePath")"
+	fi
+	
+	printf '|[%s](%s "%s")|%s|%s|\n' "$fileName" "$url" "$title" "$date" "$size" >>"$indexFilePath"
 }
 
 swaddle_webserverFiles_compressForNginx()
@@ -28,17 +139,15 @@ swaddle_webserverFiles_digest()
 		if [ "$algo" = 'sign' ]; then
 			if core_variable_isTrue "$(swaddle_configure_sign)"; then
 				swaddle_digest_signFile "$filePath"
+				swaddle_webserverFiles_index "$filePath".asc
+			else
+				return 0
 			fi
 		else
 			swaddle_digest_file "$algo" "$filePath"
+			swaddle_webserverFiles_index "$filePath"."$algo"
 		fi
 	}
 	
 	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_digest_callback 'sha512' 'sign'
-}
-
-swaddle_webserverFiles_registerConfiguration()
-{
-	configure_register Array WebserverFilesDigest swaddle_web digests
-	configure_register Value Boolean swaddle_web nginx 'no'
 }

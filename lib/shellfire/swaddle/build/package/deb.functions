@@ -442,9 +442,9 @@ swaddle_build_package_deb_createDeb()
 	popd
 	
 	# Oddly, debian packages can actually be compressed further (this is because they are 'ar' archives)
-	swaddle_webserverFiles_createFrom "$debFilePath"
 	
 	swaddle_touch_setMtimeAndAtime "$debFilePath"
+	swaddle_webserverFiles_createFrom "$debFilePath"
 }
 
 _swaddle_build_package_deb_poolAZ()

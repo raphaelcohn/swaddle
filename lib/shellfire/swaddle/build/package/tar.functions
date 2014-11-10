@@ -54,7 +54,8 @@ swaddle_build_package_tar_createTarball()
 		--numeric-owner \
 		--directory "$directory" \
 		.
-	 
+	
+	swaddle_webserverFiles_index "$_swaddle_build_package_tar_tarballFileName"
 	swaddle_webserverFiles_digest "$_swaddle_build_package_tar_tarballFileName"
 }
 
@@ -66,6 +67,7 @@ swaddle_build_package_tar_compress()
 	{
 		local compression="$core_variable_array_element"
 		swaddle_compress_${compression} "$_swaddle_build_package_tar_tarballFileName"
+		swaddle_webserverFiles_index "$_swaddle_build_package_tar_tarballFileName".$(swaddle_compress_extension "$compression")
 		swaddle_webserverFiles_digest "$_swaddle_build_package_tar_tarballFileName".$(swaddle_compress_extension "$compression")
 	}
 	
