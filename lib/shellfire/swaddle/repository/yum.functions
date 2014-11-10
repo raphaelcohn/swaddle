@@ -73,8 +73,7 @@ swaddle_repository_yum_createRepoFile()
 		protect=0
 	EOF
 	swaddle_touch_setMtimeAndAtime "$repoFilePath"
-	swaddle_digest_file "$repoFilePath"
-	swaddle_compress_gzip "$repoFilePath"
+	swaddle_webserverFiles_createFrom "$repoFilePath"
 }
 
 swaddle_repository_yum_createMirrorlist()
@@ -90,8 +89,7 @@ swaddle_repository_yum_createMirrorlist()
 	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_yum' mirrors _swaddle_repository_yum_createMirrorlist_callback "$hostBaseUrl" >"$mirrorListFilePath"
 	
 	swaddle_touch_setMtimeAndAtime "$mirrorListFilePath"
-	swaddle_digest_file "$mirrorListFilePath"
-	swaddle_compress_gzip "$mirrorListFilePath"
+	swaddle_webserverFiles_createFrom "$mirrorListFilePath"
 }
 
 core_usesIn swaddle gpg
@@ -102,10 +100,9 @@ swaddle_repository_yum_exportSigningKey()
 	fi
 	
 	local gpgKeyFilePath="$_swaddle_repository_yum_repositoryPath"/RPM-GPG-KEY-"$repositoryName"
-	
 	swaddle_gpg_exportSigningKey >"$gpgKeyFilePath"
 	swaddle_touch_setMtimeAndAtime "$gpgKeyFilePath"
-	swaddle_compress_gzip "$gpgKeyFilePath"
+	swaddle_webserverFiles_createFrom "$gpgKeyFilePath"
 }
 
 swaddle_repository_yum_signRepomdForSuse()
@@ -135,8 +132,7 @@ swaddle_repository_yum_createInstallScript()
 		curl --fail --location --silent --show-error '${hostBaseUrl}/yum/${repositoryName}/${repositoryName}.repo' | sudo -p "Password to allow root to install '$repoFilePath': " tee "$repoFilePath" >/dev/null
 		echo "Now run 'sudo yum update' and 'sudo yum group info $repositoryName' to see all packages available."
 	EOF
-	swaddle_touch_setMtimeAndAtime "$installScriptFilePath"
-	swaddle_digest_file "$installScriptFilePath"
 	chmod 0755 "$installScriptFilePath"
-	swaddle_compress_gzip "$installScriptFilePath"
+	swaddle_touch_setMtimeAndAtime "$installScriptFilePath"
+	swaddle_webserverFiles_createFrom "$installScriptFilePath"
 }

@@ -57,6 +57,7 @@ core_functions_register _swaddle_build_package_functions swaddle_build_package_r
 swaddle_build_package_resetConfiguration()
 {
 	configure_reset swaddle
+	configure_reset swaddle_web
 	configure_reset swaddle_${_swaddle_build_package_kind}
 }
 

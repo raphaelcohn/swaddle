@@ -1,0 +1,44 @@
+core_usesIn swaddle compress digest
+
+swaddle_webserverFiles_createFrom()
+{
+	local filePath="$1"
+	
+	swaddle_webserverFiles_digest "$filePath"
+	
+	swaddle_webserverFiles_compressForNginx "$filePath"
+}
+
+swaddle_webserverFiles_compressForNginx()
+{
+	local filePath="$1"
+	
+	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_web nginx)"; then
+		swaddle_compress_gzip "$filePath"
+	fi
+}
+
+swaddle_webserverFiles_digest()
+{
+	local filePath="$1"
+	
+	_swaddle_webserverFiles_digest_callback()
+	{
+		local algo="$core_variable_array_element"
+		if [ "$algo" = 'sign' ]; then
+			if core_variable_isTrue "$(swaddle_configure_sign)"; then
+				swaddle_digest_signFile "$filePath"
+			fi
+		else
+			swaddle_digest_file "$algo" "$filePath"
+		fi
+	}
+	
+	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_digest_callback 'sha512' 'sign'
+}
+
+swaddle_webserverFiles_registerConfiguration()
+{
+	configure_register Array WebserverFilesDigest swaddle_web digests
+	configure_register Value Boolean swaddle_web nginx 'no'
+}

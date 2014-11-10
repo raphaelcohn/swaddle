@@ -117,6 +117,7 @@ swaddle_build_package_rpm_generateSpecFile()
 	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_rpm_specFile"
 }
 
+core_usesIn swaddle webserverFiles
 core_dependency_requires '*' rpmbuild mkdir mv
 core_functions_register _swaddle_build_package_rpm_functions swaddle_package_rpm_rpmbuild
 swaddle_package_rpm_rpmbuild()
@@ -172,6 +173,9 @@ swaddle_package_rpm_rpmbuild()
 	set -- "$_swaddle_repository_yum_repositoryPath"/"$packageArchitecture"/"$_swaddle_build_swaddleName"-*."$packageArchitecture".rpm
 	set -f
 	local rpmFilePath="$1"
+	
+	# RPM files can be compressed A LOT more; at least 10Kb is possible
+	swaddle_webserverFiles_createFrom "$rpmFilePath"
 	
 	swaddle_touch_setMtimeAndAtime "$rpmFilePath"
 	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_repositoryPath"/"$packageArchitecture"

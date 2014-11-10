@@ -412,6 +412,7 @@ _swaddle_build_package_deb_permissionsForAr()
 	swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" chown 0:0 "$filePath"
 }
 
+core_usesIn swaddle webserverFiles
 core_dependency_requires '*' mkdir ar
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createDeb
 swaddle_build_package_deb_createDeb()
@@ -439,6 +440,9 @@ swaddle_build_package_deb_createDeb()
 			"$_swaddle_build_package_deb_controlTarballFileName" \
 			"$_swaddle_build_package_deb_dataTarballFileName"
 	popd
+	
+	# Oddly, debian packages can actually be compressed further (this is because they are 'ar' archives)
+	swaddle_webserverFiles_createFrom "$debFilePath"
 	
 	swaddle_touch_setMtimeAndAtime "$debFilePath"
 }

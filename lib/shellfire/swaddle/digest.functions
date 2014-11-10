@@ -14,15 +14,11 @@ swaddle_digest()
 core_dependency_requires '*' touch
 swaddle_digest_file()
 {
-	local filePath="$1"
-	local algo
-	for algo in md5 sha1 sha256 sha512
-	do
-		swaddle_digest ${algo} "$filePath" >"$filePath"."$algo"
-		touch -r "$filePath" "$filePath"."$algo"
-	done
-	
-	swaddle_digest_signFile "$filePath"
+	local algo="$1"
+	local filePath="$2"
+
+	swaddle_digest ${algo} "$filePath" >"$filePath"."$algo"
+	touch -r "$filePath" "$filePath"."$algo"
 }
 
 core_dependency_requires '*' touch
@@ -34,10 +30,12 @@ swaddle_digest_signFile()
 	fi
 	
 	local filePath="$1"
-	swaddle_gpg_sign "$filePath"
-	touch -r "$filePath" "$filePath".asc
+	if [ $# -eq 2 ]; then
+		local extension="$2"
+	else
+		local extension='asc'
+	fi
+	swaddle_gpg_sign "$filePath" "$extension"
 	
-	# For NGINX
-	swaddle_compress_gzip "$filePath".asc
-	touch -r "$filePath".asc "$filePath".asc.gz
+	swaddle_webserverFiles_compressForNginx "$filePath"."$extension"
 }

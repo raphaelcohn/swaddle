@@ -201,3 +201,9 @@ swaddle_configure_register_byRepositoryKind()
 	swaddle_repository_apt_registerConfiguration
 	swaddle_repository_yum_registerConfiguration
 }
+
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_webserverFiles
+swaddle_configure_register_webserverFiles()
+{
+	swaddle_webserverFiles_registerConfiguration
+}

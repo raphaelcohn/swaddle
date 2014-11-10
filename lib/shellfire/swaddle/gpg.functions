@@ -11,9 +11,22 @@ swaddle_gpg_exportSigningKey()
 	swaddle_gpg --armor --export "$(swaddle_configure_signer)"
 }
 
-core_dependency_requires '*' rm
+core_dependency_requires '*' rm mv touch
 swaddle_gpg_sign()
 {
-	rm -f "$1".asc
-	swaddle_gpg --default-key "$(swaddle_configure_signer)" --armor --sign "$1"
+	local filePath="$1"
+	if [ $# -eq 2 ]; then
+		local extension="$2"
+	else
+		local extension='asc'
+	fi
+	
+	rm -f "$filePath".asc "$filePath"."$extension"
+	
+	swaddle_gpg --default-key "$(swaddle_configure_signer)" --armor --sign "$filePath"
+	if [ "$extension" != 'asc' ]; then
+		mv "$filePath".asc "$filePath"."$extension"
+	fi
+	
+	touch -r "$filePath" "$filePath"."$extension"
 }

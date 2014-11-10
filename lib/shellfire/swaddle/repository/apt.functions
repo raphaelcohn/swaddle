@@ -1,17 +1,7 @@
-core_usesIn swaddle digest
+core_usesIn swaddle digest webserverFiles
 
 swaddle_repository_apt()
 {
-	configure_reset swaddle
-	configure_reset swaddle_apt
-	configure_reset swaddle_deb
-	
-	configure_source "$swaddle_swaddlesPath" swaddles
-	
-	configure_validate swaddle
-	configure_validate swaddle_apt
-	configure_validate swaddle_deb
-	
 	local repositoryPath="$_swaddle_repository_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
 	
 	swaddle_repository_apt_createTemporaryFolderPath
@@ -193,8 +183,8 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 					} >Index
 
 					swaddle_touch_setMtimeAndAtime Index
-					swaddle_digest_file Index
-					swaddle_compress_gzip Index
+					
+					swaddle_webserverFiles_createFrom Index
 				popd
 			fi
 		done
@@ -227,7 +217,7 @@ swaddle_repository_apt_createDistsContents()
 
 			swaddle_touch_setMtimeAndAtime Contents-"$packageArchitecture"
 			swaddle_compress_gzip Contents-"$packageArchitecture"
-			swaddle_digest_file Contents-"$packageArchitecture".gz
+			swaddle_webserverFiles_digest Contents-"$packageArchitecture".gz
 			
 			# Yes, really delete it. apt-file only looks for a gz file ordinarily.
 			rm Contents-"$packageArchitecture"
@@ -312,12 +302,9 @@ swaddle_repository_apt_createDistsRelease()
 
 	swaddle_touch_setMtimeAndAtime "$releaseFilePath"
 	
-	swaddle_digest_file "$releaseFilePath"
-	ln -f "$releaseFilePath".asc "$releaseFilePath".gpg
-	ln -f "$releaseFilePath".asc.gz "$releaseFilePath".gpg.gz
+	swaddle_digest_signFile "$releaseFilePath" gpg
 	
-	swaddle_compress_gzip "$releaseFilePath"
-	swaddle_digest_file "$releaseFilePath".gz
+	swaddle_webserverFiles_createFrom "$releaseFilePath"
 }
 
 swaddle_repository_apt_exportSigningKey()
@@ -325,8 +312,7 @@ swaddle_repository_apt_exportSigningKey()
 	local keyPath="$repositoryPath"/Release.key
 	swaddle_gpg_exportSigningKey >"$keyPath"
 	swaddle_touch_setMtimeAndAtime "$keyPath"
-	swaddle_digest_file "$keyPath"
-	swaddle_compress_gzip "$keyPath"
+	swaddle_webserverFiles_createFrom "$keyPath"
 }
 
 swaddle_repository_apt_createAptSourcesList()
@@ -343,8 +329,7 @@ swaddle_repository_apt_createAptSourcesList()
 	printf '%s\n' "deb $hostBaseUrl $repositoryName $(core_variable_array_string  _swaddle_repository_apt_components ' ')" >"$filePath"
 	
 	swaddle_touch_setMtimeAndAtime "$filePath"
-	swaddle_digest_file "$filePath"
-	swaddle_compress_gzip "$filePath"
+	swaddle_webserverFiles_createFrom "$filePath"
 }
 
 swaddle_repository_apt_createInstallScript()
@@ -371,8 +356,7 @@ swaddle_repository_apt_createInstallScript()
 	
 	chmod +x "$filePath"
 	swaddle_touch_setMtimeAndAtime "$filePath"
-	swaddle_digest_file "$filePath"
-	swaddle_compress_gzip "$filePath"
+	swaddle_webserverFiles_createFrom "$filePath"
 }
 
 core_dependency_requires '*' sort cat rm
@@ -411,13 +395,13 @@ _swaddle_repository_apt_sortAndConcatenateFragments()
 	} >>"$concatenatedFileName"
 	
 	swaddle_touch_setMtimeAndAtime "$concatenatedFileName"
-	swaddle_digest_file "$concatenatedFileName"
+	swaddle_webserverFiles_digest "$concatenatedFileName"
 	
 	local compressor
 	for compressor in gzip bzip2 lzma xz
 	do
 		swaddle_compress_${compressor} "$concatenatedFileName"
-		swaddle_digest_file "$concatenatedFileName".$(swaddle_compress_extension "$compressor")
+		swaddle_webserverFiles_digest "$concatenatedFileName".$(swaddle_compress_extension "$compressor")
 	done
 }
 
@@ -434,8 +418,7 @@ swaddle_repository_apt_createDistsComponentReleaseFile()
 	EOF
 	
 	swaddle_touch_setMtimeAndAtime 'Release'
-	swaddle_digest_file 'Release'
-	swaddle_compress_gzip 'Release'
+	swaddle_webserverFiles_createFrom 'Release'
 }
 
 core_dependency_requires '*' ar tar rm
