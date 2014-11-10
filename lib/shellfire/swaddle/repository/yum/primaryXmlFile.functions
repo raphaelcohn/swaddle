@@ -36,9 +36,9 @@ swaddle_repository_yum_primaryXmlFile()
 				local rpmTimestamp
 				local rpmDescription
 				local rpmFileName
-		
+				
 				IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease rpmSummary rpmPackager rpmUrl rpmBuildTime rpmPackageSize rpmInstalledSize rpmArchiveSize rpmLicense rpmVendor rpmGroup rpmBuildHost rpmSourceRpm rpmHeaderRangeStart rpmHeaderRangeEnd <<-EOF
-					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}\t%{SUMMARY}\t%{PACKAGER}\t%{URL}\t${BUILDTIME}\t%{PACKAGESIZE}\t%{SIZE}\t%{ARCHIVESIZE}\t%{LICENSE}\t%{VENDOR}\t%{GROUP}\t%{BUILDHOST}\t%{SOURCERPM}\t%{HEADERSTARTOFF}\t%{HEADERENDOFF}')
+					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}\t%{SUMMARY}\t%{PACKAGER}\t%{URL}\t%{BUILDTIME}\t%{PACKAGESIZE}\t%{SIZE}\t%{ARCHIVESIZE}\t%{LICENSE}\t%{VENDOR}\t%{GROUP}\t%{BUILDHOST}\t%{SOURCERPM}\t%{HEADERSTARTOFF}\t%{HEADERENDOFF}')
 				EOF
 				
 				rpmSha56Sum="$(swaddle_digest sha256 "$rpmFilePath")"
@@ -149,35 +149,35 @@ swaddle_repository_yum_primaryXmlFile_entries()
 		fi
 		
 		
-		if [ -n "$entryConstraint" ]; then
-			case "$entryConstant" in
+		if [ -n "$entryFlags" ]; then
+			case "$entryFlags" in
 				
-				'<')
+				' < ')
 					entryFlagsConverted=LT
 				;;
 				
-				'>')
+				' > ')
 					entryFlagsConverted=GT
 				;;
 				
-				'>=')
+				' >= ')
 					entryFlagsConverted=GE
 				;;
 				
-				'<=')
+				' <= ')
 					entryFlagsConverted=LE
 				;;
 				
-				'=')
+				' = ')
 					entryFlagsConverted=EQ
 				;;
 				
-				'!=')
+				' != ')
 					entryFlagsConverted=NE
 				;;
 				
 				*)
-					core_exitError $core_commandLine_exitCode_SOFTWARE "Unknown entry constraint '$entryConstraint'"
+					core_exitError $core_commandLine_exitCode_SOFTWARE "Unknown entry constraint '$entryFlags'"
 				;;
 				
 			esac

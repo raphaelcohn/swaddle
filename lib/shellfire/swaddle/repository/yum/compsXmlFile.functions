@@ -37,7 +37,6 @@ swaddle_repository_yum_compsXmlFile()
 					
 				xmlwriter_close packagelist
 				
-				swaddle_repository_yum_rpmxml_iterateRpmFiles
 			xmlwriter_close group
 			
 			xmlwriter_open category

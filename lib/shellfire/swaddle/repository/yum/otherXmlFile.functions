@@ -2,7 +2,7 @@ core_usesIn xmlwriter
 core_usesIn swaddle digest
 
 core_dependency_requires '*' rpm tr
-swaddle_repository_yum_other()
+swaddle_repository_yum_otherXmlFile()
 {
 	{
 		xmlwriter_declaration '1.0' 'UTF-8' 'no'

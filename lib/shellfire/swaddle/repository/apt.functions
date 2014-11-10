@@ -2,6 +2,8 @@ core_usesIn swaddle digest
 
 swaddle_repository_apt()
 {
+	echo HELLO 1>&2
+	
 	configure_reset swaddle
 	configure_reset swaddle_deb
 	configure_source "$swaddle_swaddlesPath" swaddles
@@ -438,7 +440,7 @@ core_dependency_requires '*' ln rm
 core_usesIn swaddle configure
 swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 {	
-	packageArchitecture="$(swaddle_repository_apt_parseDeb_extractField Architecture "$(_swaddle_build_package_deb_architecture)")"
+	packageArchitecture="$(swaddle_repository_apt_parseDeb_extractField Architecture "$(swaddle_configure_deb_architecture)")"
 	package="$(swaddle_repository_apt_parseDeb_extractField Package "$poolSource")"
 	section="$(swaddle_repository_apt_parseDeb_extractField Section "$(configure_getConfigurationSetting swaddle_deb section)")"
 

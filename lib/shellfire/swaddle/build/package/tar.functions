@@ -1,5 +1,6 @@
 swaddle_build_package_tar_registerConfiguration()
 {
+	configure_register Value DebPackageArchitecture swaddle_tar architecture 'all'
 	configure_register Value Boolean swaddle_tar bomb 'no'
 	configure_register Array TarCompression swaddle_tar compressions
 }
@@ -31,7 +32,7 @@ swaddle_build_package_tar_createTarball()
 	mkdir -m 0755 -p "$_swaddle_repository_tar_parentPath"
 	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_tar_parentPath"
 	
-	local baseName="${_swaddle_build_swaddleName}_${_swaddle_build_package_tar_version}_$(_swaddle_build_package_deb_architecture)"
+	local baseName="${_swaddle_build_swaddleName}_${_swaddle_build_package_tar_version}_$(swaddle_configure_tar_architecture)"
 	_swaddle_build_package_tar_tarballFileName="$_swaddle_repository_tar_parentPath"/"$baseName".tar
 		
 	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_tar bomb)"; then

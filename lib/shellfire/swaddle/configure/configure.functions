@@ -19,3 +19,18 @@ swaddle_configure_timestamp()
 {
 	configure_getConfigurationSetting swaddle timestamp
 }
+
+swaddle_configure_deb_architecture()
+{
+	configure_getConfigurationSetting swaddle_deb architecture
+}
+
+swaddle_configure_tar_architecture()
+{
+	configure_getConfigurationSetting swaddle_tar architecture
+}
+
+swaddle_configure_rpm_architecture()
+{
+	configure_getConfigurationSetting swaddle_rpm architecture
+}

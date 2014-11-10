@@ -4,6 +4,7 @@ core_usesIn swaddle configure
 
 swaddle_build_package_deb_registerConfiguration()
 {
+	configure_register Value DebPackageArchitecture swaddle_deb architecture 'all'
 	# Needed for both packages and repositories!
 	# common other values are 18m, 5y and 3y
 	configure_register Value NotEmpty swaddle_deb supported '9m'
@@ -280,7 +281,7 @@ swaddle_build_package_deb_createControlFile()
 			Package: ${_swaddle_build_swaddleName}
 			Version: ${_swaddle_build_package_deb_debianVersion}
 			Source: ${_swaddle_build_swaddleName}
-			Architecture: $(_swaddle_build_package_deb_architecture)
+			Architecture: $(swaddle_configure_deb_architecture)
 			Maintainer: $(swaddle_configure_maintainer)
 			Installed-Size: $(_swaddle_build_package_deb_installedSize)
 			Essential: $(configure_getConfigurationSetting swaddle_deb essential)
@@ -305,7 +306,7 @@ swaddle_build_package_deb_createControlFile()
 			Supported: $(configure_getConfigurationSetting swaddle_deb supported)
 		EOF
 		_swaddle_build_package_deb_commaSeparatedControlField Built-Using built_using
-		if [ "$(_swaddle_build_package_deb_architecture)" != 'all' ]; then
+		if [ "$(swaddle_configure_deb_architecture)" != 'all' ]; then
 			_swaddle_build_package_deb_commaSeparatedControlField Multi-Arch "$(configure_getConfigurationSetting swaddle_deb multiarch)"
 		fi
 		_swaddle_build_package_deb_extraControlFields
@@ -413,7 +414,7 @@ core_dependency_requires '*' mkdir ar
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createDeb
 swaddle_build_package_deb_createDeb()
 {
-	local poolDebFile="${_swaddle_build_swaddleName}_${_swaddle_build_package_deb_debianVersion}_$(_swaddle_build_package_deb_architecture)".deb
+	local poolDebFile="${_swaddle_build_swaddleName}_${_swaddle_build_package_deb_debianVersion}_$(swaddle_configure_deb_architecture)".deb
 	local poolSource="$_swaddle_build_swaddleName"
 	local poolAZ
 	_swaddle_build_package_deb_poolAZ
@@ -455,11 +456,6 @@ _swaddle_build_package_deb_poolAZ()
 		
 	esac
 	
-}
-
-_swaddle_build_package_deb_architecture()
-{
-	configure_getConfigurationSetting swaddle_deb architecture
 }
 
 _swaddle_build_package_deb_installedSize()

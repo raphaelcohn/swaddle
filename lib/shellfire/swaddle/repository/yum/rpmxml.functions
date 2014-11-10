@@ -56,7 +56,7 @@ swaddle_repository_yum_rpmxml_startRepodata()
 	{
 		xmlwriter_declaration '1.0' 'UTF-8' 'no'
 		xmlwriter_open repomd xmlns "http://linux.duke.edu/metadata/repo" xmlns:rpm "http://linux.duke.edu/metadata/rpm"
-			xmlwriter_leaf revision "$timestamp"
+			xmlwriter_leaf revision "$(swaddle_configure_timestamp)"
 	} >"$_swaddle_repository_yum_rpmxml_repomdXmlFilePath"
 }
 
@@ -87,12 +87,14 @@ swaddle_repository_yum_rpmxml_addToRepodata()
 
 	swaddle_compress_gzip "$filePath"
 	rm "$filePath"
-	local digestGz="$(swaddle_digest sha256 "$filePath".gz)"
-	local sizeGz="$(stat -c '%s' "$filePath".gz)"
+	local compressedFilePath="$filePath".gz
+	local digestGz="$(swaddle_digest sha256 "$compressedFilePath")"
+	local sizeGz="$(stat -c '%s' "$compressedFilePath")"
 
 	local newFileName="$digestGz"-"$fileName".xml.gz
-	mv "$filePath" "$_swaddle_repository_yum_repodataPath"/"$newFileName"
-	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_repodataPath"/"$newFileName"
+	local newFilePath="$_swaddle_repository_yum_repodataPath"/"$newFileName"
+	mv "$compressedFilePath" "$newFilePath"
+	swaddle_touch_setMtimeAndAtime "$newFilePath"
 
 	{
 		xmlwriter_open data type "$dataType"
@@ -100,9 +102,9 @@ swaddle_repository_yum_rpmxml_addToRepodata()
 			xmlwriter_leaf checksum type sha256 "$digestGz"
 			xmlwriter_leaf open-checksum type sha256 "$digest"
 			xmlwriter_leaf location href repodata/"$newFileName"
-			xmlwriter_leaf timestamp "$timestamp"
+			xmlwriter_leaf timestamp "$(swaddle_configure_timestamp)"
 			xmlwriter_leaf size $sizeGz
-			xmlwriter_lead open-size $size
+			xmlwriter_leaf open-size $size
 
 		xmlwriter_close data
 	} >>"$_swaddle_repository_yum_rpmxml_repomdXmlFilePath"
@@ -127,7 +129,7 @@ swaddle_repository_yum_rpmxml_addToRepodataComps()
 	
 			xmlwriter_leaf checksum type sha256 "$digest"
 			xmlwriter_leaf location href repodata/"$digestFilePath"
-			xmlwriter_leaf timestamp "$timestamp"
+			xmlwriter_leaf timestamp "$(swaddle_configure_timestamp)"
 			xmlwriter_leaf size $size
 	
 		xmlwriter_close data
@@ -142,8 +144,8 @@ swaddle_repository_yum_rpmxml_addToRepodataComps()
 			xmlwriter_leaf checksum type sha256 "$digestGz"
 			xmlwriter_leaf open-checksum type sha256 "$digest"
 			xmlwriter_leaf location href repodata/"$digestFilePath".gz
-			xmlwriter_leaf timestamp "$timestamp"
-			xmlwriter_lead size $sizeGz
+			xmlwriter_leaf timestamp "$(swaddle_configure_timestamp)"
+			xmlwriter_leaf size $sizeGz
 	
 		xmlwriter_close data
 	} >>"$_swaddle_repository_yum_rpmxml_repomdXmlFilePath"

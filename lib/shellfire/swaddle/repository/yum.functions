@@ -14,7 +14,8 @@ swaddle_repository_yum()
 	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
 	local hostBaseUrl
 	swaddle_repository_yum_adjustUrl hostBaseUrl "$(configure_getConfigurationSetting swaddle hostBaseUrl)"
-	
+
+	local _swaddle_repository_yum_repodataPath="$_swaddle_repository_yum_parentPath"/repodata
 	swaddle_repository_yum_createRepodata
 	swaddle_repository_yum_createRepoFile
 	swaddle_repository_yum_createMirrorlist
@@ -35,7 +36,6 @@ swaddle_repository_yum_adjustUrl()
 
 swaddle_repository_yum_createRepodata()
 {
-	local _swaddle_repository_yum_repodataPath="$_swaddle_repository_yum_parentPath"/repodata
 	mkdir -m 0755 -p "$_swaddle_repository_yum_repodataPath"
 	
 	_swaddle_repository_yum_rpmxml_repomdXmlFilePath="$_swaddle_repository_yum_repodataPath"/repomd.xml
@@ -79,18 +79,10 @@ swaddle_repository_yum_createMirrorlist()
 	_swaddle_repository_yum_createMirrorlist_callback()
 	{
 		local mirrorBaseUrl
-		swaddle_repository_yum_adjustUrl hostBaseUrl "$core_variable_array_element"
+		swaddle_repository_yum_adjustUrl mirrorBaseUrl "$core_variable_array_element"
 		printf '%s%s\n' "$mirrorBaseUrl" "$repositoryName"/rpm
 	}
-	
-	{
-		printf '%s%s\n' "$hostBaseUrl" "$repositoryName"/rpm
-		
-		local configurationSettingValue
-		_configure_configurationSettingValue 'swaddles' 'mirrors'
-		core_variable_array_iterate "$configurationSettingValue" _swaddle_repository_yum_createMirrorlist_callback
-		
-	} >"$_swaddle_repository_yum_parentPath"/mirrorlist
+	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' mirrors _swaddle_repository_yum_createMirrorlist_callback "$hostBaseUrl" >"$_swaddle_repository_yum_parentPath"/mirrorlist
 	
 	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_parentPath"/mirrorlist
 	swaddle_digest_file "$_swaddle_repository_yum_parentPath"/mirrorlist
@@ -123,6 +115,7 @@ swaddle_repository_yum_signRepomdForSuse()
 swaddle_repository_yum_createInstallScript()
 {
 	# This ought to go into a $repositoryName-release.VERSION.rpm, but that's just painful
+	local repoFilePath='$repoFilePath'
 	cat >"$_swaddle_repository_yum_parentPath"/install.sh <<-EOF
 		#!/usr/bin/env sh
 		set -e

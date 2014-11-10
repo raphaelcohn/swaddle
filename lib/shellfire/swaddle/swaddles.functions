@@ -242,8 +242,6 @@ swaddle_swaddles_registerConfiguration_attemptToDiscoverRpmChangelog()
 core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerConfiguration_miscellany
 swaddle_swaddles_registerConfiguration_miscellany()
 {
-	configure_register Value RpmPackageArchitecture swaddle_rpm architecture 'noarch'
-	configure_register Value DebPackageArchitecture swaddle_deb architecture 'all'
 	configure_register Value NotEmpty swaddle epoch '0'
 	configure_register Value NotEmpty swaddle vendor
 	configure_register Value NotEmpty swaddle_package description
@@ -283,11 +281,13 @@ core_functions_register _swaddle_swaddles_functions swaddle_swaddles_buildSwaddl
 swaddle_swaddles_buildSwaddles()
 {
 	core_variable_array_iterate swaddle_swaddles swaddle_build_all
-}
-
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_buildRepositories
-swaddle_swaddles_buildRepositories()
-{
-	swaddle_repository_apt
 	swaddle_repository_yum
 }
+
+#core_functions_register _swaddle_swaddles_functions swaddle_swaddles_buildRepositories
+#swaddle_swaddles_buildRepositories()
+#{
+#	echo HELLOXXX 1>&2
+#	swaddle_repository_apt
+#	swaddle_repository_yum
+#}

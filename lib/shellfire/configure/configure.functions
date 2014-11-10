@@ -210,12 +210,13 @@ configure_iterateOverArrayWithDefaultsIfEmpty()
 	_configure_configurationSettingValue "$namespace" "$valueName"
 	
 	if core_variable_array_isEmpty "$configurationSettingValue"; then
-
+		
 		local core_variable_array_element
 		for core_variable_array_element in "$@"
 		do
 			$callback
 		done
+		
 	else
 		core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_tar_compress_callback
 	fi
