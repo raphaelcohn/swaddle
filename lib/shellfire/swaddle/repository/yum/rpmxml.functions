@@ -120,30 +120,31 @@ swaddle_repository_yum_rpmxml_addToRepodataComps()
 		local filePath="$_swaddle_repository_yum_repodataPath"/"$fileName".xml
 		local digest="$(swaddle_digest sha256 "$filePath")"
 		local size="$(stat -c '%s' "$filePath")"
-		local digestFilePath="$digest"-"$fileName".xml
+		local digestFileName="$digest"-"$fileName".xml
+		local digestFilePath="$_swaddle_repository_yum_repodataPath"/"$digestFileName"
 		mv "$filePath" "$digestFilePath"
 		swaddle_touch_setMtimeAndAtime "$digestFilePath"
-	
-		# Note 'group' not 'groups'
+		
 		xmlwriter_open data type "$dataType"
 	
 			xmlwriter_leaf checksum type sha256 "$digest"
-			xmlwriter_leaf location href repodata/"$digestFilePath"
+			xmlwriter_leaf location href repodata/"$digestFileName"
 			xmlwriter_leaf timestamp "$(swaddle_configure_timestamp)"
 			xmlwriter_leaf size $size
 	
 		xmlwriter_close data
 	
 		swaddle_compress_gzip "$digestFilePath"
-		local digestGz="$(swaddle_digest sha256 "$digestFilePath".gz)"
-		local sizeGz="$(stat -c '%s' "$digestFilePath".gz)"
-		swaddle_touch_setMtimeAndAtime "$digestFilePath".gz
+		local compressedDigestFilePath="$digestFilePath".gz
+		local digestGz="$(swaddle_digest sha256 "$compressedDigestFilePath")"
+		local sizeGz="$(stat -c '%s' "$compressedDigestFilePath")"
+		swaddle_touch_setMtimeAndAtime "$compressedDigestFilePath"
 	
 		xmlwriter_open data type "$dataType"_gz
 	
 			xmlwriter_leaf checksum type sha256 "$digestGz"
 			xmlwriter_leaf open-checksum type sha256 "$digest"
-			xmlwriter_leaf location href repodata/"$digestFilePath".gz
+			xmlwriter_leaf location href repodata/"$digestFileName".gz
 			xmlwriter_leaf timestamp "$(swaddle_configure_timestamp)"
 			xmlwriter_leaf size $sizeGz
 	
