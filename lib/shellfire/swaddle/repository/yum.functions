@@ -8,8 +8,10 @@ swaddle_repository_yum()
 	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
 	local hostBaseUrl
 	swaddle_repository_yum_adjustUrl hostBaseUrl "$(configure_getConfigurationSetting swaddle hostBaseUrl)"
+
+	local _swaddle_repository_yum_repositoryPath="$_swaddle_repository_parentPath"/"$repositoryName"
+	local _swaddle_repository_yum_repodataPath="$_swaddle_repository_yum_repositoryPath"/repodata
 	
-	local _swaddle_repository_yum_repodataPath="$_swaddle_repository_parentPath"/repodata
 	swaddle_repository_yum_createRepodata
 	swaddle_repository_yum_createRepoFile
 	swaddle_repository_yum_createMirrorlist
@@ -49,6 +51,8 @@ swaddle_repository_yum_createRepodata()
 
 swaddle_repository_yum_createRepoFile()
 {
+	local repoFilePath="$_swaddle_repository_yum_repositoryPath"/"$repositoryName".repo
+	
 	if core_variable_isFalse "$(swaddle_configure_sign)"; then
 		local gpgKey="#"
 		local gpgCheck='gpgcheck=0'
@@ -58,34 +62,36 @@ swaddle_repository_yum_createRepoFile()
 		local gpgCheck='gpgcheck=1'
 	fi
 	
-	cat >"$_swaddle_repository_parentPath"/"$repositoryName".repo <<-EOF
+	cat >"$repoFilePath" <<-EOF
 		[${repositoryName}]
 		name=${repositoryName}
-		baseurl=${hostBaseUrl}${repositoryName}/rpm
-		mirrorlist=${hostBaseUrl}${repositoryName}/rpm/mirrorlist
+		baseurl=${hostBaseUrl}yum/${repositoryName}
+		mirrorlist=${hostBaseUrl}yum/${repositoryName}/mirrorlist
 		${gpgKey}
 		${gpgCheck}
 		enabled=1
 		protect=0
 	EOF
-	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_parentPath"/"$repositoryName".repo
-	swaddle_digest_file "$_swaddle_repository_parentPath"/"$repositoryName".repo
-	swaddle_compress_gzip "$_swaddle_repository_parentPath"/"$repositoryName".repo
+	swaddle_touch_setMtimeAndAtime "$repoFilePath"
+	swaddle_digest_file "$repoFilePath"
+	swaddle_compress_gzip "$repoFilePath"
 }
 
 swaddle_repository_yum_createMirrorlist()
 {
+	local mirrorListFilePath="$_swaddle_repository_yum_repositoryPath"/mirrorlist
+	
 	_swaddle_repository_yum_createMirrorlist_callback()
 	{
 		local mirrorBaseUrl
 		swaddle_repository_yum_adjustUrl mirrorBaseUrl "$core_variable_array_element"
 		printf '%s%s\n' "$mirrorBaseUrl" "$repositoryName"/rpm
 	}
-	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_yum' mirrors _swaddle_repository_yum_createMirrorlist_callback "$hostBaseUrl" >"$_swaddle_repository_parentPath"/mirrorlist
+	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_yum' mirrors _swaddle_repository_yum_createMirrorlist_callback "$hostBaseUrl" >"$mirrorListFilePath"
 	
-	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_parentPath"/mirrorlist
-	swaddle_digest_file "$_swaddle_repository_parentPath"/mirrorlist
-	swaddle_compress_gzip "$_swaddle_repository_parentPath"/mirrorlist
+	swaddle_touch_setMtimeAndAtime "$mirrorListFilePath"
+	swaddle_digest_file "$mirrorListFilePath"
+	swaddle_compress_gzip "$mirrorListFilePath"
 }
 
 core_usesIn swaddle gpg
@@ -95,9 +101,11 @@ swaddle_repository_yum_exportSigningKey()
 		return 0
 	fi
 	
-	swaddle_gpg_exportSigningKey >"$_swaddle_repository_parentPath"/RPM-GPG-KEY-"$repositoryName"
-	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_parentPath"/RPM-GPG-KEY-"$repositoryName"
-	swaddle_compress_gzip "$_swaddle_repository_parentPath"/RPM-GPG-KEY-"$repositoryName"
+	local gpgKeyFilePath="$_swaddle_repository_yum_repositoryPath"/RPM-GPG-KEY-"$repositoryName"
+	
+	swaddle_gpg_exportSigningKey >"$gpgKeyFilePath"
+	swaddle_touch_setMtimeAndAtime "$gpgKeyFilePath"
+	swaddle_compress_gzip "$gpgKeyFilePath"
 }
 
 swaddle_repository_yum_signRepomdForSuse()
@@ -107,26 +115,28 @@ swaddle_repository_yum_signRepomdForSuse()
 	fi
 	
 	# eg http://download.opensuse.org/distribution/13.1/repo/oss/suse/repodata/
-	ln -f "$_swaddle_repository_parentPath"/RPM-GPG-KEY-"$repositoryName" "$_swaddle_repository_yum_repodataPath"/repomd.xml.key
+	ln -f "$_swaddle_repository_yum_repositoryPath"/RPM-GPG-KEY-"$repositoryName" "$_swaddle_repository_yum_repodataPath"/repomd.xml.key
 	swaddle_digest_signFile "$_swaddle_repository_yum_repodataPath"/repomd.xml
 }
 
 swaddle_repository_yum_createInstallScript()
 {
+	local installScriptFilePath="$_swaddle_repository_yum_repositoryPath"/install.sh
+	
 	# This ought to go into a $repositoryName-release.VERSION.rpm, but that's just painful
 	local repoFilePath='$repoFilePath'
-	cat >"$_swaddle_repository_parentPath"/install.sh <<-EOF
+	cat >"$installScriptFilePath" <<-EOF
 		#!/usr/bin/env sh
 		set -e
 		set -u
 		
 		repoFilePath='/etc/yum.repos.d/$repositoryName.repo'
 		sudo -p "Password to allow root to remove '$repoFilePath' and perform install: " rm -rf "$repoFilePath"
-		curl --fail --location --silent --show-error '${hostBaseUrl}${repositoryName}/rpm/${repositoryName}.repo' | sudo -p "Password to allow root to install '$repoFilePath': " tee "$repoFilePath" >/dev/null
+		curl --fail --location --silent --show-error '${hostBaseUrl}/yum/${repositoryName}/${repositoryName}.repo' | sudo -p "Password to allow root to install '$repoFilePath': " tee "$repoFilePath" >/dev/null
 		echo "Now run 'sudo yum update' and 'sudo yum group info $repositoryName' to see all packages available."
 	EOF
-	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_parentPath"/install.sh
-	swaddle_digest_file "$_swaddle_repository_parentPath"/install.sh
-	chmod 0755 "$_swaddle_repository_parentPath"/install.sh
-	swaddle_compress_gzip "$_swaddle_repository_parentPath"/install.sh
+	swaddle_touch_setMtimeAndAtime "$installScriptFilePath"
+	swaddle_digest_file "$installScriptFilePath"
+	chmod 0755 "$installScriptFilePath"
+	swaddle_compress_gzip "$installScriptFilePath"
 }

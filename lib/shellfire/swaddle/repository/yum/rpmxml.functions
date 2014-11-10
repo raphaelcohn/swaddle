@@ -4,7 +4,7 @@ core_usesIn swaddle touch digest
 swaddle_repository_yum_rpmxml_packageCount()
 {
 	set +f
-	set -- "$_swaddle_repository_parentPath"/*/*.rpm
+	set -- "$_swaddle_repository_yum_repositoryPath"/*/*.rpm
 	set -f
 	
 	if [ ! -e "$1" ]; then
@@ -19,7 +19,7 @@ swaddle_repository_yum_rpmxml_iterateRpmFiles()
 	local callback="$1"
 
 	set +f
-	set -- "$_swaddle_repository_parentPath"/*/*.rpm
+	set -- "$_swaddle_repository_yum_repositoryPath"/*/*.rpm
 	set -f
 	
 	if [ ! -e "$1" ]; then
