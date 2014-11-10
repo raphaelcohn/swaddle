@@ -208,7 +208,10 @@ swaddle_repository_apt_createDistsContents()
 			# bin/busybox  universe/utils/busybox
 			
 			core_snippet_retrieve 'swaddle_apt_contents' no Contents-"$packageArchitecture"
-			sort -d Contents-"$packageArchitecture".tmp >>Contents-"$packageArchitecture"
+			{
+				printf '\n'
+				sort -d Contents-"$packageArchitecture".tmp
+			}>>Contents-"$packageArchitecture"
 
 			swaddle_touch_setMtimeAndAtime Contents-"$packageArchitecture"
 			swaddle_compress_gzip Contents-"$packageArchitecture"
@@ -262,7 +265,7 @@ swaddle_repository_apt_createDistsRelease()
 			do
 				set -f
 				if [ -f "$filePath" ]; then
-					printf ' %s%18s %s\n' "$filePath" "$(stat -c '%s' "$filePath")" "$(swaddle_digest ${digest} "$filePath")"
+					printf " %s%18s %s\n" "$(swaddle_digest ${digest} "$filePath")" "$(stat -c '%s' "$filePath")" "$filePath"
 				fi
 			done
 			set -f
@@ -271,19 +274,23 @@ swaddle_repository_apt_createDistsRelease()
 		pushd "$parentPath"
 		
 			local digest
+			local width
 			
 			printf 'MD5Sum:\n'
 			digest=md5
+			width=10
 			core_variable_array_iterate _swaddle_repository_apt_components _swaddle_repository_apt_createDistsRelease_callback
 			printf '\n'
 			
 			printf 'SHA1:\n'
 			digest=sha1
+			width=10
 			core_variable_array_iterate _swaddle_repository_apt_components _swaddle_repository_apt_createDistsRelease_callback
 			printf '\n'
 			
 			printf 'SHA256:\n'
 			digest=sha256
+			width=10
 			core_variable_array_iterate _swaddle_repository_apt_components _swaddle_repository_apt_createDistsRelease_callback
 			printf '\n'
 			
