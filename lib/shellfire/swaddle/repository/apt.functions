@@ -663,13 +663,11 @@ swaddle_repository_apt_architectures()
 	_configure_configurationSettingValue 'swaddle' 'apt_architectures'
 	
 	if core_variable_array_isEmpty "$configurationSettingValue"; then
-		
 		local core_variable_array_element='amd64'
 		$callback
-		
+	else
+		core_variable_array_iterate "$configurationSettingValue" "$callback"
 	fi
-	
-	core_variable_array_iterate "$configurationSettingValue" "$callback"
 }
 
 core_dependency_requires '*' mkdir md5sum

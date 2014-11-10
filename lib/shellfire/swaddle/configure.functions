@@ -43,16 +43,16 @@ configure_validateDebTask()
 	configure_validateValue swaddle_deb_task "$1"
 }
 
-core_snippet_embed raw swaddle_apt_language
+core_snippet_embed raw configure_apt_repository_language
 configure_validateAptLanguage()
 {
-	configure_validateValue swaddle_apt_language "$1"
+	configure_validateValue configure_apt_repository_language "$1"
 }
 
-core_snippet_embed raw validate_apt_repository_architecture
-configure_validateAptRepositoryArchitecture()
+core_snippet_embed raw validate_apt_architecture
+configure_validateAptArchitecture()
 {
-	configure_validateValue validate_apt_repository_architecture "$1"
+	configure_validateValue validate_apt_architecture "$1"
 }
 
 configure_validateDebPackageArchitecture()
@@ -60,13 +60,13 @@ configure_validateDebPackageArchitecture()
 	if [ "$1" = 'all' ]; then
 		return 0
 	fi
-	configure_validateAptRepositoryArchitecture "$1"
+	configure_validateAptArchitecture "$1"
 }
 
-core_snippet_embed raw validate_yum_repository_architecture
-configure_validateYumRepositoryArchitecture()
+core_snippet_embed raw validate_yum_architecture
+configure_validateYumArchitecture()
 {
-	configure_validateValue validate_yum_repository_architecture "$1"
+	configure_validateValue validate_yum_architecture "$1"
 }
 
 configure_validateRpmPackageArchitecture()
@@ -74,7 +74,7 @@ configure_validateRpmPackageArchitecture()
 	if [ "$1" = 'noarch' ]; then
 		return 0
 	fi
-	configure_validateRpmRepositoryArchitecture "$1"
+	configure_validateYumArchitecture "$1"
 }
 
 # Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
