@@ -47,7 +47,7 @@ swaddle_repository_yum_rpmxml_files()
 			set -- "$@" type dir
 		fi
 		
-		xmlwriter_leaf "$@"
+		xmlwriter_leaf "$@" "$filePath"
 	done
 }
 
@@ -65,7 +65,7 @@ swaddle_repository_yum_rpmxml_endRepodata()
 {
 	{
 		xmlwriter_close repomd
-	} >"$_swaddle_repository_yum_rpmxml_repomdXmlFilePath"
+	} >>"$_swaddle_repository_yum_rpmxml_repomdXmlFilePath"
 	
 	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_rpmxml_repomdXmlFilePath"
 	swaddle_compress_gzip "$_swaddle_repository_yum_rpmxml_repomdXmlFilePath"

@@ -201,7 +201,7 @@ swaddle_repository_yum_primaryXmlFile_entries()
 				$entryRemainder
 			EOF
 			
-			set -- "$@" flags "$entryFlags" epoch "$entryEpoch" ver "$entryVersion"
+			set -- "$@" flags "$entryFlagsConverted" epoch "$entryEpoch" ver "$entryVersion"
 			
 			if [ -n "$entryRelease" ]; then
 				set -- "$@" rel "$entryRelease"
