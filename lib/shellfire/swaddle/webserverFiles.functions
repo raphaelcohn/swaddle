@@ -229,7 +229,7 @@ _swaddle_webserverFiles_index_createInitialMarkdown()
 % ${releaseDate}
 Table:This repository was created using [swaddle](https://github.com/raphaelcohn/swaddle \"swaddle, the standalone generator, from source control to complete archive\"), the one tool you need to create DEBs, RPMs, tarballs, apt and yum repositories from source control on Linux and Mac OS X, using [fatten](https://github.com/shellfire-dev/fatten \"Fattening allows you to develop modular shell scripts then bundle them up into one multi-platform copy-and-run script\") and [shellfire](https://github.com/shellfire-dev \"Shellfire provides modular, re-usable shell script libraries which are battle-tested for platform-gotchas with bash, pdksh, AIX sh, dash, Busybox and others.\").
 
-|Name|Last Modified|Size (bytes)^[Sizes for directories are for the index file.]|Signature^[${signatureMarkdown}]|"
+|Name|Last Modified|Size|Signature^[${signatureMarkdown}]|"
 		
 		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback "$@"
 		printf '\n|:---|:------------|---:|:--------|'
