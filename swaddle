@@ -3,7 +3,7 @@
 _program()
 {
 	core_usesIn core temporaryFiles variable/array
-	core_usesIn swaddle swaddles
+	core_usesIn swaddle
 	
 	swaddle()
 	{

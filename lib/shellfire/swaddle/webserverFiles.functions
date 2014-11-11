@@ -218,7 +218,6 @@ _swaddle_webserverFiles_index_createInitialMarkdown()
 	fi
 	
 	{
-		
 		printf '%s' "% Index of $folderName
 % $(swaddle_configure_maintainer)
 % ${releaseDate}
