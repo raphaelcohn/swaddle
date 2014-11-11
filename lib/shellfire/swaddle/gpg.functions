@@ -11,6 +11,12 @@ swaddle_gpg_exportSigningKey()
 	swaddle_gpg --armor --export "$(swaddle_configure_signer)"
 }
 
+core_dependency_requires '*' awk
+swaddle_gpg_exportSigningKeyFingerprint()
+{
+	swaddle_gpg --with-colons --default-key 'Raphael Cohn (Package Signing Key) <raphael.cohn@stormmq.com>' --fingerprint | awk -v FS=':' '$1 ~ /pub/ {print $5}'
+}
+
 core_dependency_requires '*' rm mv touch
 swaddle_gpg_sign()
 {

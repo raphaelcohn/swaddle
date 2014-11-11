@@ -69,7 +69,7 @@ swaddle_webserverFiles_createIndices()
 	popd
 	
 	if [ ! -f "$inputFilePath" ]; then
-		printf '' >"$inputFilePath"
+		_swaddle_webserverFiles_index_createInitialMarkdown
 	fi
 	
 	local toFormat="$(configure_getConfigurationSetting swaddle_web pandoc_format)"
@@ -100,52 +100,6 @@ swaddle_webserverFiles_createIndices()
 	mv "$outputFilePath".tmp "$outputFilePath"
 	swaddle_touch_setMtimeAndAtime "$outputFilePath"
 	swaddle_webserverFiles_compressForNginx "$outputFilePath"
-}
-
-_swaddle_webserverFiles_index_createInitialMarkdown()
-{
-	pushd "$dirname"
-		local folderName="$(core_compatibility_basename "$(pwd)")"
-	popd
-	local timestamp="$(swaddle_configure_timestamp)"
-	local releaseDate="$(date -u -d @$timestamp +'%a, %d %h %Y %H:%M:%S %Z')"
-	
-	# Defaults
-	set -- 'sha1' 'sha256'
-
-	_swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback()
-	{
-		swaddle_digest_name "$core_variable_array_element"
-		printf '|'
-	}
-	
-	_swaddle_webserverFiles_index_createInitialMarkdown_digestColumnAlignmentCallback()
-	{
-		local width=${#core_variable_array_element}
-		printf ':'
-		# yes, this is correct
-		local index=1
-		while [ $index -lt $width ]
-		do
-			printf '-'
-			index=$((index+1))
-		done
-		printf '|'
-	}
-	
-	{
-		printf '%s' "% Index of $folderName
-% $(swaddle_configure_maintainer)
-% ${releaseDate}
-|Name|Last Modified|Size|Signature|"
-		
-		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback "$@"
-		printf '\n|:---|:------------|---:|:--------|'
-		
-		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnAlignmentCallback "$@"
-		printf '\n'
-		
-	} >"$indexFilePath"
 }
 
 core_dependency_requires '*' date stat cat
@@ -203,4 +157,53 @@ swaddle_webserverFiles_index()
 		printf '\n'
 		
 	} >>"$indexFilePath"
+}
+
+_swaddle_webserverFiles_index_createInitialMarkdown()
+{
+	pushd "$dirname"
+		local folderName="$(core_compatibility_basename "$(pwd)")"
+	popd
+	local timestamp="$(swaddle_configure_timestamp)"
+	local releaseDate="$(date -u -d @$timestamp +'%a, %d %h %Y %H:%M:%S %Z')"
+	
+	# Defaults
+	set -- 'sha1' 'sha256'
+
+	_swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback()
+	{
+		swaddle_digest_name "$core_variable_array_element"
+		printf '|'
+	}
+	
+	_swaddle_webserverFiles_index_createInitialMarkdown_digestColumnAlignmentCallback()
+	{
+		local width=${#core_variable_array_element}
+		printf ':'
+		# yes, this is correct
+		local index=1
+		while [ $index -lt $width ]
+		do
+			printf '-'
+			index=$((index+1))
+		done
+		printf '|'
+	}
+	
+	{
+		printf '%s' "% Index of $folderName
+% $(swaddle_configure_maintainer)
+% ${releaseDate}
+---
+Table:This repository was created by [swaddle](https://github.com/raphaelcohn/swaddle \"swaddle home page\")
+
+|Name|Last Modified|Size (bytes)|Signature^[_Signed using the key \`$(swaddle_configure_signer)\` with fingerprint \`$(swaddle_gpg_exportSigningKeyFingerprint)\`. _]|"
+		
+		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback "$@"
+		printf '\n|:---|:------------|---:|:--------|'
+		
+		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnAlignmentCallback "$@"
+		printf '\n'
+		
+	} >"$indexFilePath"
 }

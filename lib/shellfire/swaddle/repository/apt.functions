@@ -176,8 +176,10 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 								local compressedFileName="$1"
 								printf ' %s %7s %s\n' "$(swaddle_digest sha1 "$compressedFileName")" "$(stat -c '%s' "$compressedFileName")" "$compressedFileName"
 							}
+							
+							_swaddle_repository_apt_sortAndConcatenateFragments "Translation-$languageCode" _swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex_callback
 						}
-						configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' 'apt_architectures' _swaddle_repository_apt_createDistsComponentsTranslations_callback "$(configure_getConfigurationSetting swaddle_apt language)"
+						configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_apt' 'translations' _swaddle_repository_apt_createDistsComponentsTranslations_callback "$(configure_getConfigurationSetting swaddle_apt language)"
 					} >Index
 
 					swaddle_touch_setMtimeAndAtime Index

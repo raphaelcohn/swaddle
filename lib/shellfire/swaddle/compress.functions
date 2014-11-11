@@ -32,7 +32,7 @@ swaddle_compress_variants()
 		fi
 		local compressedFileName="$originalFilePath"$(swaddle_compress_extension "$compressor")
 		if [ -n "$callbackPerCompressedFile" ]; then
-			$callbackPerCompressedFile "$originalFilePath"
+			$callbackPerCompressedFile "$compressedFileName"
 		fi
 		swaddle_webserverFiles_createFrom "$compressedFileName" no
 	}
