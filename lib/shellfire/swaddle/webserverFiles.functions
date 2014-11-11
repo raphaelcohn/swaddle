@@ -44,15 +44,18 @@ swaddle_webserverFiles_compressForNginx()
 }
 
 core_snippet_embed raw css
-core_dependency_requires '*' pandoc rm mv
+core_dependency_requires '*' pandoc rm mv cat
 swaddle_webserverFiles_createIndices()
 {
 	local folderPath="$1"
+	local parentFolderPath="$2"
 	
 	local inputFilePath="$folderPath"/index.md
 	
 	local hasChildren=no
 	pushd "$folderPath"
+
+		_swaddle_webserverFiles_index_createInitialMarkdown
 		
 		set +f
 		local childFolder
@@ -62,7 +65,11 @@ swaddle_webserverFiles_createIndices()
 			if [ -d "$childFolder" ]; then
 				hasChildren=yes
 				if [ ! -L "$childFolder" ]; then
-					swaddle_webserverFiles_createIndices "$childFolder"
+					if [ -z "$parentFolderPath" ]; then
+						swaddle_webserverFiles_createIndices "$childFolder" "$childFolder"
+					else
+						swaddle_webserverFiles_createIndices "$childFolder" "$parentFolderPath / $childFolder"
+					fi
 				fi
 				swaddle_webserverFiles_index "$childFolder" '-'
 			fi
@@ -71,9 +78,8 @@ swaddle_webserverFiles_createIndices()
 		
 	popd
 	
-	if [ ! -f "$inputFilePath" ]; then
-		_swaddle_webserverFiles_index_createInitialMarkdown
-	fi
+	cat "$inputFilePath".tmp >>"$inputFilePath"
+	rm "$inputFilePath".tmp
 	
 	{
 		printf '|[`Parent Directory ↩`](../ "Move up to the parent directory")|\n'
@@ -120,10 +126,7 @@ swaddle_webserverFiles_index()
 {
 	local filePath="$1"
 	local dirname="$(core_compatibility_dirname "$filePath")"
-	local indexFilePath="$dirname"/index.md
-	if [ ! -f "$indexFilePath" ]; then
-		_swaddle_webserverFiles_index_createInitialMarkdown
-	fi
+	local indexFilePath="$dirname"/index.md.tmp
 	
 	local fileName="$(core_compatibility_basename "$filePath")"
 
@@ -175,9 +178,7 @@ swaddle_webserverFiles_index()
 core_dependency_requires '*' sed
 _swaddle_webserverFiles_index_createInitialMarkdown()
 {
-	pushd "$dirname"
-		local folderName="$(core_compatibility_basename "$(pwd)")"
-	popd
+	local folderName="$(core_compatibility_basename "$(pwd)")"
 	local timestamp="$(swaddle_configure_timestamp)"
 	local releaseDate="$(date -u -d @$timestamp +'%a, %d %h %Y %H:%M:%S %Z')"
 	
@@ -217,8 +218,13 @@ _swaddle_webserverFiles_index_createInitialMarkdown()
 		local signatureMarkdown="Signatures are unavailable."
 	fi
 	
+	local indexPath="/ $parentFolderPath /"
+	if [ "$indexPath" = '/  /' ]; then
+		indexPath='/'
+	fi
+	
 	{
-		printf '%s' "% Index of $folderName
+		printf '%s' "% Index of ${indexPath}
 % $(swaddle_configure_maintainer)
 % ${releaseDate}
 Table:This repository was created using [swaddle](https://github.com/raphaelcohn/swaddle \"swaddle, the standalone generator, from source control to complete archive\"), the one tool you need to create DEBs, RPMs, tarballs, apt and yum repositories from source control on Linux and Mac OS X, using [fatten](https://github.com/shellfire-dev/fatten \"Fattening allows you to develop modular shell scripts then bundle them up into one multi-platform copy-and-run script\") and [shellfire](https://github.com/shellfire-dev \"Shellfire provides modular, re-usable shell script libraries which are battle-tested for platform-gotchas with bash, pdksh, AIX sh, dash, Busybox and others.\").
@@ -231,5 +237,5 @@ Table:This repository was created using [swaddle](https://github.com/raphaelcohn
 		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnAlignmentCallback "$@"
 		printf '\n'
 		
-	} >"$indexFilePath"
+	} >index.md
 }
