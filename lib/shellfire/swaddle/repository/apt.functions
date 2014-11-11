@@ -368,14 +368,7 @@ _swaddle_repository_apt_sortAndConcatenateFragments()
 		local callbackPerCompressedFile=''
 	fi
 	
-	# Remove any existing files
-	local compressor
-	local existingConcatenatedFile
-	for compressor in none gzip bzip2 lzma xz
-	do
-		rm -f "$concatenatedFileName"$(swaddle_compress_extension "$compressor")
-	done
-	
+	swaddle_compress_variants_clean "$concatenatedFileName"
 	
 	set +f
 	set -- *."$concatenatedFileName"
@@ -398,7 +391,7 @@ _swaddle_repository_apt_sortAndConcatenateFragments()
 	} >>"$concatenatedFileName"
 	swaddle_touch_setMtimeAndAtime "$concatenatedFileName"
 	
-	swaddle_compress_variants 'swaddle_apt' 'compressions' "$callbackPerCompressedFile" 'none' 'gz' 'xz'
+	swaddle_compress_variants 'swaddle_apt' 'compressions' "$concatenatedFileName" "$callbackPerCompressedFile" 'none' 'gzip' 'xz'
 }
 
 core_dependency_requires '*' cat
