@@ -54,20 +54,14 @@ swaddle_build_package_tar_createTarball()
 		--numeric-owner \
 		--directory "$directory" \
 		.
-	
-	swaddle_webserverFiles_index "$_swaddle_build_package_tar_tarballFileName"
+
+	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_tar_tarballFileName"
 }
 
 core_usesIn swaddle compress
 core_functions_register _swaddle_build_package_tar_functions swaddle_build_package_tar_compress
 swaddle_build_package_tar_compress()
 {
-	_swaddle_build_package_tar_compress_callback()
-	{
-		local compression="$core_variable_array_element"
-		swaddle_compress_${compression} "$_swaddle_build_package_tar_tarballFileName"
-		swaddle_webserverFiles_index "$_swaddle_build_package_tar_tarballFileName".$(swaddle_compress_extension "$compression")
-	}
-	
-	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_tar' 'compressions' _swaddle_build_package_tar_compress_callback 'gzip'
+	local callbackPerCompressedFile=''
+	swaddle_compress_variants 'swaddle_tar' 'compressions' "$callbackPerCompressedFile" 'gzip' 'lrzip'
 }

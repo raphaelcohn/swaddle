@@ -12,10 +12,35 @@ swaddle_webserverFiles_registerConfiguration()
 swaddle_webserverFiles_createFrom()
 {
 	local filePath="$1"
+	local shouldCompress="$2"
 	
 	swaddle_webserverFiles_index "$filePath"
 	
-	swaddle_webserverFiles_compressForNginx "$filePath"
+	swaddle_webserverFiles_contentMd5ForNginx "$filePath"
+	
+	if core_variable_isTrue "$shouldCompress"; then
+		swaddle_webserverFiles_compressForNginx "$filePath"
+	fi
+}
+
+swaddle_webserverFiles_contentMd5ForNginx()
+{
+	local filePath="$1"
+	
+	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_web nginx)"; then
+		# The purpose of this is to allow the 'Content-MD5' HTTP header to be served
+		swaddle_digest_file md5 "$filePath"
+	fi
+}
+
+swaddle_webserverFiles_compressForNginx()
+{
+	local filePath="$1"
+	
+	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_web nginx)"; then
+		swaddle_compress_gzip "$filePath"
+		swaddle_webserverFiles_contentMd5ForNginx "$filePath".gz
+	fi
 }
 
 core_dependency_requires '*' pandoc rm mv
@@ -178,15 +203,4 @@ swaddle_webserverFiles_index()
 		printf '\n'
 		
 	} >>"$indexFilePath"
-}
-
-swaddle_webserverFiles_compressForNginx()
-{
-	local filePath="$1"
-	
-	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_web nginx)"; then
-		swaddle_compress_gzip "$filePath"
-		# The purpose of this is to allow the 'Content-MD5' HTTP header to be served
-		swaddle_digest_file md5 "$filePath"
-	fi
 }

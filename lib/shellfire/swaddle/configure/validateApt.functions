@@ -1,4 +1,5 @@
 core_usesIn configure
+core_usesIn configure validateDeb
 
 core_snippet_embed raw validate_apt_language
 configure_validateAptLanguage()
@@ -10,4 +11,13 @@ core_snippet_embed raw validate_apt_architecture
 configure_validateAptArchitecture()
 {
 	configure_validateValue validate_apt_architecture "$1"
+}
+
+configure_validateAptCompression()
+{
+	if [ "$1" = 'none' ]; then
+		return 0
+	fi
+	
+	configure_validateDebCompression "$1"
 }

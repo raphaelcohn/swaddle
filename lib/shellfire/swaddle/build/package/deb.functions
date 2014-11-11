@@ -394,7 +394,7 @@ swaddle_build_package_deb_tarData()
 		 _swaddle_build_package_deb_dataTarballFileName='data.tar'
 	 else
 		 swaddle_compress_$compression "$tarball"
-		 _swaddle_build_package_deb_dataTarballFileName="data.tar.$(swaddle_compress_extension "$compression")"
+		 _swaddle_build_package_deb_dataTarballFileName="data.tar$(swaddle_compress_extension "$compression")"
 		 rm "$tarball"
 	 fi
 	 
@@ -444,7 +444,7 @@ swaddle_build_package_deb_createDeb()
 	# Oddly, debian packages can actually be compressed further (this is because they are 'ar' archives)
 	
 	swaddle_touch_setMtimeAndAtime "$debFilePath"
-	swaddle_webserverFiles_createFrom "$debFilePath"
+	swaddle_webserverFiles_createFrom "$debFilePath" yes
 }
 
 _swaddle_build_package_deb_poolAZ()

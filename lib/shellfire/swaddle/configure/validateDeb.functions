@@ -1,7 +1,3 @@
-
-
-
-
 # Derived from http://packages.ubuntu.com/lucid/
 core_snippet_embed raw validate_deb_section
 configure_validateDebSection()

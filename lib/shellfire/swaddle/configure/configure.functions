@@ -34,3 +34,9 @@ swaddle_configure_rpm_architecture()
 {
 	configure_getConfigurationSetting swaddle_rpm architecture
 }
+
+swaddle_configure_apt_architectures()
+{
+	local callback="$1"
+	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_apt' 'architectures' "$callback" 'amd64'
+}

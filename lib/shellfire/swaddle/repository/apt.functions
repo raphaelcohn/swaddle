@@ -27,6 +27,7 @@ swaddle_repository_apt_registerConfiguration()
 	configure_register Array AptArchitecture swaddle_apt architectures
 	configure_register Value AptLanguage swaddle_apt language 'en'
 	configure_register Array AptLanguage swaddle_apt translations
+	configure_register Array AptCompression swaddle_apt compressions
 }
 
 core_dependency_requires '*' rm mkdir
@@ -57,7 +58,7 @@ swaddle_repository_apt_createDistsContentsTmp()
 		popd
 	}
 	
-	swaddle_repository_apt_architectures _swaddle_repository_apt_createDistsContentsTmp_callback
+	swaddle_configure_apt_architectures _swaddle_repository_apt_createDistsContentsTmp_callback
 }
 
 swaddle_repository_apt_parseDebsInPool()
@@ -131,8 +132,7 @@ swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile()
 				local componentFilesFolderPath="$repositoryPath"/"$poolComponent"/binary-"$packageArchitecture"
 				
 				pushd "$componentFilesFolderPath"
-				
-					rm -f Packages
+					
 					_swaddle_repository_apt_sortAndConcatenateFragments Packages
 					swaddle_repository_apt_createDistsComponentReleaseFile
 					
@@ -143,7 +143,7 @@ swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile()
 		set -f
 	}
 	
-	swaddle_repository_apt_architectures _swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile_callback
+	swaddle_configure_apt_architectures _swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile_callback
 }
 
 core_usesIn swaddle digest
@@ -171,23 +171,18 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 						{
 							local languageCode="$core_variable_array_element"
 							
-							_swaddle_repository_apt_sortAndConcatenateFragments Translation-"$languageCode"
-							
-							local extension
-							local translationFile
-							for extension in '' .gz .bz2 .lzma .xz
-							do
-								translationFile=Translation-${languageCode}${extension}
-								swaddle_webserverFiles_createFrom "$translationFile"
-								printf ' %s %7s %s\n' "$(swaddle_digest sha1 "$translationFile")" "$(stat -c '%s' "$translationFile")" "$translationFile"
-							done
+							_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex_callback()
+							{
+								local compressedFileName="$1"
+								printf ' %s %7s %s\n' "$(swaddle_digest sha1 "$compressedFileName")" "$(stat -c '%s' "$compressedFileName")" "$compressedFileName"
+							}
 						}
 						configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' 'apt_architectures' _swaddle_repository_apt_createDistsComponentsTranslations_callback "$(configure_getConfigurationSetting swaddle_apt language)"
 					} >Index
 
 					swaddle_touch_setMtimeAndAtime Index
 					
-					swaddle_webserverFiles_createFrom Index
+					swaddle_webserverFiles_createFrom Index yes
 				popd
 			fi
 		done
@@ -220,7 +215,7 @@ swaddle_repository_apt_createDistsContents()
 
 			swaddle_touch_setMtimeAndAtime Contents-"$packageArchitecture"
 			swaddle_compress_gzip Contents-"$packageArchitecture"
-			swaddle_webserverFiles_index Contents-"$packageArchitecture".gz
+			swaddle_webserverFiles_createFrom Contents-"$packageArchitecture".gz no
 			
 			# Yes, really delete it. apt-file only looks for a gz file ordinarily.
 			rm Contents-"$packageArchitecture"
@@ -231,7 +226,7 @@ swaddle_repository_apt_createDistsContents()
 		popd
 	}
 	
-	swaddle_repository_apt_architectures _swaddle_repository_apt_createDistsContents_callback
+	swaddle_configure_apt_architectures _swaddle_repository_apt_createDistsContents_callback
 }
 
 core_dependency_requires '*' cat date ln stat
@@ -307,7 +302,7 @@ swaddle_repository_apt_createDistsRelease()
 	
 	swaddle_digest_signFile "$releaseFilePath" gpg
 	
-	swaddle_webserverFiles_createFrom "$releaseFilePath"
+	swaddle_webserverFiles_createFrom "$releaseFilePath" yes
 }
 
 swaddle_repository_apt_exportSigningKey()
@@ -315,7 +310,7 @@ swaddle_repository_apt_exportSigningKey()
 	local keyPath="$repositoryPath"/Release.key
 	swaddle_gpg_exportSigningKey >"$keyPath"
 	swaddle_touch_setMtimeAndAtime "$keyPath"
-	swaddle_webserverFiles_createFrom "$keyPath"
+	swaddle_webserverFiles_createFrom "$keyPath" yes
 }
 
 swaddle_repository_apt_createAptSourcesList()
@@ -332,7 +327,7 @@ swaddle_repository_apt_createAptSourcesList()
 	printf '%s\n' "deb $hostBaseUrl $repositoryName $(core_variable_array_string  _swaddle_repository_apt_components ' ')" >"$filePath"
 	
 	swaddle_touch_setMtimeAndAtime "$filePath"
-	swaddle_webserverFiles_createFrom "$filePath"
+	swaddle_webserverFiles_createFrom "$filePath" yes
 }
 
 swaddle_repository_apt_createInstallScript()
@@ -359,23 +354,28 @@ swaddle_repository_apt_createInstallScript()
 	
 	chmod +x "$filePath"
 	swaddle_touch_setMtimeAndAtime "$filePath"
-	swaddle_webserverFiles_createFrom "$filePath"
+	swaddle_webserverFiles_createFrom "$filePath" yes
 }
 
+core_usesIn swaddle compress
 core_dependency_requires '*' sort cat rm
 _swaddle_repository_apt_sortAndConcatenateFragments()
 {
 	local concatenatedFileName="$1"
+	if [ $# -eq 2 ]; then
+		local callbackPerCompressedFile="$2"
+	else
+		local callbackPerCompressedFile=''
+	fi
 	
-	local extension
+	# Remove any existing files
+	local compressor
 	local existingConcatenatedFile
-	for extension in '' gz bz2 lzma xz
+	for compressor in none gzip bzip2 lzma xz
 	do
-		existingConcatenatedFile="$concatenatedFileName"${extension}
-		if [ -e "$existingConcatenatedFile" ]; then
-			rm "$existingConcatenatedFile"
-		fi
+		rm -f "$concatenatedFileName"$(swaddle_compress_extension "$compressor")
 	done
+	
 	
 	set +f
 	set -- *."$concatenatedFileName"
@@ -396,16 +396,9 @@ _swaddle_repository_apt_sortAndConcatenateFragments()
 			done
 		fi
 	} >>"$concatenatedFileName"
-	
 	swaddle_touch_setMtimeAndAtime "$concatenatedFileName"
-	swaddle_webserverFiles_createFrom "$concatenatedFileName"
 	
-	local compressor
-	for compressor in gzip bzip2 lzma xz
-	do
-		swaddle_compress_${compressor} "$concatenatedFileName"
-		swaddle_webserverFiles_index "$concatenatedFileName".$(swaddle_compress_extension "$compressor")
-	done
+	swaddle_compress_variants 'swaddle_apt' 'compressions' "$callbackPerCompressedFile" 'none' 'gz' 'xz'
 }
 
 core_dependency_requires '*' cat
@@ -419,9 +412,8 @@ swaddle_repository_apt_createDistsComponentReleaseFile()
 		Label: $(configure_getConfigurationSetting swaddle vendor)
 		Architecture: ${packageArchitecture}
 	EOF
-	
-	swaddle_touch_setMtimeAndAtime 'Release'
-	swaddle_webserverFiles_createFrom 'Release'
+	swaddle_touch_setMtimeAndAtime Release
+	swaddle_webserverFiles_createFrom Release yes
 }
 
 core_dependency_requires '*' ar tar rm
@@ -528,7 +520,7 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 	}
 	
 	if [ "$packageArchitecture" = 'all' ]; then
-		swaddle_repository_apt_architectures _swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry_callback
+		swaddle_configure_apt_architectures _swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry_callback
 	else
 		local core_variable_array_element="$packageArchitecture"
 		_swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry_callback
@@ -566,7 +558,7 @@ swaddle_repository_apt_parseDeb_extractContentsList()
 	}
 	
 	if [ "$packageArchitecture" = 'all' ]; then
-		swaddle_repository_apt_architectures _swaddle_repository_apt_parseDeb_extractContentsList_callback
+		swaddle_configure_apt_architectures _swaddle_repository_apt_parseDeb_extractContentsList_callback
 	else
 		local core_variable_array_element="$packageArchitecture"
 		_swaddle_repository_apt_parseDeb_extractContentsList_callback
@@ -652,12 +644,6 @@ swaddle_repository_apt_parseDeb_printControlField()
 	local fieldName="$1"
 	local fieldValue="$2"
 	printf '%s: %s\n' "$fieldName" "$fieldValue"
-}
-
-swaddle_repository_apt_architectures()
-{
-	local callback="$1"
-	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_apt' 'architectures' "$callback" 'amd64'
 }
 
 core_dependency_requires '*' mkdir md5sum

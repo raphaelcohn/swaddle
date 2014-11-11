@@ -1,45 +1,94 @@
+core_usesIn swaddle webserverFiles
+core_dependency_requires '*' rm
+swaddle_compress_variants()
+{
+	local namespace="$1"
+	local valueName="$2"
+	local callbackPerCompressedFile="$3"
+	shift 3
+
+	local keepUncompressedFile=no
+	local originalFilePath="$_swaddle_build_package_tar_tarballFileName"
+	_swaddle_build_package_tar_compress_callback()
+	{
+		local compression="$core_variable_array_element"
+		if [ "$compression" = 'none' ]; then
+			keepUncompressedFile=yes
+		else
+			swaddle_compress_${compression} "$_swaddle_build_package_tar_tarballFileName"
+		fi
+		swaddle_webserverFiles_createFrom "$_swaddle_build_package_tar_tarballFileName"$(swaddle_compress_extension "$compression") no
+		
+
+		local compressor="$core_variable_array_element"
+		if [ "$compressor" = 'none' ]; then
+			keepUncompressedFile=yes
+		else
+			swaddle_compress_${compressor} "$originalFilePath"
+		fi
+		local compressedFileName="$originalFilePath"$(swaddle_compress_extension "$compressor")
+		if [ -n "$callbackPerCompressedFile" ]; then
+			$callbackPerCompressedFile "$originalFilePath"
+		fi
+		swaddle_webserverFiles_createFrom "$callbackPerCompressedFile" no
+	}
+	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_tar' 'compressions' _swaddle_build_package_tar_compress_callback 'gzip'
+	
+	if core_variable_isFalse "$keepUncompressedFile"; then
+		rm "$originalFilePath"
+	elif [ ! -f "$originalFilePath".gz ]; then
+		swaddle_webserverFiles_compressForNginx "$originalFilePath"
+	fi
+	
+	configure_iterateOverArrayWithDefaultsIfEmpty "$namespace" "$valueName" '' _swaddle_build_package_tar_compress_callback "$@"
+}
+
 swaddle_compress_extension()
 {
 	case "$1" in
 		
+		none)
+			printf ''
+		;;
+		
 		lzop)
-			printf 'lzo'
+			printf '.lzo'
 		;;
 		
 		zip)
-			printf 'zip'
+			printf '.zip'
 		;;
 		
 		gzip)
-			printf 'gz'
+			printf '.gz'
 		;;
 		
 		bzip2)
-			printf 'bz2'
+			printf '.bz2'
 		;;
 		
 		rzip)
-			printf 'rz'
+			printf '.rz'
 		;;
 		
 		lzma)
-			printf 'lzma'
+			printf '.lzma'
 		;;
 		
 		xz)
-			printf 'xz'
+			printf '.xz'
 		;;
 		
 		lzip)
-			printf 'lz'
+			printf '.lz'
 		;;
 		
 		zpaq)
-			printf 'zpaq'
+			printf '.zpaq'
 		;;
 		
 		lrzip)
-			printf 'lrz'
+			printf '.lrz'
 		;;
 		
 	esac

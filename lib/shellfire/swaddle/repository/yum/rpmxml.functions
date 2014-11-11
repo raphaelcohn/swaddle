@@ -68,7 +68,7 @@ swaddle_repository_yum_rpmxml_endRepodata()
 	} >>"$_swaddle_repository_yum_rpmxml_repomdXmlFilePath"
 	
 	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_rpmxml_repomdXmlFilePath"
-	swaddle_webserverFiles_createFrom "$_swaddle_repository_yum_rpmxml_repomdXmlFilePath"
+	swaddle_webserverFiles_createFrom "$_swaddle_repository_yum_rpmxml_repomdXmlFilePath" yes
 }
 
 core_usesIn swaddle compress
