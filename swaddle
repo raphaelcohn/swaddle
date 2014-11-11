@@ -101,8 +101,10 @@ _program_commandLine_processOptionWithArgument()
 		;;
 		
 		c|clean-output)
+		set -x
 			core_validate_isBoolean $core_commandLine_exitCode_USAGE 'option' "$optionNameIncludingHyphens" "$optionValue"
 			swaddle_cleanOutput="$optionValue"
+			set +x
 		;;
 		
 	esac
@@ -113,7 +115,7 @@ _program_commandLine_processOptionWithoutArgument()
 	case "$optionName" in
 		
 		c|clean-output)
-			swaddle_cleanOutput=1
+			swaddle_cleanOutput=on
 		;;
 		
 	esac
@@ -153,7 +155,7 @@ _program_commandLine_validate()
 	if core_variable_isSet swaddle_cleanOutput; then
 		core_validate_isBoolean $core_commandLine_exitCode_CONFIG 'configuration setting' 'swaddle_cleanOutput' "$swaddle_cleanOutput"
 	else
-		swaddle_cleanOutput=0
+		swaddle_cleanOutput=off
 	fi
 	
 	local potentialSwaddle

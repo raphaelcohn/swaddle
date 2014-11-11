@@ -220,7 +220,7 @@ swaddle_repository_apt_createDistsContents()
 
 			swaddle_touch_setMtimeAndAtime Contents-"$packageArchitecture"
 			swaddle_compress_gzip Contents-"$packageArchitecture"
-			swaddle_webserverFiles_digest Contents-"$packageArchitecture".gz
+			swaddle_webserverFiles_index Contents-"$packageArchitecture".gz
 			
 			# Yes, really delete it. apt-file only looks for a gz file ordinarily.
 			rm Contents-"$packageArchitecture"
@@ -399,14 +399,12 @@ _swaddle_repository_apt_sortAndConcatenateFragments()
 	
 	swaddle_touch_setMtimeAndAtime "$concatenatedFileName"
 	swaddle_webserverFiles_createFrom "$concatenatedFileName"
-	swaddle_webserverFiles_digest "$concatenatedFileName"
 	
 	local compressor
 	for compressor in gzip bzip2 lzma xz
 	do
 		swaddle_compress_${compressor} "$concatenatedFileName"
-		swaddle_webserverFiles_createFrom "$concatenatedFileName".$(swaddle_compress_extension "$compressor")
-		swaddle_webserverFiles_digest "$concatenatedFileName".$(swaddle_compress_extension "$compressor")
+		swaddle_webserverFiles_index "$concatenatedFileName".$(swaddle_compress_extension "$compressor")
 	done
 }
 

@@ -15,8 +15,6 @@ swaddle_webserverFiles_createFrom()
 	
 	swaddle_webserverFiles_index "$filePath"
 	
-	swaddle_webserverFiles_digest "$filePath"
-	
 	swaddle_webserverFiles_compressForNginx "$filePath"
 }
 
@@ -79,6 +77,52 @@ swaddle_webserverFiles_createIndices()
 	swaddle_webserverFiles_compressForNginx "$outputFilePath"
 }
 
+_swaddle_webserverFiles_index_createInitialMarkdown()
+{
+	pushd "$dirname"
+		local folderName="$(core_compatibility_basename "$(pwd)")"
+	popd
+	local timestamp="$(swaddle_configure_timestamp)"
+	local releaseDate="$(date -u -d @$timestamp +'%a, %d %h %Y %H:%M:%S %Z')"
+	
+	# Defaults
+	set -- 'sha1' 'sha256'
+
+	_swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback()
+	{
+		swaddle_digest_name "$core_variable_array_element"
+		printf '|'
+	}
+	
+	_swaddle_webserverFiles_index_createInitialMarkdown_digestColumnAlignmentCallback()
+	{
+		local width=${#core_variable_array_element}
+		printf ':'
+		# yes, this is correct
+		local index=1
+		while [ $index -lt $width ]
+		do
+			printf '-'
+			index=$((index+1))
+		done
+		printf '|'
+	}
+	
+	{
+		printf '%s' "% Index of $folderName
+% $(swaddle_configure_maintainer)
+% ${releaseDate}
+|Name|Last Modified|Size|Signature|"
+		
+		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback "$@"
+		printf '\n|:---|:------------|---:|:--------|'
+		
+		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnAlignmentCallback "$@"
+		printf '\n'
+		
+	} >"$indexFilePath"
+}
+
 core_dependency_requires '*' date stat cat
 swaddle_webserverFiles_index()
 {
@@ -86,18 +130,7 @@ swaddle_webserverFiles_index()
 	local dirname="$(core_compatibility_dirname "$filePath")"
 	local indexFilePath="$dirname"/index.md
 	if [ ! -f "$indexFilePath" ]; then
-		pushd "$dirname"
-			local folderName="$(core_compatibility_basename "$(pwd)")"
-		popd
-		local timestamp="$(swaddle_configure_timestamp)"
-		local releaseDate="$(date -u -d @$timestamp +'%a, %d %h %Y %H:%M:%S %Z')"
-		cat >"$indexFilePath" <<-EOF
-			% Index of $folderName
-			% $(swaddle_configure_maintainer)
-			% ${releaseDate}
-			|Name|Last Modified|Size|SHA-1|SHA-256|
-			|:---|:------------|---:|:----|:------|
-		EOF
+		_swaddle_webserverFiles_index_createInitialMarkdown
 	fi
 	
 	local fileName="$(core_compatibility_basename "$filePath")"
@@ -105,7 +138,7 @@ swaddle_webserverFiles_index()
 	local title="$fileName"
 	if [ -d "$filePath" ]; then
 		local url="${fileName}"/
-		local fileName="${fileName}"/
+		fileName="${fileName}"/
 	else
 		url="$fileName"
 	fi
@@ -113,15 +146,38 @@ swaddle_webserverFiles_index()
 	local timestamp="$(stat -c '%Y' "$filePath")"
 	local date="$(date -u -d @$timestamp +'%a, %d %h %Y %H:%M:%S %Z')"
 	if [ $# -eq 2 ]; then
-		local statFilePath="$filePath"/"$(configure_getConfigurationSetting swaddle_web index_name)"
+		local indexName="$(configure_getConfigurationSetting swaddle_web index_name)"
+		local statFilePath="$filePath"/"$indexName"
+		local signatureFilePath="$fileName"/"$indexName".asc
 	else
 		local statFilePath="$filePath"
+		local signatureFilePath="$filePath".asc
 	fi
 	local size="$(stat -c '%s' "$statFilePath")"
-	local sha1="$(swaddle_digest sha1 "$statFilePath")"
-	local sha256="$(swaddle_digest sha256 "$statFilePath")"
 	
-	printf '|[`%s`](%s "%s")|`%s`|`%s`|`%s`|`%s`|\n' "$fileName" "$url" "$title" "$date" "$size" "$sha1" "$sha256" >>"$indexFilePath"
+	{
+		printf '|[`%s`](%s "%s")|`%s`|`%s`|' "$fileName" "$url" "$title" "$date" "$size"
+		
+		if core_variable_isTrue "$(swaddle_configure_sign)"; then
+			swaddle_digest_signFile "$statFilePath"
+			printf '[`Signature`](%s "%s")|' "$signatureFilePath" "GPG Signature using signing key $(swaddle_configure_signer)"
+		else
+			printf '%s|' '-'
+		fi
+	
+		# Defaults
+		set -- 'sha1' 'sha256'
+		
+		_swaddle_webserverFiles_index_digestColumnsCallback()
+		{
+			printf '`'
+			swaddle_digest "$core_variable_array_element" "$statFilePath"
+			printf '`|'
+		}
+		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_digestColumnsCallback "$@"
+		printf '\n'
+		
+	} >>"$indexFilePath"
 }
 
 swaddle_webserverFiles_compressForNginx()
@@ -130,28 +186,7 @@ swaddle_webserverFiles_compressForNginx()
 	
 	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_web nginx)"; then
 		swaddle_compress_gzip "$filePath"
+		# The purpose of this is to allow the 'Content-MD5' HTTP header to be served
+		swaddle_digest_file md5 "$filePath"
 	fi
-}
-
-swaddle_webserverFiles_digest()
-{
-	local filePath="$1"
-	
-	_swaddle_webserverFiles_digest_callback()
-	{
-		local algo="$core_variable_array_element"
-		if [ "$algo" = 'sign' ]; then
-			if core_variable_isTrue "$(swaddle_configure_sign)"; then
-				swaddle_digest_signFile "$filePath"
-				swaddle_webserverFiles_index "$filePath".asc
-			else
-				return 0
-			fi
-		else
-			swaddle_digest_file "$algo" "$filePath"
-			swaddle_webserverFiles_index "$filePath"."$algo"
-		fi
-	}
-	
-	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_digest_callback 'sha512' 'sign'
 }
