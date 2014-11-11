@@ -7,7 +7,7 @@ _program()
 	
 	swaddle()
 	{
-		swaddle_swaddles_all
+		swaddle_all
 	}
 }
 

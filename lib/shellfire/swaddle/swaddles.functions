@@ -1,13 +1,13 @@
 core_usesIn swaddle build repository configure/register
 core_usesIn configure
 
-swaddle_swaddles_all()
+swaddle_all()
 {
-	core_functions_execute _swaddle_swaddles_functions "$@"
+	core_functions_execute _swaddle_functions "$@"
 }
 
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_makeSwaddlesPathAbsolute
-swaddle_swaddles_makeSwaddlesPathAbsolute()
+core_functions_register _swaddle_functions swaddle_makeSwaddlesPathAbsolute
+swaddle_makeSwaddlesPathAbsolute()
 {
 	pushd "$swaddle_swaddlesPath"
 		swaddle_swaddlesPath="$(pwd)"
@@ -15,8 +15,8 @@ swaddle_swaddles_makeSwaddlesPathAbsolute()
 }
 
 core_dependency_requires '*' mkdir
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createOutputFolder
-swaddle_swaddles_createOutputFolder()
+core_functions_register _swaddle_functions swaddle_createOutputFolder
+swaddle_createOutputFolder()
 {
 	mkdir -m 0700 -p "$swaddle_outputPath" 2>/dev/null || true
 	pushd "$swaddle_outputPath"
@@ -31,8 +31,8 @@ swaddle_swaddles_createOutputFolder()
 }
 
 core_dependency_requires '*' mkdir
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createTemporaryFolder
-swaddle_swaddles_createTemporaryFolder()
+core_functions_register _swaddle_functions swaddle_createTemporaryFolder
+swaddle_createTemporaryFolder()
 {
 	if core_variable_isUnset swaddle_temporaryPath; then
 		local TMP_FOLDER
@@ -47,36 +47,37 @@ swaddle_swaddles_createTemporaryFolder()
 }
 
 core_dependency_requires '*' mkdir
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_createPackagesFolder
-swaddle_swaddles_createPackagesFolder()
+core_functions_register _swaddle_functions swaddle_createPackagesFolder
+swaddle_createPackagesFolder()
 {
-	_swaddle_swaddles_temporaryFolderPath="$swaddle_temporaryPath"/swaddles
-	rm -rf "$_swaddle_swaddles_temporaryFolderPath"|| core_exitError $core_commandLine_exitCode_CANTCREAT "Can not recreate temporary swaddles path '$_swaddle_swaddles_temporaryFolderPath'."
-	mkdir -m 0700 -p "$_swaddle_swaddles_temporaryFolderPath"
+	_swaddle_temporaryFolderPath="$swaddle_temporaryPath"/swaddles
+	rm -rf "$_swaddle_temporaryFolderPath"|| core_exitError $core_commandLine_exitCode_CANTCREAT "Can not recreate temporary swaddles path '$_swaddle_temporaryFolderPath'."
+	mkdir -m 0700 -p "$_swaddle_temporaryFolderPath"
 }
 
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_registerConfiguration
-swaddle_swaddles_registerConfiguration()
+core_functions_register _swaddle_functions swaddle_registerConfiguration
+swaddle_registerConfiguration()
 {
 	core_functions_execute _swaddle_configure_register_functions "$@"
 }
 
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_resetConfiguration
-swaddle_swaddles_resetConfiguration()
+core_functions_register _swaddle_functions swaddle_resetConfiguration
+swaddle_resetConfiguration()
 {
 	configure_reset swaddle
 }
 
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_sourceConfiguration
-swaddle_swaddles_sourceConfiguration()
+core_functions_register _swaddle_functions swaddle_sourceConfiguration
+swaddle_sourceConfiguration()
 {
 	configure_source "$swaddle_swaddlesPath" swaddles
 }
 
-core_functions_register _swaddle_swaddles_functions swaddle_swaddles_buildSwaddles
-swaddle_swaddles_buildSwaddles()
+core_functions_register _swaddle_functions swaddle_build
+swaddle_build()
 {
 	core_variable_array_iterate swaddle_swaddles swaddle_build_all
 	swaddle_repository apt deb
 	swaddle_repository yum rpm
+	swaddle_gpg_publishSigningKey
 }

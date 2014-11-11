@@ -165,6 +165,7 @@ swaddle_webserverFiles_index()
 	} >>"$indexFilePath"
 }
 
+core_dependency_requires '*' sed
 _swaddle_webserverFiles_index_createInitialMarkdown()
 {
 	pushd "$dirname"
@@ -197,7 +198,14 @@ _swaddle_webserverFiles_index_createInitialMarkdown()
 	}
 
 	if core_variable_isTrue "$(swaddle_configure_sign)"; then
-		local signatureMarkdown="Signed using the key \`$(swaddle_configure_signer)\` with fingerprint \`$(swaddle_gpg_exportSigningKeyFingerprint)\`."
+	
+		local keyserver="$(configure_getConfigurationSetting swaddle keyserver)"
+		if [ -z "$keyserver" ]; then
+			local signatureMarkdown="Signed using the key \`$(swaddle_configure_signer)\` with fingerprint \`$(swaddle_gpg_exportSigningKeyFingerprint)\`."
+		else
+			local keyserverWithHttpProtocol="$(printf '%s' "$keyserver" | sed -e s/^hkp/http/g)"
+			local signatureMarkdown="Signed using the key \`$(swaddle_configure_signer)\` with fingerprint [\`$(swaddle_gpg_exportSigningKeyFingerprint)\`]($keyserverWithHttpProtocol/pks/lookup?op=get&search=0x$(swaddle_gpg_exportSigningKeyFingerprint) \"Retrieve key '$(swaddle_gpg_exportSigningKeyFingerprint)' from keyserver\")."
+		fi
 	else
 		local signatureMarkdown="Signatures are unavailable."
 	fi

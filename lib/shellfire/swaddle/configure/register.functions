@@ -41,6 +41,13 @@ swaddle_configure_register_configuration()
 	configure_register Value NotEmpty swaddle maintainer_name
 	configure_register Value NotEmpty swaddle maintainer_comment
 	configure_register Value NotEmpty swaddle maintainer_email
+
+	_swaddle_default_keyserver='hkps://hkps.pool.sks-keyservers.net'
+	#https://sks-keyservers.net/overview-of-pools.php
+	# Disable by using ''
+	configure_register Value Any swaddle keyserver "$_swaddle_default_keyserver"
+	# comma-separated list
+	configure_register Array NotEmpty swaddle keyserver_options
 }
 
 core_dependency_requires '*' git date awk

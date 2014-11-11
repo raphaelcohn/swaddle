@@ -37,3 +37,58 @@ swaddle_gpg_sign()
 	
 	touch -r "$filePath" "$filePath"."$extension"
 }
+
+core_snippet_embed raw sks_keyservers_netCA
+swaddle_gpg_publishSigningKey()
+{
+	if core_variable_isFalse "$(swaddle_configure_sign)"; then
+		return 0
+	fi
+	
+	local keyserver="$(configure_getConfigurationSetting swaddle keyserver)"
+	if [ -z "$keyserver" ]; then
+		return 0
+	fi
+	
+	local options
+	local options_initialised
+	core_variable_array_initialise options
+	
+	core_variable_array_append options --keyserver "$keyserver"
+	
+	_swaddle_gpg_publishSigningKey_keyserverOptions()
+	{
+		if [ "$keyserver" = "$_swaddle_default_keyserver" ]; then
+			local TMP_FILE
+			core_temporaryFiles_newFileToRemoveOnExit
+			core_snippet_retrieve sks_keyservers_netCA no "$TMP_FILE"
+			set -- ca-cert-file="$TMP_FILE"
+		else
+			set --
+		fi
+		
+		local afterFirst=0
+		_swaddle_gpg_publishSigningKey_keyserverOptions_callback()
+		{
+			if [ "$afterFirst" -eq 1 ]; then
+				printf ','
+			else
+				afterFirst=1
+			fi
+			printf '%s' "$core_variable_array_element"
+		}
+		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' 'keyserver_options' _swaddle_gpg_publishSigningKey_keyserverOptions_callback "$@"
+	}
+	local keyserverOptions="$(_swaddle_gpg_publishSigningKey_keyserverOptions)"
+	if [ -n "$keyserverOptions" ]; then
+		core_variable_array_append options --keyserver-options "$keyserverOptions"
+	fi
+	
+	core_variable_array_append options --send-keys "$(swaddle_gpg_exportSigningKeyFingerprint)"
+	
+	if [ $(core_init_verbosity) -gt 0 ]; then
+		core_variable_array_passToFunctionAsArguments options swaddle_gpg || core_message WARN "Could not publish signing key to keyserver"
+	else
+		core_variable_array_passToFunctionAsArguments options swaddle_gpg 2>/dev/null || core_message WARN "Could not publish signing key to keyserver"
+	fi
+}
