@@ -1,4 +1,4 @@
-core_usesIn swaddle/repository apt yum
+core_usesIn swaddle/repository tar apt yum
 
 swaddle_repository()
 {

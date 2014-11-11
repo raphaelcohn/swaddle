@@ -77,7 +77,11 @@ core_functions_register _swaddle_functions swaddle_build
 swaddle_build()
 {
 	core_variable_array_iterate swaddle_swaddles swaddle_build_all
+	swaddle_repository tar tar
 	swaddle_repository apt deb
 	swaddle_repository yum rpm
+	
+	swaddle_webserverFiles_createIndices "$swaddle_outputPath"
+	
 	swaddle_gpg_publishSigningKey
 }

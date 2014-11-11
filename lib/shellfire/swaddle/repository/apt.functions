@@ -17,8 +17,6 @@ swaddle_repository_apt()
 	swaddle_repository_apt_exportSigningKey
 	swaddle_repository_apt_createAptSourcesList
 	swaddle_repository_apt_createInstallScript
-
-	swaddle_webserverFiles_createIndices "$_swaddle_repository_parentPath"
 }
 
 swaddle_repository_apt_registerConfiguration()
