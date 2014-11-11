@@ -189,15 +189,20 @@ _swaddle_webserverFiles_index_createInitialMarkdown()
 		done
 		printf '|'
 	}
-	
+
+	if core_variable_isTrue "$(swaddle_configure_sign)"; then
+		local signatureMarkdown="Signed using the key \`$(swaddle_configure_signer)\` with fingerprint \`$(swaddle_gpg_exportSigningKeyFingerprint)\`."
+	else
+		local signatureMarkdown="Signatures are unavailable."
 	{
+		
 		printf '%s' "% Index of $folderName
 % $(swaddle_configure_maintainer)
 % ${releaseDate}
 ---
 Table:This repository was created by [swaddle](https://github.com/raphaelcohn/swaddle \"swaddle home page\")
 
-|Name|Last Modified|Size (bytes)|Signature^[_Signed using the key \`$(swaddle_configure_signer)\` with fingerprint \`$(swaddle_gpg_exportSigningKeyFingerprint)\`. _]|"
+|Name|Last Modified|Size (bytes)|Signature^[_${signatureMarkdown} _]|"
 		
 		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback "$@"
 		printf '\n|:---|:------------|---:|:--------|'
