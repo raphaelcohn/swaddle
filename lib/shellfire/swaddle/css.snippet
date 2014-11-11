@@ -13,20 +13,20 @@ code
 }
 
 a {
-    text-decoration: none;
-    position: relative;
+		text-decoration: none;
+		position: relative;
 }
 
 a code:after, .email:after {
-    content: '';
+		content: '';
 
-    width: 100%;
-    position: absolute;
-    left: 0;
-    bottom: -3px;
+		width: 100%;
+		position: absolute;
+		left: 0;
+		bottom: -3px;
 
-    border-width: 0 0 1px;
-    border-style: solid;
+		border-width: 0 0 1px;
+		border-style: solid;
 }
 
 h1.title
@@ -87,9 +87,9 @@ table tr
 
 sup
 {
-  font-size: 0.7em;
-  vertical-align: super;
-  line-height: 0;
+	font-size: 0.7em;
+	vertical-align: super;
+	line-height: 0;
 }
 
 tr.header
@@ -161,9 +161,29 @@ hr:after
 .footnotes ol
 {
 	padding: 0px 20px;
+	counter-reset: item;
+	padding: 0;
+	list-style:none;
 }
 
-.footnotes li p
+.footnotes ol li:before
 {
-	font-style: normal;
+	content: counter(item) "";
+	counter-increment: item;
+	position: absolute; 
+	vertical-align: super;
+	font-size: xx-small;
+	left: 1em;
+}
+
+.footnotes ol li
+{
+	position: relative;
+	display: block;
+	padding: .0em .0em .0em 1.5em;
+}
+
+.footnotes ol li a:last-child
+{
+	display: none;
 }
