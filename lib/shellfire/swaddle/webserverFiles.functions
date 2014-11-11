@@ -43,6 +43,7 @@ swaddle_webserverFiles_compressForNginx()
 	fi
 }
 
+core_snippet_embed raw css
 core_dependency_requires '*' pandoc rm mv
 swaddle_webserverFiles_createIndices()
 {
@@ -91,11 +92,17 @@ swaddle_webserverFiles_createIndices()
 	core_variable_array_append options \
 		--from=markdown \
 		--to="$toFormat" \
-		--standalone \
 		-o "$outputFilePath".tmp
 	
 	if [ -n "$template" ]; then
-		core_variable_array_append options --template="$template"
+		core_variable_array_append options \
+			--template="$template"
+	else
+		local TMP_FILE
+		core_temporaryFiles_newFileToRemoveOnExit
+		core_snippet_retrieve css yes "$TMP_FILE"
+		mv "$TMP_FILE" "$TMP_FILE".css
+		core_variable_array_append options --standalone --self-contained --css "$TMP_FILE".css
 	fi
 	
 	core_variable_array_append options "$inputFilePath"
@@ -215,10 +222,9 @@ _swaddle_webserverFiles_index_createInitialMarkdown()
 		printf '%s' "% Index of $folderName
 % $(swaddle_configure_maintainer)
 % ${releaseDate}
----
-Table:This repository was created by [swaddle](https://github.com/raphaelcohn/swaddle \"swaddle home page\")
+Table:This repository was created using [swaddle](https://github.com/raphaelcohn/swaddle \"swaddle, the standalone generator, from source control to complete archive\"), the one tool you need to create DEBs, RPMs, tarballs, apt and yum repositories from source control on Linux and Mac OS X, using [fatten](https://github.com/shellfire-dev/fatten \"Fattening allows you to develop modular shell scripts then bundle them up into one multi-platform copy-and-run script\") and [shellfire](https://github.com/shellfire-dev \"Shellfire provides modular, re-usable shell script libraries which are battle-tested for platform-gotchas with bash, pdksh, AIX sh, dash, Busybox and others.\").
 
-|Name|Last Modified|Size (bytes)|Signature^[_${signatureMarkdown} _]|"
+|Name|Last Modified|Size (bytes)|Signature^[${signatureMarkdown}]|"
 		
 		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback "$@"
 		printf '\n|:---|:------------|---:|:--------|'

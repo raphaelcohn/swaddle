@@ -1,0 +1,174 @@
+body
+{
+	font-family: "Helvetica Neue",Helvetica,"Segoe UI",Arial,freesans,sans-serif;
+	font-size: 10pt;
+	color: #333;
+	word-wrap: break-word;
+	margin: 20px;
+}
+
+code
+{
+	font-size: 12pt;
+}
+
+a {
+    text-decoration: none;
+    position: relative;
+}
+
+a code:after, .email:after {
+    content: '';
+
+    width: 100%;
+    position: absolute;
+    left: 0;
+    bottom: -2px;
+
+    border-width: 0 0 1px;
+    border-style: solid;
+}
+
+h1.title
+{
+	font-weight: normal;
+}
+
+h1.title:after
+{
+	content: " /";
+}
+
+h2.author:before
+{
+	content: "Maintained by "
+}
+
+h2.author
+{
+	font-weight: 300;
+	font-style: normal;
+	font-size: 12pt;
+}
+
+h2.author .email
+{
+	font-family: monospace;
+}
+
+h3.date:before
+{
+	content: "Last Indexed on ";
+}
+
+h3.date
+{
+	font-weight: 300;
+	font-style: italic;
+	text-align: right;
+	margin-top: -30px;
+	margin-bottom: 10px;
+	font-size: 12pt;
+}
+
+table
+{
+	border-collapse: collapse;
+	border-spacing: 0px;
+	word-break: keep-all;
+	width: 100%;	
+}
+
+th, td
+{
+	padding: 6px 13px;
+	border: 1px solid #DDD;
+}
+
+table tr
+{
+	line-height: 18px;
+}
+
+sup
+{
+  font-size: 0.7em;
+  vertical-align: super;
+  line-height: 0;
+}
+
+tr.header
+{
+	border-top: 1px solid #000;
+}
+
+tr.header th
+{
+	background-color: #333;
+	border-left: 1px solid #000;
+	color: #FFF;
+}
+
+tr.header th a
+{
+	color: lightblue;
+}
+
+tr .footnoteRef
+{
+	margin-left: 3px;
+}
+
+tr
+{
+	background-color: #FFF;
+	border-top: 1px solid #CCC;
+}
+
+tr.odd
+{
+	background-color: #F8F8F8;
+}
+
+caption
+{
+	caption-side: bottom;
+	font-size: 10pt;
+	margin-bottom: 0px;
+	margin-top: -22px;
+	font-style: italic;
+	text-align: right;
+	padding-right: 16px;
+}
+
+hr:before
+{
+	display: table;
+	content: "";
+}
+
+hr
+{
+	height: 4px;
+	padding: 0px;
+	margin: 26px 0px 16px 0px;
+	background-color: #E7E7E7;
+	border: 0px none;
+}
+
+hr:after
+{
+	display: table;
+	clear: both;
+	content: "";
+}
+
+.footnotes ol
+{
+	padding: 0px 20px;
+}
+
+.footnotes li p
+{
+	font-style: normal;
+}
