@@ -50,6 +50,7 @@ swaddle_webserverFiles_createIndices()
 	
 	local inputFilePath="$folderPath"/index.md
 	
+	local hasChildren=no
 	pushd "$folderPath"
 		
 		set +f
@@ -58,6 +59,7 @@ swaddle_webserverFiles_createIndices()
 		do
 			set -f
 			if [ -d "$childFolder" ]; then
+				hasChildren=yes
 				if [ ! -L "$childFolder" ]; then
 					swaddle_webserverFiles_createIndices "$childFolder"
 				fi
@@ -71,8 +73,10 @@ swaddle_webserverFiles_createIndices()
 	if [ ! -f "$inputFilePath" ]; then
 		_swaddle_webserverFiles_index_createInitialMarkdown
 	fi
-		
-	printf '|[`Parent Directory ↩`](../ "Move up to the parent directory")|\n' >>"$inputFilePath"
+	
+	{
+		printf '|[`Parent Directory ↩`](../ "Move up to the parent directory")|\n'
+	}>>"$inputFilePath"
 	
 	local toFormat="$(configure_getConfigurationSetting swaddle_web pandoc_format)"
 	local template="$(configure_getConfigurationSetting swaddle_web pandoc_template)"
