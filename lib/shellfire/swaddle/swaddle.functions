@@ -73,6 +73,31 @@ swaddle_sourceConfiguration()
 	configure_source "$swaddle_swaddlesPath" swaddles
 }
 
+core_functions_register _swaddle_functions swaddle_publishToGithubPagesPrepare
+swaddle_publishToGithubPagesPrepare()
+{
+	# https://help.github.com/articles/creating-project-pages-manually/
+	
+	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
+		return 0
+	fi
+	
+	if core_variable_isTrue "$swaddle_cleanOutput"; then
+		git clone --quiet "$(configure_getConfigurationSetting swaddle url)" "$swaddle_outputPath"
+	fi
+	
+	# Re-entrant
+	pushd "$swaddle_outputPath"
+		git checkout --orphan gh-pages
+	popd
+	
+	if core_variable_isTrue "$swaddle_cleanOutput"; then
+		pushd "$swaddle_outputPath"
+			git rm -rf . 2>/dev/null || true
+		popd
+	fi
+}
+
 core_functions_register _swaddle_functions swaddle_build
 swaddle_build()
 {
@@ -85,34 +110,21 @@ swaddle_build()
 	swaddle_gpg_publishSigningKey
 }
 
-#core_functions_register _swaddle_functions swaddle_publish
-swaddle_publish()
+core_functions_register _swaddle_functions swaddle_resetConfiguration
+core_functions_register _swaddle_functions swaddle_sourceConfiguration
+
+core_functions_register _swaddle_functions swaddle_publishToGithubPagesFinish
+swaddle_publishToGithubPagesFinish()
 {
-	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
-	
-	# https://help.github.com/articles/creating-project-pages-manually/
-	pushd "$swaddle_outputPath"/..
-		
-		# Must be empty
-		git clone http://github.com/"$user"/"$repositoryName"/git "$(core_compatibility_basename "$swaddle_outputPath")"
-		
-	popd
-	
-	pushd "$swaddle_outputPath"
-	
-		git checkout --orphan gh-pages
-		git rm -rf .
-	
-	popd
-	
-	# Do stuff
+	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"
+	local version="$(configure_getConfigurationSetting swaddle version)"
+	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"
 	
 	pushd "$swaddle_outputPath"
 	
 		git add -A .
-		git commit -a -m "Updated repository $XXXXXXXXXXXX date/version"
+		git commit -a -m "Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'"
 		git push
 		
 	popd
-	
 }
