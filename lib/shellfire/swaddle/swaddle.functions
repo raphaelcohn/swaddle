@@ -120,10 +120,20 @@ swaddle_publishToGithubPagesFinish()
 	local version="$(configure_getConfigurationSetting swaddle version)"
 	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"
 	
+	local tagMessage="Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'"
+	local tagName="pages_$repositoryName_$version"
+	
 	pushd "$swaddle_outputPath"
 	
 		git add -A .
 		git commit -a -m "Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'"
+		
+		if core_variable_isTrue "$(swaddle_configure_sign)"; then
+			git tag --sign --local-user="$(swaddle_configure_signer)" -m "$tagMessage" "$tagName"
+		else
+			git tag a -m "$tagMessage" "$tagName"
+		fi
+		
 		git push
 		
 	popd
