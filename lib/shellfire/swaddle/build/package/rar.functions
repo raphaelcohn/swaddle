@@ -52,8 +52,8 @@ swaddle_build_package_rar_create()
 	
 	pushd "$directory"
 	
-		rar a -m5 -md4097 -ol -ow -r -tl "$_swaddle_build_package_rar_fileName" "$contents" 2>/dev/null
-		configure_getConfigurationSetting swaddle_package description | rar c "$_swaddle_build_package_rar_fileName" 2>/dev/null
+		rar a -m5 -md4097 -ol -ow -r -tl "$_swaddle_build_package_rar_fileName" "$contents" 1>/dev/null 2>/dev/null
+		configure_getConfigurationSetting swaddle_package description | rar c "$_swaddle_build_package_rar_fileName" 1>/dev/null 2>/dev/null
 	
 	popd
 	
