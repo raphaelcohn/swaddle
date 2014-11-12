@@ -1,6 +1,6 @@
 core_usesIn configure
 core_usesIn swaddle fakeroot touch architecture
-core_usesIn swaddle/build/package deb rpm tar
+core_usesIn swaddle/build/package tar zip deb rpm
 
 swaddle_build_package()
 {

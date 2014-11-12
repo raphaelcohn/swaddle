@@ -37,10 +37,10 @@ swaddle_build_package_zip_create()
 	mkdir -m 0755 -p "$zipParentPath"
 	swaddle_touch_setMtimeAndAtime "$zipParentPath"
 	
-	rm -f "$_swaddle_build_package_zip_fileName"
-	
 	local baseName="${_swaddle_build_swaddleName}_${_swaddle_build_package_zip_version}_${_swaddle_build_package_translatedArchitecture}"
 	_swaddle_build_package_zip_fileName="$zipParentPath"/"$baseName".zip
+	
+	rm -f "$_swaddle_build_package_zip_fileName"
 	
 	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_zip bomb)"; then
 		local directory="$_swaddle_build_package_root"
