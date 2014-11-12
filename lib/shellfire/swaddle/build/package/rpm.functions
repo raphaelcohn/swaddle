@@ -192,6 +192,10 @@ _swaddle_build_package_rpm_digestAlgorithm()
 			printf '%s' 2
 		;;
 		
+		sha224)
+			printf '%s' 11
+		;;
+		
 		sha256)
 			printf '%s' 8
 		;;
@@ -205,6 +209,20 @@ _swaddle_build_package_rpm_digestAlgorithm()
 		;;
 		
 	esac
+	
+	# Also, the following exist:-
+	# RIPEMD-128  105
+	# RIPEMD-160  3
+	# RIPEMD-256  111
+	# RIPEMD-320  112
+	# Jenkins  109
+	# CRC-32  106
+	# ADLER-32  107
+	# CRC-64  108
+	# MD2  5
+	# MD4  104
+	# TIGER-192  6
+	# CRC-32  106
 }
 
 _swaddle_build_package_rpm_compression()

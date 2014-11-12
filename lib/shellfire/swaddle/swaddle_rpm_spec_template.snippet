@@ -45,7 +45,7 @@ Group: $(configure_getConfigurationSetting swaddle_rpm category)
 License: $(configure_getConfigurationSetting swaddle_rpm licence)
 Vendor: $(configure_getConfigurationSetting swaddle vendor)
 URL: $(configure_getConfigurationSetting swaddle url)
-BugsURL: $(swaddle_configure_bugsUrl)
+BugURL: $(swaddle_configure_bugsUrl)
 Packager: $(swaddle_configure_maintainer)
 
 $(_swaddle_build_package_rpm_iterateDependencies Requires depends)

@@ -17,6 +17,7 @@ swaddle_architecture_translate()
 			packageArchitecture="$debianArchitecture"
 		;;
 		
+		# Valid source architectures are 'src' and 'nosrc'; the latter is for when only package-related files are included
 		rpm)	
 			case "$debianArchitecture" in
 		
