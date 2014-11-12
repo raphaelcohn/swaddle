@@ -135,6 +135,8 @@ core_dependency_requires '*' git awk
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverUrl
 swaddle_configure_register_attemptToDiscoverUrl()
 {
+	configure_register Value Any swaddle bugs_url ''
+	
 	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
 		configure_register Value NotEmpty swaddle url
 		return 0

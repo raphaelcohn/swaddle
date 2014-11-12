@@ -323,7 +323,7 @@ swaddle_repository_apt_createAptSourcesList()
 	
 	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
 	
-	local filePath="$repositoryPath"/00$repositoryName.sources.list
+	local filePath="$repositoryPath"/sources.list
 	printf '%s\n' "deb $hostBaseUrl $repositoryName $(core_variable_array_string  _swaddle_repository_apt_components ' ')" >"$filePath"
 	
 	swaddle_touch_setMtimeAndAtime "$filePath"
@@ -347,9 +347,9 @@ swaddle_repository_apt_createInstallScript()
 		cat >"$temporaryKeyFile" <<EOF
 			$(cat "$_swaddle_repository_parentPath"/dists/"$repositoryName"/Release.key)
 		EOF
-		sudo -p "Password required to install repository "$repositoryName" public key to apt: " apt-key add "$temporaryKeyFile"
+		sudo -p "Password required to install repository '$repositoryName' public key to apt: " apt-key add "$temporaryKeyFile"
 		
-		printf '%s\n' "$(cat "$_swaddle_repository_parentPath"/dists/"$repositoryName"/00$repositoryName.sources.list)" | sudo -p "Password required to install repository '$repositoryName' apt sources list to '/etc/sources.list.d/00$repositoryName.sources.list': " tee /etc/sources.list.d/00$repositoryName.list >/dev/null
+		echo '$(cat "$_swaddle_repository_parentPath"/dists/"$repositoryName"/sources.list)' | sudo -p "Password required to install repository '$repositoryName' apt sources list to '/etc/sources.list.d/00$repositoryName.sources.list': " tee /etc/sources.list.d/00$repositoryName.list >/dev/null
 	EOA
 	
 	chmod +x "$filePath"
@@ -442,11 +442,8 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 	packageArchitecture="$(swaddle_repository_apt_parseDeb_extractField Architecture all)"
 	package="$(swaddle_repository_apt_parseDeb_extractField Package "$poolSource")"
 	section="$(swaddle_repository_apt_parseDeb_extractField Section "$(configure_getConfigurationSetting swaddle_deb section)")"
-
-	local ourBugsUrl="$(configure_getConfigurationSetting swaddle_deb bugs_url)"
-	if [ -z "$ourBugsUrl" ]; then
-		ourBugsUrl="$(configure_getConfigurationSetting swaddle url)"
-	fi
+	
+	local ourBugsUrl="$(swaddle_configure_bugsUrl)"
 	local bugsUrlDefault="$(swaddle_repository_apt_parseDeb_extractField Homepage "$ourBugsUrl")"
 	
 	{

@@ -9,7 +9,6 @@ swaddle_build_package_deb_registerConfiguration()
 	configure_register Value NotEmpty swaddle_deb supported '9m'
 	configure_register Value DebSection swaddle_deb section 'misc'
 	configure_register Value DebPriority swaddle_deb priority 'extra'
-	configure_register Value Any swaddle_deb bugs_url ''
 		
 	configure_register Value DebComponent swaddle_deb component 'multiverse'
 	
@@ -307,7 +306,7 @@ swaddle_build_package_deb_createControlFile()
 			Section: $(configure_getConfigurationSetting swaddle_deb section)
 			Priority: $(configure_getConfigurationSetting swaddle_deb priority)
 			Homepage: $(configure_getConfigurationSetting swaddle url)
-			Bugs: $(_swaddle_build_package_deb_bugs_url)
+			Bugs: $(swaddle_configure_bugsUrl)
 			Origin: $(configure_getConfigurationSetting swaddle vendor)
 			Supported: $(configure_getConfigurationSetting swaddle_deb supported)
 		EOF
@@ -525,15 +524,6 @@ _swaddle_build_package_deb_extraControlFields()
 	}
 	
 	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_deb_extraControlFields_callback
-}
-
-_swaddle_build_package_deb_bugs_url()
-{
-	local bugsUrl="$(configure_getConfigurationSetting swaddle_deb bugs_url)"
-	if [ -z "$bugsUrl" ]; then
-		bugsUrl="$(configure_getConfigurationSetting swaddle url)"
-	fi
-	printf '%s' "$bugsUrl"
 }
 
 core_dependency_requires '*' sed

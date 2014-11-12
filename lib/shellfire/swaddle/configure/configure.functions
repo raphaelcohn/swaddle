@@ -20,9 +20,13 @@ swaddle_configure_timestamp()
 	configure_getConfigurationSetting swaddle timestamp
 }
 
-swaddle_configure_rpm_architecture()
+swaddle_configure_bugsUrl()
 {
-	configure_getConfigurationSetting swaddle_rpm architecture
+	local bugsUrl="$(configure_getConfigurationSetting swaddle bugs_url)"
+	if [ -z "$bugsUrl" ]; then
+		bugsUrl="$(configure_getConfigurationSetting swaddle url)"
+	fi
+	printf '%s' "$bugsUrl"
 }
 
 swaddle_configure_apt_architectures()

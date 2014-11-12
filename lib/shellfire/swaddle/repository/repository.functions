@@ -22,7 +22,7 @@ swaddle_repository_configure()
 	
 	configure_source "$swaddle_swaddlesPath" swaddles
 
-	# swaddle_deb used for section, priority, supports, bugs_url if missing when generating packages
+	# swaddle_deb used for section, priority, supports if missing when generating packages
 	local reset
 	for reset in swaddle swaddle_web swaddle_${repositoryKind} swaddle_${packageKind}
 	do
