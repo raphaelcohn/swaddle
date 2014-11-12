@@ -5,13 +5,16 @@ core_usesIn configure
 
 swaddle_build_package()
 {
+	local packageArchitecture="$1"
+	shift 1
+	
 	core_functions_execute _swaddle_build_package_functions "$@"
 }
 
 core_functions_register _swaddle_build_package_functions swaddle_build_package_createTemporaryFolder
 swaddle_build_package_createTemporaryFolder()
 {
-	_swaddle_build_package_temporaryFolderPath="$_swaddle_build_temporaryFolderPath"/"$_swaddle_build_package_kind"
+	_swaddle_build_package_temporaryFolderPath="$_swaddle_build_temporaryFolderPath"/"$_swaddle_build_package_kind"/"$packageArchitecture"
 	mkdir -m 0700 -p "$_swaddle_build_package_temporaryFolderPath"
 }
 
@@ -19,38 +22,8 @@ core_dependency_requires '*' mkdir
 core_functions_register _swaddle_build_package_functions swaddle_build_package_createRootFolder
 swaddle_build_package_createRootFolder()
 {
-	_swaddle_build_package_root="$_swaddle_build_package_temporaryFolderPath"/root
+	_swaddle_build_package_root="$_swaddle_build_package_temporaryFolderPath"/"$packageArchitecture"/root
 	mkdir -m 0755 -p "$_swaddle_build_package_root"
-}
-
-swaddle_build_package_defaultFixPermissions()
-{
-	_swaddle_build_package_defaultFixPermissions_recurse()
-	{
-		local filePath="$1"
-		if [ -e "$filePath" ]; then
-			swaddle_touch_setMtimeAndAtime "$filePath"
-			
-			if [ -L "$filePath" ]; then
-				return 0
-			fi
-			
-			if [ -d "$filePath" ]; then
-				local subPath
-				set +f
-				for subPath in "$filePath"/*
-				do
-					set -f
-					_swaddle_build_package_defaultFixPermissions_recurse "$subPath"
-				done
-				set +f
-			fi
-		fi
-	}
-
-	local fakerootEnvironmentFilePath="$1"
-	local pathToBodyOrSkeleton="$2"
-	_swaddle_build_package_defaultFixPermissions_recurse "$pathToBodyOrSkeleton"
 }
 
 core_functions_register _swaddle_build_package_functions swaddle_build_package_resetConfiguration

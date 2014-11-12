@@ -14,8 +14,8 @@ swaddle_build_package_deb_registerConfiguration()
 	configure_register Value DebPackageArchitecture swaddle_deb architecture 'all'
 	
 	configure_register Value DebComponent swaddle_deb component 'multiverse'
-		
-	configure_register Value DebMultiArch swaddle_deb multiarch 'allowed'
+	
+	configure_register Value DebMultiArch swaddle_deb multiarch 'no'
 	configure_register Value DebCompression swaddle_deb compression 'xz'
 		
 	configure_register Value Boolean swaddle_deb essential 'no'
@@ -38,7 +38,7 @@ swaddle_build_package_deb_registerConfiguration()
 
 	#http://www.debian.org/doc/debian-policy/ch-sharedlibs.html#s-shlibs
 	configure_register Array NotEmpty swaddle_deb shlibs
-	configure_register Array NotEmpty swaddle_deb configFiles
+	configure_register Array NotEmpty swaddle_deb config_files
 	configure_register Array NotEmpty swaddle_deb triggers_activate
 	configure_register Array NotEmpty swaddle_deb triggers_activate_noawait
 	configure_register Array NotEmpty swaddle_deb triggers_interest
@@ -52,6 +52,13 @@ swaddle_build_package_deb_registerConfiguration()
 
 swaddle_build_package_deb()
 {
+	local multiarch="$(configure_getConfigurationSetting swaddle_deb multiarch)"
+	local packageArchitecture="$(configure_getConfigurationSetting swaddle_deb architecture)"
+	if [ "$packageArchitecture" = 'all' ]; then
+		if [ "$multiarch" = 'same' ]; then
+			core_exitError $core_commandLine_exitCode_CONFIG "A deb package can't have Architecture 'all' and also Multi-Arch 'same'."
+		fi
+	fi
 	core_functions_execute _swaddle_build_package_deb_functions "$@"
 }
 
@@ -102,7 +109,7 @@ swaddle_build_package_deb_createConffiles()
 	local confFilesPath="$_swaddle_build_package_deb_controlFolderPath"/conffiles
 	
 	local configurationSettingValue
-	_configure_configurationSettingValue 'swaddle_deb' "configFiles"
+	_configure_configurationSettingValue 'swaddle_deb' 'config_files'
 	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_deb_createConffiles_callback >"$confFilesPath"
 	
 	if [ ! -s "$confFilesPath" ]; then

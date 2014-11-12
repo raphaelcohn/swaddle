@@ -1,0 +1,91 @@
+# Unsupported in RPM: i586, i686, sparc64, m68kint, sh3, sh4
+
+swaddle_architecture_translateDebianToRpm()
+{
+	local result
+	case "$1" in
+		
+		all)
+			result=noarch
+		;;
+		
+		# i586, i686 as used by Suse are not supported
+		i386)
+			result=i386
+		;;
+		
+		amd64)
+			result=x86_64
+		;;
+		
+		ia64)
+			result=ia64
+		;;
+		
+		arm64)
+			result=aarch64
+		;;
+		
+		armhf)
+			result=armv7hl
+		;;
+		
+		armel)
+			result=armv5tel
+		;;
+		
+		powerpc)
+			result=ppc
+		;;
+		
+		powerpc64)
+			result=ppc64
+		;;
+		
+		ppc64el)
+			result=ppc64le
+		;;
+		
+		mips)
+			result=mips
+		;;
+		
+		mipsel)
+			result=mipsel
+		;;
+		
+		alpha)
+			result=alpha
+		;;
+
+		#Debian is 32-bit SPARC. RPM also supported sparc64
+		sparc)
+			result=sparc
+		;;
+		
+		# m68kint not supported
+		m68k)
+			result=m68k
+		;;
+		
+		# sh3 not supported
+		sh)
+			result=sh
+		;;
+		
+		s390)
+			result=s390
+		;;
+		
+		s390x)
+			result=s390x
+		;;
+		
+		*)
+			core_exitError $core_commandLine_exitCode_CONFIG "Can not convert architecture '$1' to RPM"
+		;;
+		
+	esac
+	
+	printf '%s' "$result"
+}

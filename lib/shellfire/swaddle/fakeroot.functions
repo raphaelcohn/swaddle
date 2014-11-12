@@ -11,3 +11,33 @@ swaddle_fakeroot()
 		fakeroot -s "$fakerootEnvironmentOutputPath" -- "$@"
 	fi	
 }
+
+swaddle_fakeroot_fixPermissions()
+{
+	local fakerootEnvironmentFilePath="$1"
+	local pathToBodyOrSkeleton="$2"
+	_swaddle_fakeroot_fixPermissions_recurse "$pathToBodyOrSkeleton"
+}
+
+_swaddle_fakeroot_fixPermissions_recurse()
+{
+	local filePath="$1"
+	if [ -e "$filePath" ]; then
+		swaddle_touch_setMtimeAndAtime "$filePath"
+		
+		if [ -L "$filePath" ]; then
+			return 0
+		fi
+		
+		if [ -d "$filePath" ]; then
+			local subPath
+			set +f
+			for subPath in "$filePath"/*
+			do
+				set -f
+				_swaddle_build_package_defaultFixPermissions_recurse "$subPath"
+			done
+			set +f
+		fi
+	fi
+}
