@@ -1,0 +1,61 @@
+core_usesIn swaddle webserverFiles
+
+swaddle_build_package_rar_registerConfiguration()
+{
+	configure_register Value Boolean swaddle_rar bomb 'no'
+}
+
+swaddle_build_package_rar()
+{
+	core_functions_execute _swaddle_build_package_rar_functions "$@"
+}
+
+core_functions_register _swaddle_build_package_rar_functions swaddle_build_package_rar_computeZipVersion
+swaddle_build_package_rar_computeZipVersion()
+{
+	local epoch="$(configure_getConfigurationSetting swaddle epoch)"
+	local version="$(configure_getConfigurationSetting swaddle version)"
+	local iteration="$(configure_getConfigurationSetting swaddle iteration)"
+	if [ -z "$epoch" ]; then
+		_swaddle_build_package_rar_version="$version"-"$iteration"
+	elif [ "$epoch" = '0' ]; then
+		_swaddle_build_package_rar_version="$version"-"$iteration"
+	else
+		_swaddle_build_package_rar_version="$epoch":"$version"-"$iteration"
+	fi
+}
+
+core_dependency_requires '*' rar mkdir rm mv
+core_functions_register _swaddle_build_package_rar_functions swaddle_build_package_rar_create
+swaddle_build_package_rar_create()
+{
+	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	local parentPath="$_swaddle_repository_parentPath"/"$repositoryName"
+	
+	mkdir -m 0755 -p "$parentPath"
+	swaddle_touch_setMtimeAndAtime "$parentPath"
+	
+	local baseName="${_swaddle_build_swaddleName}_${_swaddle_build_package_rar_version}_${_swaddle_build_package_translatedArchitecture}"
+	_swaddle_build_package_rar_fileName="$parentPath"/"$baseName".rar
+	
+	rm -f "$_swaddle_build_package_rar_fileName"
+	
+	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_rar bomb)"; then
+		local directory="$_swaddle_build_package_root"
+		local contents=.
+	else
+		swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" mv "$_swaddle_build_package_root" "$_swaddle_build_package_temporaryFolderPath"/"$baseName"
+		
+		local directory="$_swaddle_build_package_temporaryFolderPath"
+		local contents="$baseName"
+	fi
+	
+	pushd "$directory"
+	
+		rar a -m5 -md4097 -ol -ow -r -tl "$_swaddle_build_package_rar_fileName" "$contents" 2>/dev/null
+		configure_getConfigurationSetting swaddle_package description | rar c "$_swaddle_build_package_rar_fileName" 2>/dev/null
+	
+	popd
+	
+	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_rar_fileName"
+}

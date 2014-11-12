@@ -6,7 +6,7 @@ swaddle_architecture_translate()
 	local debianArchitecture="$2"
 	case "$toPackageKind" in
 		
-		tar|zip|7z)
+		tar|zip|7z|rar)
 			packageArchitecture="$debianArchitecture"
 		;;
 		
