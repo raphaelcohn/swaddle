@@ -3,24 +3,55 @@ core_usesIn swaddle compress digest
 swaddle_webserverFiles_registerConfiguration()
 {
 	configure_register Array WebserverFilesDigest swaddle_web digests
-	configure_register Value NotEmpty swaddle_web pandoc_format 'html5'
-	configure_register Value Any swaddle_web pandoc_template ''
+	configure_register Array Any swaddle_web pandoc_options
 	configure_register Value NotEmpty swaddle_web index_name 'index.html'
 	configure_register Value Boolean swaddle_web use_index_name_in_directory_links yes
 }
 
 core_snippet_embed raw css
-core_dependency_requires '*' pandoc rm mv cat
+swaddle_webserverFiles_create()
+{
+	local rootFolderPath="$1"
+	
+	local useIndexNameInDirectoryLinks="$(configure_getConfigurationSetting swaddle_web use_index_name_in_directory_links)"
+	local sign="$(swaddle_configure_sign)"
+	local maintainer="$(swaddle_configure_maintainer)"
+	local indexFileName="$(configure_getConfigurationSetting swaddle_web index_name)"
+	local inputFileName=index.md
+	
+	if [ "$inputFileName" = "$indexFileName" ]; then
+		inputFileName="$inputFileName".tmp
+	fi
+	
+	local releaseDate
+	swaddle_webserverFiles_releaseDate
+	
+	local parentUrlMarkdown
+	swaddle_webserverFiles_parentUrlMarkdown
+	
+	local signatureMarkdown
+	swaddle_webserverFiles_signatureMarkdown
+	
+	local cssToEmbedFilePath
+	swaddle_webserverFiles_extractDefaultCss
+	
+	swaddle_webserverFiles_createIndices "$rootFolderPath" ''
+	
+	# Top-level index.html is not signed otherwise
+	swaddle_digest_signFile "$rootFolderPath"/"$indexFileName"
+}
+
+core_dependency_requires '*' rm
 swaddle_webserverFiles_createIndices()
 {
 	local folderPath="$1"
 	local parentFolderPath="$2"
 	
-	local inputFilePath="$folderPath"/index.md.tmp
+	local inputFilePath="$folderPath"/"$inputFileName"
+	local indexFilePath="$folderPath"/"$indexFileName"
 	
 	_swaddle_webserverFiles_index_createInitialMarkdown >"$inputFilePath"
 	
-	local hasChildren=no
 	pushd "$folderPath"
 		
 		set +f
@@ -28,25 +59,25 @@ swaddle_webserverFiles_createIndices()
 		for child in *
 		do
 			set -f
-			if [ "$child" = 'index.md.tmp' ]; then
+			
+			if [ "$child" = "$inputFileName" ]; then
 				continue
 			fi
 			
 			if [ -d "$child" ]; then
-				hasChildren=yes
 				if [ ! -L "$child" ]; then
-					if [ -z "$parentFolderPath" ]; then
-						swaddle_webserverFiles_createIndices "$child" "$child"
+					if [ -n "$parentFolderPath" ]; then
+						swaddle_webserverFiles_createIndices "$folderPath"/"$child" "$parentFolderPath / $child"
 					else
-						swaddle_webserverFiles_createIndices "$child" "$parentFolderPath / $child"
+						swaddle_webserverFiles_createIndices "$folderPath"/"$child" "$child"
 					fi
 				fi
 				
-				swaddle_webserverFiles_index "$child" '-'
+				swaddle_webserverFiles_index "$child" >>"$inputFilePath"
 				
 			elif [ -f "$child" ]; then
 				
-				swaddle_webserverFiles_index "$child"
+				swaddle_webserverFiles_index "$child" >>"$inputFilePath"
 					
 			fi
 			
@@ -54,123 +85,89 @@ swaddle_webserverFiles_createIndices()
 		set -f
 		
 	popd
-
+	
+	# Only for non-root indices
 	if [ -n "$parentFolderPath" ]; then
-		{
-			if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_web use_index_name_in_directory_links)"; then
-				local indexName="$(configure_getConfigurationSetting swaddle_web index_name)"
-				local url="../$indexName"
-			else
-				local url="../"
-			fi
-			printf '\n%s\n' "[\`Parent Directory ↩\`](${url} \"Move up to the parent directory\")"
-		}>>"$inputFilePath"
+		printf '\n%s\n' "$parentUrlMarkdown" >>"$inputFilePath"
 	fi
-	
-	local toFormat="$(configure_getConfigurationSetting swaddle_web pandoc_format)"
-	local template="$(configure_getConfigurationSetting swaddle_web pandoc_template)"
-	local destinationFileName="$(configure_getConfigurationSetting swaddle_web index_name)"
-	local outputFilePath="$folderPath"/"$destinationFileName"
-	
-	local options
-	local options_initialised
-	
-	core_variable_array_initialise options
-	
-	core_variable_array_append options \
-		--from=markdown \
-		--to="$toFormat" \
-		-o "$outputFilePath".tmp
-	
-	if [ -n "$template" ]; then
-		core_variable_array_append options \
-			--template="$template"
-	else
-		local TMP_FILE
-		core_temporaryFiles_newFileToRemoveOnExit
-		core_snippet_retrieve css yes "$TMP_FILE"
-		mv "$TMP_FILE" "$TMP_FILE".css
-		core_variable_array_append options --standalone --self-contained --css "$TMP_FILE".css
-	fi
-	
-	core_variable_array_append options "$inputFilePath"
-	
-	core_variable_array_passToFunctionAsArguments options pandoc
+
+	# Generate with pandoc
+	configure_callFunctionWithDefaultsIfEmpty 'swaddle_web' 'pandoc_options' swaddle_webserverFiles_pandoc --to=html5 --standalone --self-contained --css "$cssToEmbedFilePath"
 	
 	rm "$inputFilePath"
-	mv "$outputFilePath".tmp "$outputFilePath"
-	swaddle_touch_setMtimeAndAtime "$outputFilePath"
-	
-	# Top-level index.html is not signed otherwise
-	if [ -z "$parentFolderPath" ]; then
-		swaddle_digest_signFile "$outputFilePath"
-	fi
+	swaddle_touch_setMtimeAndAtime "$indexFilePath"
 }
 
-core_dependency_requires '*' date stat cat
+core_dependency_requires '*' stat
 swaddle_webserverFiles_index()
 {
 	local filePath="$1"
-	local dirname="$(core_compatibility_dirname "$filePath")"
-	local indexFilePath="$dirname"/index.md.tmp
 	
+	local dirname="$(core_compatibility_dirname "$filePath")"
 	local fileName="$(core_compatibility_basename "$filePath")"
-	local indexName="$(configure_getConfigurationSetting swaddle_web index_name)"
-
-	local title="$fileName"
+	local date="$(swaddle_webserverFiles_formatDate "$(stat -c '%Y' "$filePath")")"
+	
 	if [ -d "$filePath" ]; then
-		if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_web use_index_name_in_directory_links)"; then
-			local url="$fileName"/"$indexName"
+		local statFilePath="$filePath"/"$indexFileName"
+		local signatureFilePath="$fileName"/"$indexFileName".asc
+		
+		local linkText="$fileName/"
+		if core_variable_isTrue "$useIndexNameInDirectoryLinks"; then
+			local url="$fileName"/"$indexFileName"
 		else
 			local url="$fileName"/
 		fi
-		fileName="$fileName"/
-	else
-		local url="$fileName"
-	fi
-	
-	local timestamp="$(stat -c '%Y' "$filePath")"
-	local date="$(date -u -d @$timestamp +'%a, %d %h %Y %H:%M:%S %Z')"
-	if [ $# -eq 2 ]; then
-		local statFilePath="$filePath"/"$indexName"
-		local signatureFilePath="${fileName}${indexName}".asc
+		if [ -z "$parentFolderPath" ]; then
+			local linkTitle="Index of / $fileName /"
+		else
+			local linkTitle="Index of / $parentFolderPath / $fileName /"
+		fi
+		
 	else
 		local statFilePath="$filePath"
 		local signatureFilePath="$filePath".asc
+		
+		local linkText="$fileName"
+		local url="$fileName"
+		if [ -z "$parentFolderPath" ]; then
+			local linkTitle="Download file / $fileName"
+		else
+			local linkTitle="Download file / $parentFolderPath / $fileName"
+		fi
 	fi
+	
 	local size="$(stat -c '%s' "$statFilePath")"
 	
-	{
-		printf '|[`%s`](%s "%s")|`%s`|`%s`|' "$fileName" "$url" "$title" "$date" "$size"
-		
-		if core_variable_isTrue "$(swaddle_configure_sign)"; then
-			swaddle_digest_signFile "$statFilePath"
-			printf '[`Signature`](%s "%s")|' "$signatureFilePath" "GPG Signature using signing key $(swaddle_configure_signer)"
-		else
-			printf '%s|' '-'
-		fi
 	
-		# Defaults
-		set -- 'sha1' 'sha256'
-		
-		_swaddle_webserverFiles_index_digestColumnsCallback()
-		{
-			printf '`'
-			swaddle_digest "$core_variable_array_element" "$statFilePath"
-			printf '`|'
-		}
-		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_digestColumnsCallback "$@"
-		printf '\n'
-		
-	} >>"$indexFilePath"
+	printf '|[`%s`](%s "%s")|`%s`|`%s`|' "$linkText" "$url" "$linkTitle" "$date" "$size"
+	
+	if core_variable_isTrue "$sign"; then
+		swaddle_digest_signFile "$statFilePath"
+		printf '[`Signature`](%s "%s")|' "$signatureFilePath" "GPG Signature using signing key $(swaddle_configure_signer)"
+	else
+		printf '%s|' '-'
+	fi
+	
+	_swaddle_webserverFiles_index_digestColumnsCallback()
+	{
+		printf '`'
+		swaddle_digest "$core_variable_array_element" "$statFilePath"
+		printf '`|'
+	}
+	swaddle_webserverFiles_iterateOverDigests _swaddle_webserverFiles_index_digestColumnsCallback
+	
+	printf '\n'
 }
 
-core_dependency_requires '*' sed
+swaddle_webserverFiles_iterateOverDigests()
+{
+	local callback="$1"
+	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' "$callback" 'sha1' 'sha256'
+}
+
 _swaddle_webserverFiles_index_createInitialMarkdown()
 {
 	local folderName="$(core_compatibility_basename "$(pwd)")"
-	local timestamp="$(swaddle_configure_timestamp)"
-	local releaseDate="$(date -u -d @$timestamp +'%a, %d %h %Y %H:%M:%S %Z')"
 	
 	# Defaults
 	set -- 'sha1' 'sha256'
@@ -194,19 +191,6 @@ _swaddle_webserverFiles_index_createInitialMarkdown()
 		done
 		printf '|'
 	}
-
-	if core_variable_isTrue "$(swaddle_configure_sign)"; then
-	
-		local keyserver="$(configure_getConfigurationSetting swaddle keyserver)"
-		if [ -z "$keyserver" ]; then
-			local signatureMarkdown="Signed using the key \`$(swaddle_configure_signer)\` with fingerprint \`$(swaddle_gpg_exportSigningKeyFingerprint)\`."
-		else
-			local keyserverWithHttpProtocol="$(printf '%s' "$keyserver" | sed -e s/^hkp/http/g)"
-			local signatureMarkdown="Signed using the key \`$(swaddle_configure_signer)\` with fingerprint [\`$(swaddle_gpg_exportSigningKeyFingerprint)\`]($keyserverWithHttpProtocol/pks/lookup?op=get&search=0x$(swaddle_gpg_exportSigningKeyFingerprint) \"Retrieve key '$(swaddle_gpg_exportSigningKeyFingerprint)' from keyserver\")."
-		fi
-	else
-		local signatureMarkdown="Signatures are unavailable."
-	fi
 	
 	local indexPath="/ $parentFolderPath /"
 	if [ "$indexPath" = '/  /' ]; then
@@ -214,15 +198,72 @@ _swaddle_webserverFiles_index_createInitialMarkdown()
 	fi
 	
 	printf '%s' "% Index of ${indexPath}
-% $(swaddle_configure_maintainer)
+% ${maintainer}
 % ${releaseDate}
 Table:This repository was created using [swaddle](https://github.com/raphaelcohn/swaddle \"swaddle, the standalone generator, from source control to complete archive\"), the one tool you need to create DEBs, RPMs, tarballs, apt and yum repositories from source control on Linux and Mac OS X, using [fatten](https://github.com/shellfire-dev/fatten \"Fattening allows you to develop modular shell scripts then bundle them up into an one multi-platform copy-and-run script\") and [shellfire](https://github.com/shellfire-dev \"Shellfire provides modular, re-usable shell script libraries which are battle-tested for platform-gotchas with bash, pdksh, AIX sh, dash, Busybox and others.\").
 
 |Name|Last Modified|Size|Signature^[${signatureMarkdown}]|"
 	
-	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback "$@"
-	printf '\n|:---|:------------|---:|:--------|'
+	swaddle_webserverFiles_iterateOverDigests _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback
 	
-	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnAlignmentCallback "$@"
+	printf '\n|:---|:------------|---:|:--------|'
+	swaddle_webserverFiles_iterateOverDigests _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnAlignmentCallback
 	printf '\n'
+}
+
+core_dependency_requires '*' date
+swaddle_webserverFiles_releaseDate()
+{
+	releaseDate="$(swaddle_webserverFiles_formatDate "$(swaddle_configure_timestamp)")"
+}
+
+swaddle_webserverFiles_parentUrlMarkdown()
+{
+	if core_variable_isTrue "$useIndexNameInDirectoryLinks"; then
+		local parentUrl="../$indexFileName"
+	else
+		local parentUrl="../"
+	fi
+	parentUrlMarkdown="[\`Parent Directory ↩\`](${parentUrl} \"Move up to the parent directory\")"
+}
+
+core_dependency_requires '*' sed
+swaddle_webserverFiles_signatureMarkdown()
+{
+	if core_variable_isTrue "$sign"; then
+	
+		local keyserver="$(configure_getConfigurationSetting swaddle keyserver)"
+		if [ -z "$keyserver" ]; then
+			signatureMarkdown="Signed using the key \`$(swaddle_configure_signer)\` with fingerprint \`$(swaddle_gpg_exportSigningKeyFingerprint)\`."
+		else
+			local keyserverWithHttpProtocol="$(printf '%s' "$keyserver" | sed -e s/^hkp/http/g)"
+			signatureMarkdown="Signed using the key \`$(swaddle_configure_signer)\` with fingerprint [\`$(swaddle_gpg_exportSigningKeyFingerprint)\`]($keyserverWithHttpProtocol/pks/lookup?op=get&search=0x$(swaddle_gpg_exportSigningKeyFingerprint) \"Retrieve key '$(swaddle_gpg_exportSigningKeyFingerprint)' from keyserver\")."
+		fi
+	else
+		signatureMarkdown="Signatures are unavailable."
+	fi
+}
+
+core_dependency_requires '*' mv
+swaddle_webserverFiles_extractDefaultCss()
+{
+	# Extract css to use if no default template
+	local TMP_FILE
+	core_temporaryFiles_newFileToRemoveOnExit
+	core_snippet_retrieve css yes "$TMP_FILE"
+	# Pandoc moans about content-type detection otherwise!
+	cssToEmbedFilePath="$TMP_FILE".css
+	mv "$TMP_FILE" "$cssToEmbedFilePath"
+}
+
+core_dependency_requires '*' pandoc
+swaddle_webserverFiles_pandoc()
+{
+	pandoc --from=markdown "$@" -o "$indexFilePath" "$inputFilePath"
+}
+
+core_dependency_requires '*' date
+swaddle_webserverFiles_formatDate()
+{
+	date -u -d @"$1" +'%a, %d %h %Y %H:%M:%S %Z'
 }

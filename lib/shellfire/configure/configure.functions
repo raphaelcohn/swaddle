@@ -222,6 +222,23 @@ configure_iterateOverArrayWithDefaultsIfEmpty()
 	fi
 }
 
+configure_callFunctionWithDefaultsIfEmpty()
+{
+	local namespace="$1"
+	local valueName="$2"
+	local callback="$3"
+	shift 3
+	
+	local configurationSettingValue
+	_configure_configurationSettingValue "$namespace" "$valueName"
+	
+	if core_variable_array_isEmpty "$configurationSettingValue"; then
+		"$callback" "$@"
+	else
+		core_variable_array_passToFunctionAsArguments "$configurationSettingValue" "$callback"
+	fi
+}
+
 configure_validate()
 {
 	local namespace="$1"
