@@ -34,7 +34,7 @@ swaddle_build_packages()
 {
 	local count=0
 	local _swaddle_build_package_kind
-	for _swaddle_build_package_kind in tar zip 7z deb rpm
+	for _swaddle_build_package_kind in tar zip 7z rar deb rpm
 	do
 		if ! core_path_isReadableAndSearchableFolderPath "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"; then
 			continue
@@ -57,16 +57,16 @@ swaddle_build_packagesPackageKindToRepositoryPath()
 	local repositoryKind
 	case "$_swaddle_build_package_kind" in
 		
-		tar|zip|7z)
-			repositoryKind="$_swaddle_build_package_kind"
-		;;
-		
 		deb)
 			repositoryKind=apt
 		;;
 		
 		rpm)
 			repositoryKind=yum
+		;;
+		
+		*)
+			repositoryKind="$_swaddle_build_package_kind"
 		;;
 		
 	esac
