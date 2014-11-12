@@ -87,7 +87,7 @@ swaddle_build()
 	swaddle_gpg_publishSigningKey
 }
 
-core_functions_register _swaddle_functions swaddle_publish
+#core_functions_register _swaddle_functions swaddle_publish
 swaddle_publish()
 {
 	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
