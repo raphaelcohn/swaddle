@@ -34,7 +34,7 @@ swaddle_build_packages()
 {
 	local count=0
 	local _swaddle_build_package_kind
-	for _swaddle_build_package_kind in tar deb rpm
+	for _swaddle_build_package_kind in tar zip deb rpm
 	do
 		if ! core_path_isReadableAndSearchableFolderPath "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"; then
 			continue
@@ -47,7 +47,7 @@ swaddle_build_packages()
 	done
 	
 	if [ $count -eq 0 ]; then
-		core_message WARN "No package kinds (tar, deb, rpm) in '$_swaddle_build_sourcePath' for swaddle '$_swaddle_build_swaddleName"
+		core_message WARN "No package kinds (tar, zip, deb, rpm) in '$_swaddle_build_sourcePath' for swaddle '$_swaddle_build_swaddleName"
 	fi
 }
 
@@ -59,6 +59,10 @@ swaddle_build_packagesPackageKindToRepositoryPath()
 		
 		tar)
 			repositoryKind=tar
+		;;
+		
+		zip)
+			repositoryKind=zip
 		;;
 		
 		deb)

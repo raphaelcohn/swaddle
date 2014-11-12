@@ -40,13 +40,15 @@ swaddle_build_package_tar_createTarball()
 	_swaddle_build_package_tar_tarballFileName="$tarballParentPath"/"$baseName".tar
 	
 	swaddle_compress_variants_clean "$_swaddle_build_package_tar_tarballFileName"
-		
+	
 	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_tar bomb)"; then
 		local directory="$_swaddle_build_package_root"
+		local contents=.
 	else
 		swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" mv "$_swaddle_build_package_root" "$_swaddle_build_package_temporaryFolderPath"/"$baseName"
 		
-		local directory="$_swaddle_build_package_temporaryFolderPath"/"$baseName"
+		local directory="$_swaddle_build_package_temporaryFolderPath"
+		local contents="$baseName"
 	fi
 	
 	swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" tar "$@" \
@@ -54,7 +56,7 @@ swaddle_build_package_tar_createTarball()
 		--file "$_swaddle_build_package_tar_tarballFileName" \
 		--numeric-owner \
 		--directory "$directory" \
-		.
+		"$contents"
 	
 	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_tar_tarballFileName"
 }

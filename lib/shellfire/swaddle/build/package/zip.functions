@@ -1,0 +1,77 @@
+core_usesIn swaddle webserverFiles
+
+swaddle_build_package_zip_registerConfiguration()
+{
+	configure_register Value Boolean swaddle_zip bomb 'yes'
+	# Supported since 2003, but only since 2012 in Python. Disabled on Mac OS X infozip, doesn't work with minizip, either.
+	configure_register Value Boolean swaddle_zip use_bzip2 'no'
+}
+
+swaddle_build_package_zip()
+{
+	core_functions_execute _swaddle_build_package_zip_functions "$@"
+}
+
+core_functions_register _swaddle_build_package_zip_functions swaddle_build_package_zip_computeZipVersion
+swaddle_build_package_zip_computeZipVersion()
+{
+	local epoch="$(configure_getConfigurationSetting swaddle epoch)"
+	local version="$(configure_getConfigurationSetting swaddle version)"
+	local iteration="$(configure_getConfigurationSetting swaddle iteration)"
+	if [ -z "$epoch" ]; then
+		_swaddle_build_package_zip_version="$version"-"$iteration"
+	elif [ "$epoch" = '0' ]; then
+		_swaddle_build_package_zip_version="$version"-"$iteration"
+	else
+		_swaddle_build_package_zip_version="$epoch":"$version"-"$iteration"
+	fi
+}
+
+core_dependency_requires '*' zip mkdir rm mv
+core_functions_register _swaddle_build_package_zip_functions swaddle_build_package_zip_create
+swaddle_build_package_zip_create()
+{
+	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	local zipParentPath="$_swaddle_repository_parentPath"/"$repositoryName"
+	
+	mkdir -m 0755 -p "$zipParentPath"
+	swaddle_touch_setMtimeAndAtime "$zipParentPath"
+	
+	rm -f "$_swaddle_build_package_zip_fileName"
+	
+	local baseName="${_swaddle_build_swaddleName}_${_swaddle_build_package_zip_version}_${_swaddle_build_package_translatedArchitecture}"
+	_swaddle_build_package_zip_fileName="$zipParentPath"/"$baseName".zip
+	
+	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_zip bomb)"; then
+		local directory="$_swaddle_build_package_root"
+		local contents=.
+	else
+		swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" mv "$_swaddle_build_package_root" "$_swaddle_build_package_temporaryFolderPath"/"$baseName"
+		
+		local directory="$_swaddle_build_package_temporaryFolderPath"
+		local contents="$baseName"
+	fi
+	
+	local options
+	local options_intialised
+	core_variable_array_initialise options
+	
+	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_zip use_bzip2)"; then
+		core_variable_array_append options -Z bzip2
+	fi
+	
+	core_variable_array_append options --archive-comment -q -r -9 "$_swaddle_build_package_zip_fileName" "$contents"
+	
+	core_variable_array_passToFunctionAsArguments options _swaddle_build_package_zip_create
+	
+	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_zip_fileName"
+}
+
+_swaddle_build_package_zip_create()
+{
+	pushd "$directory"
+		
+		configure_getConfigurationSetting swaddle_package description | zip "$@"
+		
+	popd
+}
