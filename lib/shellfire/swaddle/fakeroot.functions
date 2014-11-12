@@ -35,7 +35,7 @@ _swaddle_fakeroot_fixPermissions_recurse()
 			for subPath in "$filePath"/*
 			do
 				set -f
-				_swaddle_build_package_defaultFixPermissions_recurse "$subPath"
+				_swaddle_fakeroot_fixPermissions_recurse "$subPath"
 			done
 			set +f
 		fi

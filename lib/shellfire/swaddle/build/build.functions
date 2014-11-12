@@ -39,29 +39,9 @@ swaddle_build_packages()
 		if ! core_path_isReadableAndSearchableFolderPath "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"; then
 			continue
 		fi
-
-		local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
-		local repositoryKind
-		case "$_swaddle_build_package_kind" in
-			
-			tar)
-				repositoryKind=tar
-			;;
-			
-			deb)
-				repositoryKind=apt
-			;;
-			
-			rpm)
-				repositoryKind=yum
-			;;
-			
-		esac
 		
-		_swaddle_repository_parentPath="$swaddle_outputPath"/"$repositoryKind"
+		swaddle_build_packagesPackageKindToRepositoryPath
 		swaddle_build_packagesByArchitecture
-		
-		swaddle_build_package
 				
 		count=$((count+1))
 	done
@@ -69,6 +49,28 @@ swaddle_build_packages()
 	if [ $count -eq 0 ]; then
 		core_message WARN "No package kinds (tar, deb, rpm) in '$_swaddle_build_sourcePath' for swaddle '$_swaddle_build_swaddleName"
 	fi
+}
+
+swaddle_build_packagesPackageKindToRepositoryPath()
+{
+	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	local repositoryKind
+	case "$_swaddle_build_package_kind" in
+		
+		tar)
+			repositoryKind=tar
+		;;
+		
+		deb)
+			repositoryKind=apt
+		;;
+		
+		rpm)
+			repositoryKind=yum
+		;;
+		
+	esac
+	_swaddle_repository_parentPath="$swaddle_outputPath"/"$repositoryKind"
 }
 
 swaddle_build_packagesByArchitecture()
@@ -105,7 +107,6 @@ swaddle_build_packagesByArchitecture()
 					
 					all)
 						if ! core_variable_array_contains architecturesToBuild all; then
-							
 							core_variable_array_append architecturesToBuild all
 							weAreBuildingAllArchitecture=1
 						fi
@@ -113,7 +114,6 @@ swaddle_build_packagesByArchitecture()
 					
 					*)
 						if ! core_variable_array_contains architecturesToBuild "$potentialArchitecture"; then
-							
 							core_variable_array_append architecturesToBuild "$potentialArchitecture"
 							weAreBuildingNotAllArchitecture=1
 						fi
@@ -135,11 +135,16 @@ swaddle_build_packagesByArchitecture()
 	
 	# Default to building 'all'
 	if [ $weAreBuildingNotAllArchitecture -eq 0 ]; then
-		if [ $weAreBuildingNotAllArchitecture -eq 0 ]; then
+		if [ $weAreBuildingAllArchitecture -eq 0 ]; then
 			core_variable_array_append architecturesToBuild 'all'
 			weAreBuildingAllArchitecture=1
 		fi
 	fi
 	
-	core_variable_array_passToFunctionAsArguments architecturesToBuild swaddle_build_package
+	_swaddle_build_packagesByArchitecture_callback()
+	{
+		swaddle_build_package "$core_variable_array_element"
+	}
+	
+	core_variable_array_iterate architecturesToBuild _swaddle_build_packagesByArchitecture_callback
 }

@@ -33,9 +33,9 @@ swaddle_build_package_rpm_registerConfiguration()
 
 swaddle_build_package_rpm()
 {
-	# Validate that config files and package folder paths are all valid
-
+	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
 	local _swaddle_repository_yum_repositoryPath="$_swaddle_repository_parentPath"/"$repositoryName"
+	
 	core_functions_execute _swaddle_build_package_rpm_functions "$@"
 }
 

@@ -7,17 +7,14 @@ swaddle_architecture_translate()
 	case "$toPackageKind" in
 		
 		tar)
-			configure_validateAptArchitecture 
 			packageArchitecture="$debianArchitecture"
 		;;
 		
 		deb)
-			if [ "$debianArchitecture" = 'all']; then
-				packageArchitecture=all
-				return 0
+			if [ "$debianArchitecture" != 'all' ]; then
+				configure_validateAptArchitecture "$debianArchitecture"
 			fi
-			
-			configure_validateAptArchitecture "$debianArchitecture"
+			packageArchitecture="$debianArchitecture"
 		;;
 		
 		rpm)	
