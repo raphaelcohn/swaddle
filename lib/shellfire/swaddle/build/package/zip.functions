@@ -3,7 +3,7 @@ core_usesIn swaddle webserverFiles
 swaddle_build_package_zip_registerConfiguration()
 {
 	configure_register Value Boolean swaddle_zip bomb 'yes'
-	configure_register Value Boolean swaddle_zip extension 'zip'
+	configure_register Value NotEmpty swaddle_zip extension 'zip'
 	# Supported since 2003, but only since 2012 in Python. Disabled on Mac OS X infozip, doesn't work with minizip, either.
 	configure_register Value Boolean swaddle_zip use_bzip2 'no'
 }

@@ -50,11 +50,9 @@ swaddle_build_package_7z_create()
 		local contents="$baseName"
 	fi
 	
-	core_variable_array_passToFunctionAsArguments options _swaddle_build_package_7z_create
-	
 	pushd "$directory"
 	
-		7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "$_swaddle_build_package_7z_fileName" "$contents"
+		7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "$_swaddle_build_package_7z_fileName" "$contents" 2>/dev/null
 	
 	popd
 	

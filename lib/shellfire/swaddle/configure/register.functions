@@ -199,10 +199,11 @@ swaddle_configure_register_miscellany()
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_byPackageKind
 swaddle_configure_register_byPackageKind()
 {
-	swaddle_build_package_tar_registerConfiguration
-	swaddle_build_package_zip_registerConfiguration
-	swaddle_build_package_deb_registerConfiguration
-	swaddle_build_package_rpm_registerConfiguration
+	local packageKind
+	for packageKind in tar zip 7z deb rpm
+	do
+		swaddle_build_package_${packageKind}_registerConfiguration	
+	done
 }
 
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_byRepositoryKind
