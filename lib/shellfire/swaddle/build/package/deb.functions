@@ -230,7 +230,7 @@ swaddle_build_package_deb_createControlScripts()
 	_swaddle_build_package_deb_createControlScript()
 	{
 		local scriptKind="$1"
-		local scriptTypePath="$_swaddle_build_templatesPath"/"$_swaddle_build_package_kind"/scripts/"$scriptKind"
+		local scriptTypePath="$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/scripts/"$scriptKind"
 	
 		if ! core_path_isReadableAndSearchableFolderPath "$scriptTypePath"; then
 			return 0

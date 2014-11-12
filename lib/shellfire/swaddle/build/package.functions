@@ -66,7 +66,7 @@ swaddle_build_package_sourceConfiguration()
 {
 	configure_source "$swaddle_swaddlesPath" swaddles
 	configure_source "$_swaddle_build_sourcePath" package
-	configure_source "$_swaddle_build_templatesPath"/"$_swaddle_build_package_kind" "$_swaddle_build_package_kind"
+	configure_source "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind" "$_swaddle_build_package_kind"
 }
 
 core_functions_register _swaddle_build_package_functions swaddle_build_package_validateConfiguration
@@ -94,8 +94,8 @@ swaddle_build_package_synchroniseToPackageRoot()
 	local folderStructurePath
 	local fakerootEnvironmentFilePath
 	for folderStructurePath in \
-		"$_swaddle_build_templatesPath"/"$_swaddle_build_package_kind"/body \
-		"$_swaddle_build_templatesPath"/"$_swaddle_build_package_kind"/skeleton \
+		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/body \
+		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/skeleton \
 		"$_swaddle_build_sourcePath"/body \
 		"$_swaddle_build_sourcePath"/skeleton
 	do
