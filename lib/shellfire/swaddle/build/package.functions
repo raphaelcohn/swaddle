@@ -99,7 +99,7 @@ swaddle_build_package_synchroniseToPackageRoot()
 			continue
 		fi
 		
-		# Trailing '\' matters to rsync, remember!
+		# Trailing '/' matters to rsync, remember!
 		set -- "$@" "$folderStructurePath"/
 	done
 	
