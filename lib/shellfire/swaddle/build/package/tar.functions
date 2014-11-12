@@ -51,7 +51,7 @@ swaddle_build_package_tar_createTarball()
 		local contents="$baseName"
 	fi
 	
-	swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" tar "$@" \
+	swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" tar \
 		--create \
 		--file "$_swaddle_build_package_tar_tarballFileName" \
 		--numeric-owner \

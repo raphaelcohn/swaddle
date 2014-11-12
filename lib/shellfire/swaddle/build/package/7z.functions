@@ -1,0 +1,62 @@
+core_usesIn swaddle webserverFiles
+
+swaddle_build_package_7z_registerConfiguration()
+{
+	configure_register Value Boolean swaddle_7z bomb 'no'
+}
+
+swaddle_build_package_7z()
+{
+	core_functions_execute _swaddle_build_package_7z_functions "$@"
+}
+
+core_functions_register _swaddle_build_package_7z_functions swaddle_build_package_7z_computeZipVersion
+swaddle_build_package_7z_computeZipVersion()
+{
+	local epoch="$(configure_getConfigurationSetting swaddle epoch)"
+	local version="$(configure_getConfigurationSetting swaddle version)"
+	local iteration="$(configure_getConfigurationSetting swaddle iteration)"
+	if [ -z "$epoch" ]; then
+		_swaddle_build_package_7z_version="$version"-"$iteration"
+	elif [ "$epoch" = '0' ]; then
+		_swaddle_build_package_7z_version="$version"-"$iteration"
+	else
+		_swaddle_build_package_7z_version="$epoch":"$version"-"$iteration"
+	fi
+}
+
+core_dependency_requires '*' 7z mkdir rm mv
+core_functions_register _swaddle_build_package_7z_functions swaddle_build_package_7z_create
+swaddle_build_package_7z_create()
+{
+	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	local parentPath="$_swaddle_repository_parentPath"/"$repositoryName"
+	
+	mkdir -m 0755 -p "$parentPath"
+	swaddle_touch_setMtimeAndAtime "$parentPath"
+	
+	local baseName="${_swaddle_build_swaddleName}_${_swaddle_build_package_7z_version}_${_swaddle_build_package_translatedArchitecture}"
+	_swaddle_build_package_7z_fileName="$parentPath"/"$baseName".7z
+	
+	rm -f "$_swaddle_build_package_7z_fileName"
+	
+	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_7z bomb)"; then
+		local directory="$_swaddle_build_package_root"
+		local contents=.
+	else
+		swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" mv "$_swaddle_build_package_root" "$_swaddle_build_package_temporaryFolderPath"/"$baseName"
+		
+		local directory="$_swaddle_build_package_temporaryFolderPath"
+		local contents="$baseName"
+	fi
+	
+	core_variable_array_passToFunctionAsArguments options _swaddle_build_package_7z_create
+	
+	pushd "$directory"/"
+	
+		7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "$_swaddle_build_package_7z_fileName" "$contents"
+	
+	popd
+	
+	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_7z_fileName"
+}

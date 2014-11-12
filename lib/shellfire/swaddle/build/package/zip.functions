@@ -3,6 +3,7 @@ core_usesIn swaddle webserverFiles
 swaddle_build_package_zip_registerConfiguration()
 {
 	configure_register Value Boolean swaddle_zip bomb 'yes'
+	configure_register Value Boolean swaddle_zip extension 'zip'
 	# Supported since 2003, but only since 2012 in Python. Disabled on Mac OS X infozip, doesn't work with minizip, either.
 	configure_register Value Boolean swaddle_zip use_bzip2 'no'
 }
@@ -38,9 +39,9 @@ swaddle_build_package_zip_create()
 	swaddle_touch_setMtimeAndAtime "$zipParentPath"
 	
 	local baseName="${_swaddle_build_swaddleName}_${_swaddle_build_package_zip_version}_${_swaddle_build_package_translatedArchitecture}"
-	_swaddle_build_package_zip_fileName="$zipParentPath"/"$baseName".zip
+	_swaddle_build_package_zip_fileName="$zipParentPath"/"$baseName"."$(configure_getConfigurationSetting swaddle_zip extension)"
 	
-	rm -f "$_swaddle_build_package_zip_fileName"
+	rm -f "$_swaddle_build_package_zip_fileName" "$zipParentPath"/"$baseName".zip
 	
 	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_zip bomb)"; then
 		local directory="$_swaddle_build_package_root"
