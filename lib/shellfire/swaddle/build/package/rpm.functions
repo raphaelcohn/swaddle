@@ -174,7 +174,6 @@ swaddle_package_rpm_rpmbuild()
 	swaddle_touch_setMtimeAndAtime "$rpmFilePath"
 	
 	# RPM files can be compressed A LOT more; at least 10Kb is possible
-	swaddle_webserverFiles_createFrom "$rpmFilePath" yes
 	
 	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_repositoryPath"/"$_swaddle_build_package_translatedArchitecture"
 	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_repositoryPath"

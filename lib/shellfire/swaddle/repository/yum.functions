@@ -73,7 +73,6 @@ swaddle_repository_yum_createRepoFile()
 		protect=0
 	EOF
 	swaddle_touch_setMtimeAndAtime "$repoFilePath"
-	swaddle_webserverFiles_createFrom "$repoFilePath" yes
 }
 
 swaddle_repository_yum_createMirrorlist()
@@ -89,7 +88,6 @@ swaddle_repository_yum_createMirrorlist()
 	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_yum' mirrors _swaddle_repository_yum_createMirrorlist_callback "$hostBaseUrl" >"$mirrorListFilePath"
 	
 	swaddle_touch_setMtimeAndAtime "$mirrorListFilePath"
-	swaddle_webserverFiles_createFrom "$mirrorListFilePath" yes
 }
 
 core_usesIn swaddle gpg
@@ -102,7 +100,6 @@ swaddle_repository_yum_exportSigningKey()
 	local gpgKeyFilePath="$_swaddle_repository_yum_repositoryPath"/RPM-GPG-KEY-"$repositoryName"
 	swaddle_gpg_exportSigningKey >"$gpgKeyFilePath"
 	swaddle_touch_setMtimeAndAtime "$gpgKeyFilePath"
-	swaddle_webserverFiles_createFrom "$gpgKeyFilePath" yes
 }
 
 swaddle_repository_yum_signRepomdForSuse()
@@ -134,5 +131,4 @@ swaddle_repository_yum_createInstallScript()
 	EOF
 	chmod 0755 "$installScriptFilePath"
 	swaddle_touch_setMtimeAndAtime "$installScriptFilePath"
-	swaddle_webserverFiles_createFrom "$installScriptFilePath" yes
 }

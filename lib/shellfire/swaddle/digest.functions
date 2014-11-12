@@ -36,8 +36,6 @@ swaddle_digest_signFile()
 		local extension='asc'
 	fi
 	swaddle_gpg_sign "$filePath" "$extension"
-	
-	swaddle_webserverFiles_compressForNginx "$filePath"."$extension"
 }
 
 swaddle_digest_name()

@@ -85,7 +85,7 @@ table tr
 	line-height: 18px;
 }
 
-sup
+table sup
 {
 	font-size: 0.7em;
 	vertical-align: super;
@@ -128,12 +128,19 @@ tr.odd
 caption
 {
 	caption-side: bottom;
-	font-size: 10pt;
-	margin-bottom: 0px;
-	margin-top: -22px;
 	font-style: italic;
 	text-align: right;
-	padding-right: 16px;
+	padding-right: 13px;
+	margin-top: 12px;
+	/*margin-bottom: -26px;*/
+}
+
+/* title=Move up to the parent directory */
+p a[title="Move up to the parent directory"]
+{
+	float: left;
+	left: 13px;
+	top: -32px;
 }
 
 hr:before
@@ -144,6 +151,7 @@ hr:before
 
 hr
 {
+	clear: both;
 	height: 4px;
 	padding: 0px;
 	margin: 26px 0px 16px 0px;

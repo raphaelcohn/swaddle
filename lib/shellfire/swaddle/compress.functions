@@ -34,15 +34,12 @@ swaddle_compress_variants()
 		if [ -n "$callbackPerCompressedFile" ]; then
 			$callbackPerCompressedFile "$compressedFileName"
 		fi
-		swaddle_webserverFiles_createFrom "$compressedFileName" no
 	}
 	
 	configure_iterateOverArrayWithDefaultsIfEmpty "$namespace" "$valueName" _swaddle_build_package_tar_compress_callback "$@"
 	
 	if core_variable_isFalse "$keepUncompressedFile"; then
 		rm "$originalFilePath"
-	elif [ ! -f "$originalFilePath".gz ]; then
-		swaddle_webserverFiles_compressForNginx "$originalFilePath"
 	fi
 }
 

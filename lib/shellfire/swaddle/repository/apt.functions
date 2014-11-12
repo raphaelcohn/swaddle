@@ -181,8 +181,6 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 					} >Index
 
 					swaddle_touch_setMtimeAndAtime Index
-					
-					swaddle_webserverFiles_createFrom Index yes
 				popd
 			fi
 		done
@@ -215,7 +213,6 @@ swaddle_repository_apt_createDistsContents()
 
 			swaddle_touch_setMtimeAndAtime Contents-"$packageArchitecture"
 			swaddle_compress_gzip Contents-"$packageArchitecture"
-			swaddle_webserverFiles_createFrom Contents-"$packageArchitecture".gz no
 			
 			# Yes, really delete it. apt-file only looks for a gz file ordinarily.
 			rm Contents-"$packageArchitecture"
@@ -301,8 +298,6 @@ swaddle_repository_apt_createDistsRelease()
 	swaddle_touch_setMtimeAndAtime "$releaseFilePath"
 	
 	swaddle_digest_signFile "$releaseFilePath" gpg
-	
-	swaddle_webserverFiles_createFrom "$releaseFilePath" yes
 }
 
 swaddle_repository_apt_exportSigningKey()
@@ -310,7 +305,6 @@ swaddle_repository_apt_exportSigningKey()
 	local keyPath="$repositoryPath"/Release.key
 	swaddle_gpg_exportSigningKey >"$keyPath"
 	swaddle_touch_setMtimeAndAtime "$keyPath"
-	swaddle_webserverFiles_createFrom "$keyPath" yes
 }
 
 swaddle_repository_apt_createAptSourcesList()
@@ -327,7 +321,6 @@ swaddle_repository_apt_createAptSourcesList()
 	printf '%s\n' "deb $hostBaseUrl $repositoryName $(core_variable_array_string  _swaddle_repository_apt_components ' ')" >"$filePath"
 	
 	swaddle_touch_setMtimeAndAtime "$filePath"
-	swaddle_webserverFiles_createFrom "$filePath" yes
 }
 
 swaddle_repository_apt_createInstallScript()
@@ -354,7 +347,6 @@ swaddle_repository_apt_createInstallScript()
 	
 	chmod +x "$filePath"
 	swaddle_touch_setMtimeAndAtime "$filePath"
-	swaddle_webserverFiles_createFrom "$filePath" yes
 }
 
 core_usesIn swaddle compress
@@ -406,7 +398,6 @@ swaddle_repository_apt_createDistsComponentReleaseFile()
 		Architecture: ${packageArchitecture}
 	EOF
 	swaddle_touch_setMtimeAndAtime Release
-	swaddle_webserverFiles_createFrom Release yes
 }
 
 core_dependency_requires '*' ar tar rm
