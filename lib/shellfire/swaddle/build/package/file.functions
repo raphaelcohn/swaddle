@@ -1,0 +1,84 @@
+core_usesIn swaddle webserverFiles
+
+swaddle_build_package_file_registerConfiguration()
+{
+	configure_register Value Any swaddle_file path ''
+	configure_register Array TarCompression swaddle_file compressions
+}
+
+swaddle_build_package_file()
+{
+	core_functions_execute _swaddle_build_package_file_functions "$@"
+}
+
+core_functions_register _swaddle_build_package_file_functions swaddle_build_package_file_computeFileVersion
+swaddle_build_package_file_computeFileVersion()
+{
+	local epoch="$(configure_getConfigurationSetting swaddle epoch)"
+	local version="$(configure_getConfigurationSetting swaddle version)"
+	local iteration="$(configure_getConfigurationSetting swaddle iteration)"
+	if [ -z "$epoch" ]; then
+		_swaddle_build_package_file_version="$version"-"$iteration"
+	elif [ "$epoch" = '0' ]; then
+		_swaddle_build_package_file_version="$version"-"$iteration"
+	else
+		_swaddle_build_package_file_version="$epoch":"$version"-"$iteration"
+	fi
+}
+
+core_dependency_requires '*' file mkdir rm mv
+core_functions_register _swaddle_build_package_file_functions swaddle_build_package_file_create
+swaddle_build_package_file_create()
+{
+	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	local parentPath="$_swaddle_repository_parentPath"/"$repositoryName"
+	
+	mkdir -m 0755 -p "$parentPath"
+	swaddle_touch_setMtimeAndAtime "$parentPath"
+	
+	local chosenFile="$(configure_getConfigurationSetting swaddle_file path)"
+	if [ -n "$chosenFile" ]; then
+		if [ ! -f "$_swaddle_build_package_root"/"$chosenFile" ]; then
+			core_exitError $core_commandLine_exitCode_CONFIG "The file '$chosenFile' does not exist as a file"
+		fi
+	else
+		pushd "$_swaddle_build_package_root"
+		
+			local file
+			for file in *
+			do
+				if [ ! -e "$file" ]; then
+					continue
+				fi
+			
+				if [ -L "$file" ]; then
+					continue
+				fi
+			
+				if [ -f "$file" ]; then
+					if [ -n "$chosenFile" ]; then
+						core_exitError $core_commandLine_exitCode_CONFIG "There are multiple files to choose from"
+					fi
+				
+					chosenFile="$file"
+				fi
+			done
+	
+		popd
+	fi
+	local useFilePath="$_swaddle_build_package_root"/"$chosenFile"
+	
+	_swaddle_build_package_file_fileName="$parentPath"/"${_swaddle_build_swaddleName}_${_swaddle_build_package_file_version}_${_swaddle_build_package_translatedArchitecture}"
+	
+	rm -f "$_swaddle_build_package_file_fileName"
+	cp "$useFilePath" "$_swaddle_build_package_file_fileName" 
+	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_file_fileName"
+}
+
+core_usesIn swaddle compress
+core_functions_register _swaddle_build_package_file_functions swaddle_build_package_file_compress
+swaddle_build_package_file_compress()
+{
+	local callbackPerCompressedFile=''
+	swaddle_compress_variants 'swaddle_file' 'compressions' "$_swaddle_build_package_file_fileName" "$callbackPerCompressedFile" 'gzip' 'lrzip' 'zip'
+}

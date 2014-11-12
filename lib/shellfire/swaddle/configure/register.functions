@@ -200,7 +200,7 @@ core_functions_register _swaddle_configure_register_functions swaddle_configure_
 swaddle_configure_register_byPackageKind()
 {
 	local packageKind
-	for packageKind in tar zip 7z rar deb rpm
+	for packageKind in tar zip 7z rar file deb rpm
 	do
 		swaddle_build_package_${packageKind}_registerConfiguration	
 	done
