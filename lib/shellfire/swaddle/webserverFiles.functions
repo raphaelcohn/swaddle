@@ -16,18 +16,22 @@ swaddle_webserverFiles_createIndices()
 	local folderPath="$1"
 	local parentFolderPath="$2"
 	
-	local inputFilePath="$folderPath"/index.md
+	local inputFilePath="$folderPath"/index.md.tmp
+	
+	_swaddle_webserverFiles_index_createInitialMarkdown >"$inputFilePath"
 	
 	local hasChildren=no
 	pushd "$folderPath"
-
-		_swaddle_webserverFiles_index_createInitialMarkdown
 		
 		set +f
 		local child
 		for child in *
 		do
 			set -f
+			if [ "$child" = 'index.md.tmp' ]; then
+				continue
+			fi
+			
 			if [ -d "$child" ]; then
 				hasChildren=yes
 				if [ ! -L "$child" ]; then
@@ -50,9 +54,6 @@ swaddle_webserverFiles_createIndices()
 		set -f
 		
 	popd
-	
-	cat "$inputFilePath".tmp >>"$inputFilePath"
-	rm "$inputFilePath".tmp
 
 	if [ -n "$parentFolderPath" ]; then
 		{
@@ -212,19 +213,16 @@ _swaddle_webserverFiles_index_createInitialMarkdown()
 		indexPath='/'
 	fi
 	
-	{
-		printf '%s' "% Index of ${indexPath}
+	printf '%s' "% Index of ${indexPath}
 % $(swaddle_configure_maintainer)
 % ${releaseDate}
 Table:This repository was created using [swaddle](https://github.com/raphaelcohn/swaddle \"swaddle, the standalone generator, from source control to complete archive\"), the one tool you need to create DEBs, RPMs, tarballs, apt and yum repositories from source control on Linux and Mac OS X, using [fatten](https://github.com/shellfire-dev/fatten \"Fattening allows you to develop modular shell scripts then bundle them up into an one multi-platform copy-and-run script\") and [shellfire](https://github.com/shellfire-dev \"Shellfire provides modular, re-usable shell script libraries which are battle-tested for platform-gotchas with bash, pdksh, AIX sh, dash, Busybox and others.\").
 
 |Name|Last Modified|Size|Signature^[${signatureMarkdown}]|"
-		
-		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback "$@"
-		printf '\n|:---|:------------|---:|:--------|'
-		
-		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnAlignmentCallback "$@"
-		printf '\n'
-		
-	} >index.md
+	
+	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback "$@"
+	printf '\n|:---|:------------|---:|:--------|'
+	
+	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnAlignmentCallback "$@"
+	printf '\n'
 }
