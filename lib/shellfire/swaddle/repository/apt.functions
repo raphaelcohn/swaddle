@@ -318,7 +318,7 @@ swaddle_repository_apt_createAptSourcesList()
 	local hostBaseUrl="$(configure_getConfigurationSetting swaddle hostBaseUrl)"
 	if core_variable_endsWith "$hostBaseUrl" '/'; then
 		local length=${#hostBaseUrl}
-		hostBaseUrl="$(core_variable_allButLastN "$hostBaseUrl" $((length-1)))"
+		hostBaseUrl="$(core_variable_allButLastN "$hostBaseUrl" 1)"
 	fi
 	
 	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
