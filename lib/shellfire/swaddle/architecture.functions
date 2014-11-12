@@ -1,91 +1,82 @@
-# Unsupported in RPM: i586, i686, sparc64, m68kint, sh3, sh4
+# Unsupported in Debian: i586, i686, sparc64, m68kint, sh3, sh4
 
-swaddle_architecture_translateDebianToRpm()
+swaddle_architecture_translate()
 {
-	local result
-	case "$1" in
+	local toPackageKind="$1"
+	local debianArchitecture="$2"
+	case "$toPackageKind" in
 		
-		all)
-			result=noarch
+		tar)
+			configure_validateAptArchitecture 
+			packageArchitecture="$debianArchitecture"
 		;;
 		
-		# i586, i686 as used by Suse are not supported
-		i386)
-			result=i386
+		deb)
+			if [ "$debianArchitecture" = 'all']; then
+				packageArchitecture=all
+				return 0
+			fi
+			
+			configure_validateAptArchitecture "$debianArchitecture"
 		;;
 		
-		amd64)
-			result=x86_64
-		;;
+		rpm)	
+			case "$debianArchitecture" in
 		
-		ia64)
-			result=ia64
-		;;
+				all)
+					packageArchitecture=noarch
+				;;
 		
-		arm64)
-			result=aarch64
-		;;
+				# i586, i686 as used by Suse are not supported
+				i386|ia64|mips|mipsel|alpha|sparc|m68k|sh|s390|s390x)
+					packageArchitecture="$debianArchitecture"
+				;;
 		
-		armhf)
-			result=armv7hl
-		;;
+				# m68kint not supported
+				m68k)
+					packageArchitecture=m68k
+				;;
 		
-		armel)
-			result=armv5tel
-		;;
+				amd64)
+					packageArchitecture=x86_64
+				;;
 		
-		powerpc)
-			result=ppc
-		;;
+				arm64)
+					packageArchitecture=aarch64
+				;;
 		
-		powerpc64)
-			result=ppc64
-		;;
+				armhf)
+					packageArchitecture=armv7hl
+				;;
 		
-		ppc64el)
-			result=ppc64le
-		;;
+				armel)
+					packageArchitecture=armv5tel
+				;;
 		
-		mips)
-			result=mips
-		;;
+				powerpc)
+					packageArchitecture=ppc
+				;;
 		
-		mipsel)
-			result=mipsel
-		;;
+				powerpc64)
+					packageArchitecture=ppc64
+				;;
 		
-		alpha)
-			result=alpha
-		;;
-
-		#Debian is 32-bit SPARC. RPM also supported sparc64
-		sparc)
-			result=sparc
-		;;
+				ppc64el)
+					packageArchitecture=ppc64le
+				;;
 		
-		# m68kint not supported
-		m68k)
-			result=m68k
-		;;
+				*)
+					core_message WARN "No known conversion from debian architecture '$1' to RPM architecture; using an identity conversion which is probably wrong"
+					packageArchitecture="$debianArchitecture"
+				;;
 		
-		# sh3 not supported
-		sh)
-			result=sh
-		;;
-		
-		s390)
-			result=s390
-		;;
-		
-		s390x)
-			result=s390x
+			esac
 		;;
 		
 		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "Can not convert architecture '$1' to RPM"
+			core_exitError $core_commandLine_exitCode_SOFTWARE "Unknown toPackageKind '$toPackageKind'"
 		;;
 		
 	esac
 	
-	printf '%s' "$result"
 }

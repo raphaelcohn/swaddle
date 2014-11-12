@@ -10,9 +10,7 @@ swaddle_build_package_deb_registerConfiguration()
 	configure_register Value DebSection swaddle_deb section 'misc'
 	configure_register Value DebPriority swaddle_deb priority 'extra'
 	configure_register Value Any swaddle_deb bugs_url ''
-	
-	configure_register Value DebPackageArchitecture swaddle_deb architecture 'all'
-	
+		
 	configure_register Value DebComponent swaddle_deb component 'multiverse'
 	
 	configure_register Value DebMultiArch swaddle_deb multiarch 'no'
@@ -53,8 +51,7 @@ swaddle_build_package_deb_registerConfiguration()
 swaddle_build_package_deb()
 {
 	local multiarch="$(configure_getConfigurationSetting swaddle_deb multiarch)"
-	local packageArchitecture="$(configure_getConfigurationSetting swaddle_deb architecture)"
-	if [ "$packageArchitecture" = 'all' ]; then
+	if [ "$_swaddle_build_package_translatedArchitecture" = 'all' ]; then
 		if [ "$multiarch" = 'same' ]; then
 			core_exitError $core_commandLine_exitCode_CONFIG "A deb package can't have Architecture 'all' and also Multi-Arch 'same'."
 		fi
@@ -290,7 +287,7 @@ swaddle_build_package_deb_createControlFile()
 			Package: ${_swaddle_build_swaddleName}
 			Version: ${_swaddle_build_package_deb_debianVersion}
 			Source: ${_swaddle_build_swaddleName}
-			Architecture: $(swaddle_configure_deb_architecture)
+			Architecture: ${_swaddle_build_package_translatedArchitecture}
 			Maintainer: $(swaddle_configure_maintainer)
 			Installed-Size: $(_swaddle_build_package_deb_installedSize)
 			Essential: $(configure_getConfigurationSetting swaddle_deb essential)
@@ -315,7 +312,7 @@ swaddle_build_package_deb_createControlFile()
 			Supported: $(configure_getConfigurationSetting swaddle_deb supported)
 		EOF
 		_swaddle_build_package_deb_commaSeparatedControlField Built-Using built_using
-		if [ "$(swaddle_configure_deb_architecture)" != 'all' ]; then
+		if [ "$_swaddle_build_package_translatedArchitecture" != 'all' ]; then
 			_swaddle_build_package_deb_commaSeparatedControlField Multi-Arch "$(configure_getConfigurationSetting swaddle_deb multiarch)"
 		fi
 		_swaddle_build_package_deb_extraControlFields
@@ -424,7 +421,7 @@ core_dependency_requires '*' mkdir ar
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createDeb
 swaddle_build_package_deb_createDeb()
 {
-	local poolDebFile="${_swaddle_build_swaddleName}_${_swaddle_build_package_deb_debianVersion}_$(swaddle_configure_deb_architecture)".deb
+	local poolDebFile="${_swaddle_build_swaddleName}_${_swaddle_build_package_deb_debianVersion}_${_swaddle_build_package_translatedArchitecture}".deb
 	local poolSource="$_swaddle_build_swaddleName"
 	local poolAZ
 	_swaddle_build_package_deb_poolAZ

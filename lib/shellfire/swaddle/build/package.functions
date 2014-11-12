@@ -1,12 +1,15 @@
-core_usesIn swaddle/build/package deb rpm tar
-core_usesIn swaddle fakeroot
-core_usesIn swaddle touch
 core_usesIn configure
+core_usesIn swaddle fakeroot touch architecture
+core_usesIn swaddle/build/package deb rpm tar
 
 swaddle_build_package()
 {
-	local packageArchitecture="$1"
+	local _swaddle_build_package_architecture="$1"
 	shift 1
+
+	local packageArchitecture
+	swaddle_architecture_translate "$_swaddle_build_package_kind" "$_swaddle_build_package_architecture"
+	_swaddle_build_package_translatedArchitecture="$packageArchitecture"
 	
 	core_functions_execute _swaddle_build_package_functions "$@"
 }
@@ -14,7 +17,7 @@ swaddle_build_package()
 core_functions_register _swaddle_build_package_functions swaddle_build_package_createTemporaryFolder
 swaddle_build_package_createTemporaryFolder()
 {
-	_swaddle_build_package_temporaryFolderPath="$_swaddle_build_temporaryFolderPath"/"$_swaddle_build_package_kind"/"$packageArchitecture"
+	_swaddle_build_package_temporaryFolderPath="$_swaddle_build_temporaryFolderPath"/"$_swaddle_build_package_kind"/"$_swaddle_build_package_architecture"
 	mkdir -m 0700 -p "$_swaddle_build_package_temporaryFolderPath"
 }
 
@@ -22,7 +25,7 @@ core_dependency_requires '*' mkdir
 core_functions_register _swaddle_build_package_functions swaddle_build_package_createRootFolder
 swaddle_build_package_createRootFolder()
 {
-	_swaddle_build_package_root="$_swaddle_build_package_temporaryFolderPath"/"$packageArchitecture"/root
+	_swaddle_build_package_root="$_swaddle_build_package_temporaryFolderPath"/"$_swaddle_build_package_architecture"/root
 	mkdir -m 0755 -p "$_swaddle_build_package_root"
 }
 
@@ -67,10 +70,14 @@ swaddle_build_package_synchroniseToPackageRoot()
 	local folderStructurePath
 	local fakerootEnvironmentFilePath
 	for folderStructurePath in \
-		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/body \
-		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/skeleton \
-		"$_swaddle_build_sourcePath"/body \
-		"$_swaddle_build_sourcePath"/skeleton
+		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/body/"$_swaddle_build_package_architecture" \
+		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/skeleton/"$_swaddle_build_package_architecture" \
+		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/body/any \
+		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/skeleton/any \
+		"$_swaddle_build_sourcePath"/body/any \
+		"$_swaddle_build_sourcePath"/skeleton/any \
+		"$_swaddle_build_sourcePath"/body/"$_swaddle_build_package_architecture" \
+		"$_swaddle_build_sourcePath"/skeleton/"$_swaddle_build_package_architecture"
 	do
 		fakerootEnvironmentFilePath="$folderStructurePath".fakeroot
 		

@@ -59,6 +59,7 @@ swaddle_build_packages()
 		esac
 		
 		_swaddle_repository_parentPath="$swaddle_outputPath"/"$repositoryKind"
+		swaddle_build_packagesByArchitecture
 		
 		swaddle_build_package
 				
@@ -68,4 +69,77 @@ swaddle_build_packages()
 	if [ $count -eq 0 ]; then
 		core_message WARN "No package kinds (tar, deb, rpm) in '$_swaddle_build_sourcePath' for swaddle '$_swaddle_build_swaddleName"
 	fi
+}
+
+swaddle_build_packagesByArchitecture()
+{
+	local architecturesToBuild
+	local architecturesToBuild_initialised
+	core_variable_array_initialise architecturesToBuild
+
+	local pathContainingPackageFiles
+	local weAreBuildingAllArchitecture=0
+	local weAreBuildingNotAllArchitecture=0
+	for pathContainingPackageFiles in "$_swaddle_build_sourcePath"/skeleton "$_swaddle_build_sourcePath"/body "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/body "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/skeleton
+	do
+		if ! core_path_isReadableAndSearchableFolderPath "$pathContainingPackageFiles"; then
+			continue
+		fi
+		
+		pushd "$pathContainingPackageFiles"
+		
+			set +f
+			for potentialArchitecture in *
+			do
+				set -f
+				if [ ! -e "$potentialArchitecture" ]; then
+					# Legitimate, but rather odd
+					continue
+				fi
+				
+				case "$potentialArchitecture" in
+					
+					any)
+						:
+					;;
+					
+					all)
+						if ! core_variable_array_contains architecturesToBuild all; then
+							
+							core_variable_array_append architecturesToBuild all
+							weAreBuildingAllArchitecture=1
+						fi
+					;;
+					
+					*)
+						if ! core_variable_array_contains architecturesToBuild "$potentialArchitecture"; then
+							
+							core_variable_array_append architecturesToBuild "$potentialArchitecture"
+							weAreBuildingNotAllArchitecture=1
+						fi
+					;;
+					
+				esac
+				
+			done
+			set -f
+		popd
+		
+	done
+
+	if [ $weAreBuildingNotAllArchitecture -eq 1 ]; then
+		if [ $weAreBuildingNotAllArchitecture -eq 1 ]; then
+			core_exitError $core_commandLine_exitCode_CONFIG "We are already building specific architectures; it is not permitted to then build the 'all' architecture"
+		fi
+	fi
+	
+	# Default to building 'all'
+	if [ $weAreBuildingNotAllArchitecture -eq 0 ]; then
+		if [ $weAreBuildingNotAllArchitecture -eq 0 ]; then
+			core_variable_array_append architecturesToBuild 'all'
+			weAreBuildingAllArchitecture=1
+		fi
+	fi
+	
+	core_variable_array_passToFunctionAsArguments architecturesToBuild swaddle_build_package
 }

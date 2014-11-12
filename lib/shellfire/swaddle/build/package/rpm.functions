@@ -4,7 +4,6 @@ core_usesIn swaddle configure
 
 swaddle_build_package_rpm_registerConfiguration()
 {
-	configure_register Value RpmPackageArchitecture swaddle_rpm architecture 'noarch'
 	configure_register Array NotEmpty swaddle_rpm depends
 	configure_register Array NotEmpty swaddle_rpm depends_before_install
 	configure_register Array NotEmpty swaddle_rpm depends_after_install
@@ -153,9 +152,8 @@ swaddle_package_rpm_rpmbuild()
 		core_variable_array_append options --sign
 	fi
 	
-	local packageArchitecture="$(swaddle_configure_rpm_architecture)"
 	core_variable_array_append options \
-		--target "$packageArchitecture" \
+		--target "$_swaddle_build_package_translatedArchitecture" \
 		--define "buildroot $_swaddle_build_package_root" \
 		--define "_topdir $_swaddle_build_package_temporaryFolderPath" \
 		--define "_sourcedir $_swaddle_build_package_temporaryFolderPath" \
@@ -170,7 +168,7 @@ swaddle_package_rpm_rpmbuild()
 	fi
 	
 	set +f
-	set -- "$_swaddle_repository_yum_repositoryPath"/"$packageArchitecture"/"$_swaddle_build_swaddleName"-*."$packageArchitecture".rpm
+	set -- "$_swaddle_repository_yum_repositoryPath"/"$_swaddle_build_package_translatedArchitecture"/"$_swaddle_build_swaddleName"-*."$_swaddle_build_package_translatedArchitecture".rpm
 	set -f
 	local rpmFilePath="$1"
 	swaddle_touch_setMtimeAndAtime "$rpmFilePath"
@@ -178,7 +176,7 @@ swaddle_package_rpm_rpmbuild()
 	# RPM files can be compressed A LOT more; at least 10Kb is possible
 	swaddle_webserverFiles_createFrom "$rpmFilePath" yes
 	
-	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_repositoryPath"/"$packageArchitecture"
+	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_repositoryPath"/"$_swaddle_build_package_translatedArchitecture"
 	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_repositoryPath"
 }
 
