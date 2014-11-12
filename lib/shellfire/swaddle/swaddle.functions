@@ -86,3 +86,35 @@ swaddle_build()
 	
 	swaddle_gpg_publishSigningKey
 }
+
+core_functions_register _swaddle_functions swaddle_publish
+swaddle_publish()
+{
+	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	
+	# https://help.github.com/articles/creating-project-pages-manually/
+	pushd "$swaddle_outputPath"/..
+		
+		# Must be empty
+		git clone http://github.com/"$user"/"$repositoryName"/git "$(core_compatibility_basename "$swaddle_outputPath")"
+		
+	popd
+	
+	pushd "$swaddle_outputPath"
+	
+		git checkout --orphan gh-pages
+		git rm -rf .
+	
+	popd
+	
+	# Do stuff
+	
+	pushd "$swaddle_outputPath"
+	
+		git add -A .
+		git commit -a -m "Updated repository $XXXXXXXXXXXX date/version"
+		git push
+		
+	popd
+	
+}
