@@ -73,7 +73,7 @@ swaddle_sourceConfiguration()
 	configure_source "$swaddle_swaddlingPath" swaddling
 }
 
-core_dependency_requires '*' grep
+core_dependency_requires '*' grep rsync
 core_usesIn swaddle git
 core_functions_register _swaddle_functions swaddle_publishToGithubPagesPrepare
 swaddle_publishToGithubPagesPrepare()
@@ -90,18 +90,7 @@ swaddle_publishToGithubPagesPrepare()
 	fi
 	
 	if [ ! -d "$swaddle_outputPath"/.git ]; then
-		if ! git clone --quiet "$_swaddle_git_swaddlingPathGitRoot" -- "$swaddle_outputPath"; then
-			
-			local message="Can't publish to GitHub pages (couldn't clone from '$_swaddle_git_swaddlingPathGitRoot' to --output-path '$swaddle_outputPath'"
-			if core_variable_isFalse "$swaddle_cleanOutput"; then
-				message="$message, perhaps because the output folder isn't clean - you could try again with '--clean-output')"
-			else
-				message=", not sure why)"
-			fi
-			
-			core_message WARN "$message"
-			return 0
-		fi
+		rsync -a -q "$_swaddle_git_swaddlingPathGitRoot"/.git/ "$swaddle_outputPath"/.git/
 	fi
 
 	pushd "$swaddle_outputPath"
