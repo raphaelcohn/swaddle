@@ -28,6 +28,9 @@ swaddle_createOutputFolder()
 		rm -rf "$swaddle_outputPath"/*
 		set +f
 	fi
+	
+	_swaddle_outputDownloadPath=$swaddle_outputPath/download
+	mkdir -m 0755 -p "$_swaddle_outputDownloadPath"
 }
 
 core_dependency_requires '*' mkdir
@@ -73,36 +76,61 @@ swaddle_sourceConfiguration()
 	configure_source "$swaddle_swaddlingPath" swaddling
 }
 
+core_dependency_requires '*' grep
 core_usesIn swaddle git
 core_functions_register _swaddle_functions swaddle_publishToGithubPagesPrepare
 swaddle_publishToGithubPagesPrepare()
 {
+	_swaddle_canPublishToGithubPages=0
+	
+	if core_variable_isFalse "$swaddle_publishGithub"; then
+		return 0
+	fi
+	
 	if swaddle_git_swaddlingCanUseGit; then
+		core_message WARN "Can't publish to GitHub pages (git unavailable or swaddling is not in a git repository)"
 		return 0
 	fi
 	
-	if swaddle_git_pathIsInGitRepository "$swaddle_outputPath"; then
-		_swaddle_canPublishToGithubPages=1
-	else
-		_swaddle_canPublishToGithubPages=0
-		return 0
-	fi
-	
-	# https://help.github.com/articles/creating-project-pages-manually/
-	
-	if [ -d "$swaddle_outputPath"/.git ]; then
-		git pull --quiet
-	else
-		git clone --quiet "$_swaddle_git_swaddlingPathGitRoot" -- "$swaddle_outputPath"
-	fi
-	
-	# Re-entrant
-	pushd "$swaddle_outputPath"
-		# Can succeed even if branch already created, if branch not commited
-		if git checkout --orphan gh-pages 2>/dev/null; then
-			# Fails on a subsequent run if previous run aborted (pathspec does not match)
-			git rm -rf . 1>/dev/null 2>/dev/null || true
+	if [ ! -d "$swaddle_outputPath"/.git ]; then
+		if ! git clone --quiet "$_swaddle_git_swaddlingPathGitRoot" -- "$swaddle_outputPath"; then
 			
+			local message="Can't publish to GitHub pages (couldn't clone from '$_swaddle_git_swaddlingPathGitRoot' to --output-path '$swaddle_outputPath'"
+			if core_variable_isFalse "$swaddle_cleanOutput"; then
+				message="$message, perhaps because the output folder isn't clean - you could try again with '--clean-output')"
+			else
+				message=", not sure why)"
+			fi
+			
+			core_message WARN "$message"
+			return 0
+		fi
+	fi
+
+	pushd "$swaddle_outputPath"
+		
+		# gh-pages branch might not exist because we're out-of-date
+		if ! git branch --list --no-color | grep ' gh-pages$'; then
+			
+			if ! git fetch --all --quiet; then
+				core_message WARN "Can't publish to GitHub pages (can't fetch in '$swaddle_outputPath')"
+				return 0
+			fi
+			
+		fi
+
+		if ! git branch --list --no-color | grep ' gh-pages$'; then
+		
+			if ! git checkout --orphan gh-pages; then
+				core_message WARN "Can't publish to GitHub pages (can't create 'gh-pages' orphan branch in '$swaddle_outputPath'; create it yourself using either 'git checkout --orphan gh-pages' or, preferrably, GitHub's site generator)"
+				return 0
+			fi
+			
+			core_message NOTICE "Create a CNAME file in '$swaddle_outputPath' (check https://help.github.com/articles/my-custom-domain-isn-t-working/ )"
+		
+			# Fails on a subsequent run if previous run aborted (pathspec does not match)
+			git rm --quiet --force -r -- . 1>/dev/null 2>/dev/null || true
+		
 			# Why this logic?
 			# - command above leaves empty folder rubble behind
 			# - a previous run may have aborted, leaving stuff not yet checked in
@@ -122,9 +150,24 @@ swaddle_publishToGithubPagesPrepare()
 			set +f
 			
 		else
-			git checkout gh-pages 1>/dev/null 2>/dev/null
+	
+			if ! git checkout --quiet gh-pages; then
+				core_message WARN "Can't publish to GitHub pages (can't checkout the 'gh-pages' orphan branch in '$swaddle_outputPath')"
+				return 0
+			fi
+			
+			if ! git pull --quiet; then
+				core_message WARN "Can't publish to GitHub pages (can't pull in '$swaddle_outputPath' - merge conflicts?)"
+				return 0
+			fi
+			
+			# NOTE: the branch may still be a local branch only.
+			
 		fi
+		
 	popd
+	
+	_swaddle_canPublishToGithubPages=1
 }
 
 core_functions_register _swaddle_functions swaddle_build
@@ -145,6 +188,10 @@ core_functions_register _swaddle_functions swaddle_sourceConfiguration
 core_functions_register _swaddle_functions swaddle_publishToGithubPagesFinish
 swaddle_publishToGithubPagesFinish()
 {
+	if core_variable_isFalse "$_swaddle_canPublishToGithubPages"; then
+		return 0
+	fi
+	
 	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
 	local version="$(configure_getConfigurationSetting swaddle version)"
 	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"
@@ -182,7 +229,13 @@ swaddle_publishToGithubPagesFinish()
 		
 		swaddle_publishToGithubPagesFinish_tag 0
 		
-		#git push --quiet --tags --set-upstream origin gh-pages
+		exit 90
+		
+		if ! git push --quiet --tags; then
+			if ! git push --quiet --tags --set-upstream origin gh-pages; then
+				core_message WARN "Can't push '$swaddle_outputPath' to GitHub Pages"
+			fi
+		fi
 		
 	popd
 }

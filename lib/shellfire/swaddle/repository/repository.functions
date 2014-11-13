@@ -6,8 +6,8 @@ swaddle_repository()
 	local packageKind="$2"
 	
 	swaddle_repository_configure "$@"
-	
-	local _swaddle_repository_parentPath="$swaddle_outputPath"/"$repositoryKind"
+
+	swaddle_repository_setParentPath
 	
 	swaddle_repository_${repositoryKind}
 }
@@ -28,4 +28,9 @@ swaddle_repository_configure()
 	do
 		configure_validate "$reset"
 	done
+}
+
+swaddle_repository_setParentPath()
+{
+	_swaddle_repository_parentPath="$_swaddle_outputDownloadPath"/"$repositoryKind"
 }

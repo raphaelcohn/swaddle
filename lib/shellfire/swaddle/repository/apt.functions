@@ -309,7 +309,7 @@ swaddle_repository_apt_exportSigningKey()
 
 swaddle_repository_apt_createAptSourcesList()
 {
-	local hostBaseUrl="$(configure_getConfigurationSetting swaddle hostBaseUrl)"
+	local hostBaseUrl="$(configure_getConfigurationSetting swaddle host_base_url)"
 	if core_variable_endsWith "$hostBaseUrl" '/'; then
 		local length=${#hostBaseUrl}
 		hostBaseUrl="$(core_variable_allButLastN "$hostBaseUrl" 1)"
@@ -318,7 +318,7 @@ swaddle_repository_apt_createAptSourcesList()
 	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
 	
 	local filePath="$repositoryPath"/sources.list
-	printf '%s\n' "deb $hostBaseUrl $repositoryName $(core_variable_array_string  _swaddle_repository_apt_components ' ')" >"$filePath"
+	printf '%s\n' "deb $hostBaseUrl/apt $repositoryName $(core_variable_array_string  _swaddle_repository_apt_components ' ')" >"$filePath"
 	
 	swaddle_touch_setMtimeAndAtime "$filePath"
 }

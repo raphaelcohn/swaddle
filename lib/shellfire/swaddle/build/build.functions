@@ -1,6 +1,5 @@
 core_usesIn core functions variable variable/array
-core_usesIn swaddle/build package
-core_usesIn swaddle configure
+core_usesIn swaddle configure repository build/package
 
 swaddle_build_all()
 {
@@ -70,7 +69,8 @@ swaddle_build_packagesPackageKindToRepositoryPath()
 		;;
 		
 	esac
-	_swaddle_repository_parentPath="$swaddle_outputPath"/"$repositoryKind"
+	
+	swaddle_repository_setParentPath
 }
 
 swaddle_build_packagesByArchitecture()

@@ -5,14 +5,10 @@ core_functions_register _swaddle_configure_register_functions swaddle_git_findSw
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_configuration
 swaddle_configure_register_configuration()
 {
-	# derive name from folderpath
 	local repositoryName="$(core_compatibility_basename "$swaddle_swaddlingPath")"
 	configure_register Value NotEmpty swaddle repository_name "$repositoryName"
 	
-	# Might want to use github pages going forward...
-	#http://blog.teamtreehouse.com/using-github-pages-to-host-your-website
-	##https://bintray.com/
-	configure_register Value NotEmpty swaddle hostBaseUrl
+	configure_register Value NotEmpty swaddle host_base_url
 	
 	if core_variable_isSet HOME; then
 		if core_path_isReadableAndSearchableFolderPath "$HOME/.gnupg"; then
