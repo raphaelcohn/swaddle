@@ -90,7 +90,9 @@ swaddle_publishToGithubPagesPrepare()
 	
 	# https://help.github.com/articles/creating-project-pages-manually/
 	
-	if [ ! -d "$swaddle_outputPath"/.git ]; then
+	if [ -d "$swaddle_outputPath"/.git ]; then
+		git pull --quiet
+	else
 		git clone --quiet "$_swaddle_git_swaddlesPathGitRoot" -- "$swaddle_outputPath"
 	fi
 	
@@ -180,7 +182,7 @@ swaddle_publishToGithubPagesFinish()
 		
 		swaddle_publishToGithubPagesFinish_tag 0
 		
-		#git push
+		git push --quiet --tags --set-upstream origin gh-pages
 		
 	popd
 }
