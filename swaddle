@@ -33,7 +33,7 @@ _program_commandLine_helpMessage()
 	_program_commandLine_helpMessage_usage="[OPTION]... -- [SWADDLE]..."
 	_program_commandLine_helpMessage_description="Builds packages by 'swaddling' them."
 	_program_commandLine_helpMessage_options="
-  -s, --swaddles-path PATH    Path to swaddles (package definitions).
+  -s, --swaddling-path PATH    Path to swaddling (package definitions).
                               Defaults to current working directory:-
                               $(pwd)
   -o, --output-path PATH      Path to use when creating packages.
@@ -49,7 +49,7 @@ _program_commandLine_helpMessage()
   -c, --clean-output [OFF]    Clean output on start. Defaults to OFF."
     _program_commandLine_helpMessage_optionsSpacing='     '
 	_program_commandLine_helpMessage_configurationKeys="
-  swaddle_swaddlesPath   Equivalent to --swaddles-path
+  swaddle_swaddlingPath   Equivalent to --swaddling-path
   swaddle_outputPath     Equivalent to --output-path
   swaddle_temporaryPath  Equivalent to --temporary-path
 "
@@ -62,7 +62,7 @@ _program_commandLine_optionExists()
 {
 	case "$optionName" in
 		
-		s|swaddles-path)
+		s|swaddling-path)
 			echo 'yes-argumented'
 		;;
 		
@@ -85,9 +85,9 @@ _program_commandLine_processOptionWithArgument()
 {
 	case "$optionName" in
 		
-		s|swaddles-path)
+		s|swaddling-path)
 			core_validate_folderPathReadableAndSearchable $core_commandLine_exitCode_USAGE 'option' "$optionNameIncludingHyphens" "$optionValue"
-			swaddle_swaddlesPath="$optionValue"
+			swaddle_swaddlingPath="$optionValue"
 		;;
 		
 		o|output-path)
@@ -123,22 +123,22 @@ _program_commandLine_processOptionWithoutArgument()
 
 _program_commandLine_handleNonOptions()
 {
-	core_variable_array_initialise swaddle_swaddles
+	core_variable_array_initialise swaddle_swaddling
 	
 	local swaddle
 	for swaddle in "$@"
 	do
-		core_variable_array_append swaddle_swaddles "$swaddle"
+		core_variable_array_append swaddle_swaddling "$swaddle"
 	done
 }
 
 _program_commandLine_validate()
 {
-	if core_variable_isSet swaddle_swaddlesPath; then
-		core_validate_folderPathReadableAndSearchable $core_commandLine_exitCode_CONFIG 'configuration setting' 'swaddle_swaddlesPath' "$swaddle_swaddlesPath"
+	if core_variable_isSet swaddle_swaddlingPath; then
+		core_validate_folderPathReadableAndSearchable $core_commandLine_exitCode_CONFIG 'configuration setting' 'swaddle_swaddlingPath' "$swaddle_swaddlingPath"
 	else
-		core_message INFO "Defaulting --swaddles-path to current working directory"
-		swaddle_swaddlesPath="$(pwd)"
+		core_message INFO "Defaulting --swaddling-path to current working directory"
+		swaddle_swaddlingPath="$(pwd)"
 	fi
 	
 	if core_variable_isSet swaddle_outputPath; then
@@ -159,35 +159,35 @@ _program_commandLine_validate()
 	fi
 	
 	local potentialSwaddle
-	if core_variable_array_isEmpty swaddle_swaddles; then
-		pushd "$swaddle_swaddlesPath"
+	if core_variable_array_isEmpty swaddle_swaddling; then
+		pushd "$swaddle_swaddlingPath"
 			
 			set +f
 			for potentialSwaddle in *
 			do
 				set +f
-				if [ "$potentialSwaddle" = 'swaddles.conf.d' ]; then
+				if [ "$potentialSwaddle" = 'swaddling.conf.d' ]; then
 					continue
 				fi
 				if core_path_isReadableAndSearchableFolderPath "$potentialSwaddle"; then
-					core_variable_array_append swaddle_swaddles "$potentialSwaddle"
+					core_variable_array_append swaddle_swaddling "$potentialSwaddle"
 				fi
 			done
 			set -f
 			
 		popd
-		if core_variable_array_isEmpty swaddle_swaddles; then
-			core_message WARN "There are no swaddles in '$swaddle_swaddlesPath'"
+		if core_variable_array_isEmpty swaddle_swaddling; then
+			core_message WARN "There are no swaddling in '$swaddle_swaddlingPath'"
 		fi
 	else
-		_program_commandLine_validate_swaddles()
+		_program_commandLine_validate_swaddling()
 		{
 			potentialSwaddle="$core_variable_array_element"
-			if ! core_path_isReadableAndSearchableFolderPath "$swaddle_swaddlesPath"/"$potentialSwaddle"; then
-				core_exitError $core_commandLine_exitCode_USAGE "The swaddle '$potentialSwaddle' is not a readable, searchable folder in the swaddle path '$swaddle_swaddlesPath'"
+			if ! core_path_isReadableAndSearchableFolderPath "$swaddle_swaddlingPath"/"$potentialSwaddle"; then
+				core_exitError $core_commandLine_exitCode_USAGE "The swaddle '$potentialSwaddle' is not a readable, searchable folder in the swaddle path '$swaddle_swaddlingPath'"
 			fi
 		}
-		core_variable_array_iterate swaddle_swaddles _program_commandLine_validate_swaddles
+		core_variable_array_iterate swaddle_swaddling _program_commandLine_validate_swaddling
 	fi
 }
 

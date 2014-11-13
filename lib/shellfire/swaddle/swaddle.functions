@@ -9,8 +9,8 @@ swaddle_all()
 core_functions_register _swaddle_functions swaddle_makeSwaddlesPathAbsolute
 swaddle_makeSwaddlesPathAbsolute()
 {
-	pushd "$swaddle_swaddlesPath"
-		swaddle_swaddlesPath="$(pwd)"
+	pushd "$swaddle_swaddlingPath"
+		swaddle_swaddlingPath="$(pwd)"
 	popd
 }
 
@@ -50,8 +50,8 @@ core_dependency_requires '*' mkdir
 core_functions_register _swaddle_functions swaddle_createPackagesFolder
 swaddle_createPackagesFolder()
 {
-	_swaddle_temporaryFolderPath="$swaddle_temporaryPath"/swaddles
-	rm -rf "$_swaddle_temporaryFolderPath"|| core_exitError $core_commandLine_exitCode_CANTCREAT "Can not recreate temporary swaddles path '$_swaddle_temporaryFolderPath'."
+	_swaddle_temporaryFolderPath="$swaddle_temporaryPath"/swaddling
+	rm -rf "$_swaddle_temporaryFolderPath"|| core_exitError $core_commandLine_exitCode_CANTCREAT "Can not recreate temporary swaddling path '$_swaddle_temporaryFolderPath'."
 	mkdir -m 0700 -p "$_swaddle_temporaryFolderPath"
 }
 
@@ -70,14 +70,14 @@ swaddle_resetConfiguration()
 core_functions_register _swaddle_functions swaddle_sourceConfiguration
 swaddle_sourceConfiguration()
 {
-	configure_source "$swaddle_swaddlesPath" swaddles
+	configure_source "$swaddle_swaddlingPath" swaddling
 }
 
 core_usesIn swaddle git
 core_functions_register _swaddle_functions swaddle_publishToGithubPagesPrepare
 swaddle_publishToGithubPagesPrepare()
 {
-	if swaddle_git_swaddlesCanUseGit; then
+	if swaddle_git_swaddlingCanUseGit; then
 		return 0
 	fi
 	
@@ -93,7 +93,7 @@ swaddle_publishToGithubPagesPrepare()
 	if [ -d "$swaddle_outputPath"/.git ]; then
 		git pull --quiet
 	else
-		git clone --quiet "$_swaddle_git_swaddlesPathGitRoot" -- "$swaddle_outputPath"
+		git clone --quiet "$_swaddle_git_swaddlingPathGitRoot" -- "$swaddle_outputPath"
 	fi
 	
 	# Re-entrant
@@ -130,7 +130,7 @@ swaddle_publishToGithubPagesPrepare()
 core_functions_register _swaddle_functions swaddle_build
 swaddle_build()
 {
-	core_variable_array_iterate swaddle_swaddles swaddle_build_all
+	core_variable_array_iterate swaddle_swaddling swaddle_build_all
 	swaddle_repository apt deb
 	swaddle_repository yum rpm
 	

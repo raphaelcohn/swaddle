@@ -20,7 +20,7 @@ swaddle_repository_configure()
 		configure_reset "$reset"
 	done
 	
-	configure_source "$swaddle_swaddlesPath" swaddles
+	configure_source "$swaddle_swaddlingPath" swaddling
 
 	# swaddle_deb used for section, priority, supports if missing when generating packages
 	local reset

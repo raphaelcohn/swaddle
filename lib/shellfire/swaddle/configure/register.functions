@@ -6,7 +6,7 @@ core_functions_register _swaddle_configure_register_functions swaddle_configure_
 swaddle_configure_register_configuration()
 {
 	# derive name from folderpath
-	local repositoryName="$(core_compatibility_basename "$swaddle_swaddlesPath")"
+	local repositoryName="$(core_compatibility_basename "$swaddle_swaddlingPath")"
 	configure_register Value NotEmpty swaddle repository_name "$repositoryName"
 	
 	# Might want to use github pages going forward...
@@ -43,14 +43,14 @@ core_dependency_requires '*' git date awk
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverVersionAndMtime
 swaddle_configure_register_attemptToDiscoverVersionAndMtime()
 {
-	if swaddle_git_swaddlesCanUseGit; then
+	if swaddle_git_swaddlingCanUseGit; then
 		configure_register Value NotEmpty swaddle timestamp 0
 		configure_register Value NotEmpty swaddle version '0'
 		configure_register Value NotEmpty swaddle iteration '1'
 		return 0
 	fi
 	
-	pushd "$swaddle_swaddlesPath"
+	pushd "$swaddle_swaddlingPath"
 		
 		local iso8601Date="$(git log -n 1 --format='%ci')"
 		
@@ -75,12 +75,12 @@ core_dependency_requires '*' head
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverRpmLicence
 swaddle_configure_register_attemptToDiscoverRpmLicence()
 {
-	if swaddle_git_swaddlesCanUseGit; then
+	if swaddle_git_swaddlingCanUseGit; then
 		configure_register Value RpmLicence swaddle_rpm licence
 		return 0
 	fi
 	
-	local currentPath="$swaddle_swaddlesPath"
+	local currentPath="$swaddle_swaddlingPath"
 	local licenceFilePath
 	while true
 	do
@@ -126,13 +126,13 @@ swaddle_configure_register_attemptToDiscoverUrl()
 {
 	configure_register Value Any swaddle bugs_url ''
 	
-	if swaddle_git_swaddlesCanUseGit; then
+	if swaddle_git_swaddlingCanUseGit; then
 		configure_register Value NotEmpty swaddle url
 		return 0
 	fi
 	
 	local fetchUrl
-	pushd "$swaddle_swaddlesPath"
+	pushd "$swaddle_swaddlingPath"
 	
 		fetchUrl="$(git remote show -n origin | awk '$1 ~ /Fetch/ {print $3}')"
 		if [ "$fetchUrl" = 'origin' ]; then
@@ -148,7 +148,7 @@ core_dependency_requires '*' date
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverRpmChangelog
 swaddle_configure_register_attemptToDiscoverRpmChangelog()
 {
-	if swaddle_git_swaddlesCanUseGit; then
+	if swaddle_git_swaddlingCanUseGit; then
 		return 0
 	fi
 	
@@ -158,7 +158,7 @@ swaddle_configure_register_attemptToDiscoverRpmChangelog()
 	local commitHash
 	local subject
 	local changelogDate
-	pushd "$swaddle_swaddlesPath"
+	pushd "$swaddle_swaddlingPath"
 		
 		_swaddle_configure_register_attemptToDiscoverRpmChangelog_internal()
 		{

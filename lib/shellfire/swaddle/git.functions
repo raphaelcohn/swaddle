@@ -11,10 +11,10 @@ swaddle_git_pathIsInGitRepository()
 
 swaddle_git_findSwaddlesPathGitRoot()
 {
-	if swaddle_git_pathIsInGitRepository "$swaddle_swaddlesPath"; then
-		_swaddle_git_swaddlesCanUseGit=1
+	if swaddle_git_pathIsInGitRepository "$swaddle_swaddlingPath"; then
+		_swaddle_git_swaddlingCanUseGit=1
 	else
-		_swaddle_git_swaddlesCanUseGit=0
+		_swaddle_git_swaddlingCanUseGit=0
 	fi
 	
 	local currentFolderPath
@@ -22,10 +22,10 @@ swaddle_git_findSwaddlesPathGitRoot()
 	do
 		currentFolderPath="$(core_compatibility_dirname "$currentFolderPath")"
 	done
-	_swaddle_git_swaddlesPathGitRoot="$currentFolderPath"
+	_swaddle_git_swaddlingPathGitRoot="$currentFolderPath"
 }
 
-swaddle_git_swaddlesCanUseGit()
+swaddle_git_swaddlingCanUseGit()
 {
-	core_variable_isFalse "$_swaddle_git_swaddlesCanUseGit"
+	core_variable_isFalse "$_swaddle_git_swaddlingCanUseGit"
 }
