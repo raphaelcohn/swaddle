@@ -28,9 +28,6 @@ swaddle_createOutputFolder()
 		rm -rf "$swaddle_outputPath"/*
 		set +f
 	fi
-	
-	_swaddle_outputDownloadPath=$swaddle_outputPath/download
-	mkdir -m 0755 -p "$_swaddle_outputDownloadPath"
 }
 
 core_dependency_requires '*' mkdir
@@ -108,20 +105,15 @@ swaddle_publishToGithubPagesPrepare()
 	fi
 
 	pushd "$swaddle_outputPath"
-		
-		# gh-pages branch might not exist because we're out-of-date
-		if ! git branch --list --no-color | grep ' gh-pages$'; then
-			
-			if ! git fetch --all --quiet; then
-				core_message WARN "Can't publish to GitHub pages (can't fetch in '$swaddle_outputPath')"
-				return 0
-			fi
-			
+	
+		if ! git fetch --all --quiet; then
+			core_message WARN "Can't publish to GitHub pages (can't fetch in '$swaddle_outputPath')"
+			return 0
 		fi
-
-		if ! git branch --list --no-color | grep ' gh-pages$'; then
 		
-			if ! git checkout --orphan gh-pages; then
+		if ! git branch --list --no-color | grep -q ' gh-pages$'; then
+		
+			if ! git checkout --quiet --orphan gh-pages; then
 				core_message WARN "Can't publish to GitHub pages (can't create 'gh-pages' orphan branch in '$swaddle_outputPath'; create it yourself using either 'git checkout --orphan gh-pages' or, preferrably, GitHub's site generator)"
 				return 0
 			fi
@@ -156,18 +148,20 @@ swaddle_publishToGithubPagesPrepare()
 				return 0
 			fi
 			
-			if ! git pull --quiet; then
-				core_message WARN "Can't publish to GitHub pages (can't pull in '$swaddle_outputPath' - merge conflicts?)"
-				return 0
-			fi
-			
-			# NOTE: the branch may still be a local branch only.
-			
+			# Failures: It may be that  git branch --set-upstream-to=origin/gh-pages gh-pages  or  git push --set-upstream origin gh-pages  hasn't happened yet for the gh-pages branch, ie this is still a local branch
+			git pull --quiet --all 2>/dev/null || true
 		fi
 		
 	popd
 	
 	_swaddle_canPublishToGithubPages=1
+}
+
+core_functions_register _swaddle_functions swaddle_createDownloadFolder
+swaddle_createDownloadFolder()
+{
+	_swaddle_outputDownloadPath=$swaddle_outputPath/download
+	mkdir -m 0755 -p "$_swaddle_outputDownloadPath"
 }
 
 core_functions_register _swaddle_functions swaddle_build
@@ -177,7 +171,7 @@ swaddle_build()
 	swaddle_repository apt deb
 	swaddle_repository yum rpm
 	
-	swaddle_webserverFiles_create "$swaddle_outputPath"
+	swaddle_webserverFiles_create "$_swaddle_outputDownloadPath"
 	
 	swaddle_gpg_publishSigningKey
 }
@@ -197,7 +191,7 @@ swaddle_publishToGithubPagesFinish()
 	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"
 	
 	local tagMessage="Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'"
-	local tagName="pages_${repositoryName}_${version}"
+	local tagName="gh-pages_${repositoryName}_${version}"
 	
 	swaddle_publishToGithubPagesFinish_tag()
 	{
@@ -231,6 +225,7 @@ swaddle_publishToGithubPagesFinish()
 		
 		exit 90
 		
+		# Pushes to source of clone - which is local folder. yucky.
 		if ! git push --quiet --tags; then
 			if ! git push --quiet --tags --set-upstream origin gh-pages; then
 				core_message WARN "Can't push '$swaddle_outputPath' to GitHub Pages"
