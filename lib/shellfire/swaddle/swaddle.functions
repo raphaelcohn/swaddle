@@ -212,11 +212,9 @@ swaddle_publishToGithubPagesFinish()
 		
 		swaddle_publishToGithubPagesFinish_tag 0
 		
-		exit 90
-		
 		# Pushes to source of clone - which is local folder. yucky.
-		if ! git push --quiet --tags; then
-			if ! git push --quiet --tags --set-upstream origin gh-pages; then
+		if ! git push --quiet --all; then
+			if ! git push --quiet --all --set-upstream origin gh-pages; then
 				core_message WARN "Can't push '$swaddle_outputPath' to GitHub Pages"
 			fi
 		fi
