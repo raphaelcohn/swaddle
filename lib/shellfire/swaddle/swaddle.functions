@@ -182,7 +182,7 @@ swaddle_publishToGithubPagesFinish()
 		
 		swaddle_publishToGithubPagesFinish_tag 0
 		
-		git push --quiet --tags --set-upstream origin gh-pages
+		#git push --quiet --tags --set-upstream origin gh-pages
 		
 	popd
 }
