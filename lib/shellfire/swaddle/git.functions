@@ -1,0 +1,31 @@
+swaddle_git_pathIsInGitRepository()
+{
+	local path="$1"
+
+	if core_compatibility_whichNoOutput git; then
+		git log -n 0 "$path" 2>/dev/null
+	else
+		return 0
+	fi
+}
+
+swaddle_git_findSwaddlesPathGitRoot()
+{
+	if swaddle_git_pathIsInGitRepository "$swaddle_swaddlesPath"; then
+		_swaddle_git_swaddlesCanUseGit=1
+	else
+		_swaddle_git_swaddlesCanUseGit=0
+	fi
+	
+	local currentFolderPath
+	while [ ! -d "$currentFolderPath"/.git ]
+	do
+		currentFolderPath="$(core_compatibility_dirname "$currentFolderPath")"
+	done
+	_swaddle_git_swaddlesPathGitRoot="$currentFolderPath"
+}
+
+swaddle_git_swaddlesCanUseGit()
+{
+	core_variable_isFalse "$_swaddle_git_swaddlesCanUseGit"
+}

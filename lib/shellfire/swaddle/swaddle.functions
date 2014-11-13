@@ -23,9 +23,24 @@ swaddle_createOutputFolder()
 		swaddle_outputPath="$(pwd)"
 	popd
 	
+	# Clean does NOT remove .git
 	if core_variable_isTrue "$swaddle_cleanOutput"; then
+		local file
 		set +f
-			rm -rf "$swaddle_outputPath"/*
+		for file in "$swaddle_outputPath"/*
+		do
+			set -f
+			
+			if [ ! -e "$file" ]; then
+				continue
+			fi
+			
+			if [ "$file" = '.git' ]; then
+				continue
+			fi
+			
+			rm -rf "$file"
+		done
 		set -f
 	fi
 }
@@ -73,29 +88,56 @@ swaddle_sourceConfiguration()
 	configure_source "$swaddle_swaddlesPath" swaddles
 }
 
+core_usesIn swaddle git
 core_functions_register _swaddle_functions swaddle_publishToGithubPagesPrepare
 swaddle_publishToGithubPagesPrepare()
 {
-	# https://help.github.com/articles/creating-project-pages-manually/
-	
-	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
+	if swaddle_git_swaddlesCanUseGit; then
 		return 0
 	fi
 	
-	if core_variable_isTrue "$swaddle_cleanOutput"; then
-		git clone --quiet "$(configure_getConfigurationSetting swaddle url)" "$swaddle_outputPath"
+	if swaddle_git_pathIsInGitRepository "$swaddle_outputPath"; then
+		_swaddle_canPublishToGithubPages=1
+	else
+		_swaddle_canPublishToGithubPages=0
+		return 0
+	fi
+	
+	# https://help.github.com/articles/creating-project-pages-manually/
+	
+	if [ ! -d "$swaddle_outputPath"/.git ]; then
+		git clone --quiet "$_swaddle_git_swaddlesPathGitRoot" -- "$swaddle_outputPath"
 	fi
 	
 	# Re-entrant
 	pushd "$swaddle_outputPath"
-		git checkout --orphan gh-pages
+		# Can succeed even if branch already created, if branch not commited
+		if git checkout --orphan gh-pages 2>/dev/null; then
+			# Fails on a subsequent run if previous run aborted (pathspec does not match)
+			git rm -rf . 1>/dev/null 2>/dev/null || true
+			
+			# Why this logic?
+			# - command above leaves empty folder rubble behind
+			# - a previous run may have aborted, leaving stuff not yet checked in
+			set +f
+			local folder
+			for folder in *
+			do
+				set -f
+				if [ ! -e "$folder" ]; then
+					continue
+				fi
+				if [ "$folder" = '.git' ]; then
+					continue
+				fi
+				rm -rf "$folder"
+			done
+			set +f
+			
+		else
+			git checkout gh-pages
+		fi
 	popd
-	
-	if core_variable_isTrue "$swaddle_cleanOutput"; then
-		pushd "$swaddle_outputPath"
-			git rm -rf . 2>/dev/null || true
-		popd
-	fi
 }
 
 core_functions_register _swaddle_functions swaddle_build
@@ -116,25 +158,42 @@ core_functions_register _swaddle_functions swaddle_sourceConfiguration
 core_functions_register _swaddle_functions swaddle_publishToGithubPagesFinish
 swaddle_publishToGithubPagesFinish()
 {
-	local repositoryName="$(configure_getConfigurationSetting swaddle repositoryName)"
+	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
 	local version="$(configure_getConfigurationSetting swaddle version)"
 	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"
 	
 	local tagMessage="Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'"
-	local tagName="pages_$repositoryName_$version"
+	local tagName="pages_${repositoryName}_${version}"
+	
+	swaddle_publishToGithubPagesFinish_tag()
+	{
+		local iterationCount=$1
+		if [ $iterationCount -ne 0 ]; then
+			local thisAttemptTagMessage="$tagMessage (revision $iterationCount)"
+			local thisAttemptTagName="$tagName_$iterationCount"
+		else
+			local thisAttemptTagMessage="$tagMessage"
+			local thisAttemptTagName="$tagName"
+		fi
+		
+		if core_variable_isTrue "$(swaddle_configure_sign)"; then
+			git tag --sign --local-user="$(swaddle_configure_signer)" --message="$thisAttemptTagMessage" "$thisAttemptTagName" 1>/dev/null || swaddle_publishToGithubPagesFinish_tag $((iterationCount+1))
+		else
+			git tag --annotate --message="$thisAttemptTagMessage" "$thisAttemptTagName" 1>/dev/null || swaddle_publishToGithubPagesFinish_tag $((iterationCount+1))
+		fi
+	}
 	
 	pushd "$swaddle_outputPath"
 	
-		git add -A .
-		git commit -a -m "Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'"
+		git add --all . 1>/dev/null
 		
-		if core_variable_isTrue "$(swaddle_configure_sign)"; then
-			git tag --sign --local-user="$(swaddle_configure_signer)" -m "$tagMessage" "$tagName"
-		else
-			git tag a -m "$tagMessage" "$tagName"
-		fi
+		# --signoff --author= --date=
 		
-		git push
+		git commit --all -m "Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'" 1>/dev/null
+		
+		swaddle_publishToGithubPagesFinish_tag 0
+		
+		#git push
 		
 	popd
 }

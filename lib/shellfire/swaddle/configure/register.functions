@@ -1,17 +1,6 @@
-core_functions_register _swaddle_configure_register_functions swaddle_configure_register_deduceIfSwaddlesAreInGit
-swaddle_configure_register_deduceIfSwaddlesAreInGit()
-{
-	if ! core_compatibility_whichNoOutput git; then
-		_swaddle_swaddles_canUseGit=0
-		return 0
-	fi
-		
-	if git log -n 0 "$swaddle_swaddlesPath" 2>/dev/null; then
-		_swaddle_swaddles_canUseGit=1
-	else
-		_swaddle_swaddles_canUseGit=0
-	fi
-}
+core_usesIn swaddle git
+
+core_functions_register _swaddle_configure_register_functions swaddle_git_findSwaddlesPathGitRoot
 
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_configuration
 swaddle_configure_register_configuration()
@@ -54,7 +43,7 @@ core_dependency_requires '*' git date awk
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverVersionAndMtime
 swaddle_configure_register_attemptToDiscoverVersionAndMtime()
 {
-	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
+	if swaddle_git_swaddlesCanUseGit; then
 		configure_register Value NotEmpty swaddle timestamp 0
 		configure_register Value NotEmpty swaddle version '0'
 		configure_register Value NotEmpty swaddle iteration '1'
@@ -86,7 +75,7 @@ core_dependency_requires '*' head
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverRpmLicence
 swaddle_configure_register_attemptToDiscoverRpmLicence()
 {
-	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
+	if swaddle_git_swaddlesCanUseGit; then
 		configure_register Value RpmLicence swaddle_rpm licence
 		return 0
 	fi
@@ -137,7 +126,7 @@ swaddle_configure_register_attemptToDiscoverUrl()
 {
 	configure_register Value Any swaddle bugs_url ''
 	
-	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
+	if swaddle_git_swaddlesCanUseGit; then
 		configure_register Value NotEmpty swaddle url
 		return 0
 	fi
@@ -159,7 +148,7 @@ core_dependency_requires '*' date
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverRpmChangelog
 swaddle_configure_register_attemptToDiscoverRpmChangelog()
 {
-	if core_variable_isFalse "$_swaddle_swaddles_canUseGit"; then
+	if swaddle_git_swaddlesCanUseGit; then
 		return 0
 	fi
 	
@@ -171,7 +160,7 @@ swaddle_configure_register_attemptToDiscoverRpmChangelog()
 	local changelogDate
 	pushd "$swaddle_swaddlesPath"
 		
-		_swaddle_swaddles_attemptToDiscoverRpmChangelog_internal()
+		_swaddle_configure_register_attemptToDiscoverRpmChangelog_internal()
 		{
 			git log --format='%at%x09%aN%x09%aE%x09%H%x09%s' | while IFS="$(printf '\t')" read -r epochSeconds author authorEmail commitHash subject
 			do
@@ -182,7 +171,7 @@ swaddle_configure_register_attemptToDiscoverRpmChangelog()
 			done
 		}
 		
-		configure_register Value NotEmpty swaddle_rpm changelog "$(_swaddle_swaddles_attemptToDiscoverRpmChangelog_internal)"
+		configure_register Value NotEmpty swaddle_rpm changelog "$(_swaddle_configure_register_attemptToDiscoverRpmChangelog_internal)"
 		
 	popd
 }
