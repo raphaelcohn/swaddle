@@ -23,25 +23,10 @@ swaddle_createOutputFolder()
 		swaddle_outputPath="$(pwd)"
 	popd
 	
-	# Clean does NOT remove .git
 	if core_variable_isTrue "$swaddle_cleanOutput"; then
-		local file
 		set +f
-		for file in "$swaddle_outputPath"/*
-		do
-			set -f
-			
-			if [ ! -e "$file" ]; then
-				continue
-			fi
-			
-			if [ "$file" = '.git' ]; then
-				continue
-			fi
-			
-			rm -rf "$file"
-		done
-		set -f
+		rm -rf "$swaddle_outputPath"/*
+		set +f
 	fi
 }
 
@@ -135,7 +120,7 @@ swaddle_publishToGithubPagesPrepare()
 			set +f
 			
 		else
-			git checkout gh-pages
+			git checkout gh-pages 1>/dev/null 2>/dev/null
 		fi
 	popd
 }
@@ -170,26 +155,28 @@ swaddle_publishToGithubPagesFinish()
 		local iterationCount=$1
 		if [ $iterationCount -ne 0 ]; then
 			local thisAttemptTagMessage="$tagMessage (revision $iterationCount)"
-			local thisAttemptTagName="$tagName_$iterationCount"
+			local thisAttemptTagName="${tagName}_${iterationCount}"
 		else
 			local thisAttemptTagMessage="$tagMessage"
 			local thisAttemptTagName="$tagName"
 		fi
 		
 		if core_variable_isTrue "$(swaddle_configure_sign)"; then
-			git tag --sign --local-user="$(swaddle_configure_signer)" --message="$thisAttemptTagMessage" "$thisAttemptTagName" 1>/dev/null || swaddle_publishToGithubPagesFinish_tag $((iterationCount+1))
+			git tag --sign --local-user="$(swaddle_configure_signer)" --message="$thisAttemptTagMessage" "$thisAttemptTagName" 2>/dev/null || swaddle_publishToGithubPagesFinish_tag $((iterationCount+1))
 		else
-			git tag --annotate --message="$thisAttemptTagMessage" "$thisAttemptTagName" 1>/dev/null || swaddle_publishToGithubPagesFinish_tag $((iterationCount+1))
+			git tag --annotate --message="$thisAttemptTagMessage" "$thisAttemptTagName" 2>/dev/null || swaddle_publishToGithubPagesFinish_tag $((iterationCount+1))
 		fi
 	}
 	
 	pushd "$swaddle_outputPath"
-	
+		
 		git add --all . 1>/dev/null
 		
-		# --signoff --author= --date=
-		
-		git commit --all -m "Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'" 1>/dev/null
+		if core_variable_isTrue "$(swaddle_configure_sign)"; then
+			git commit --quiet --all --author="$(swaddle_configure_maintainer)" --signoff --date="$timestampInEpochSeconds" -m "Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'" --gpg-sign="$(swaddle_configure_signer)"
+		else
+			git commit --quiet --all --author="$(swaddle_configure_maintainer)" --signoff --date="$timestampInEpochSeconds" -m "Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'"
+		fi
 		
 		swaddle_publishToGithubPagesFinish_tag 0
 		

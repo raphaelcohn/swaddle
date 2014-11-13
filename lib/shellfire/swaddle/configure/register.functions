@@ -57,7 +57,7 @@ swaddle_configure_register_attemptToDiscoverVersionAndMtime()
 		local timestamp="$(date -d "$iso8601Date" +'%s')"
 		configure_register Value NotEmpty swaddle timestamp "$timestamp"
 		
-		local version="$(date -d "$iso8601Date" '+%Y.%m.%d.%H.%M')"
+		local version="$(date -d "$iso8601Date" '+%Y.%m%d.%H%M')"
 		configure_register Value NotEmpty swaddle version "$version"
 		
 		local pendingChanges="$(git diff --minimal --no-color --name-status)"
