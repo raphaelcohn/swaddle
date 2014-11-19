@@ -7,3 +7,6 @@
 [submodule "lib/shellfire/unicode"]
 	path = lib/shellfire/unicode
 	url = https://github.com/shellfire-dev/unicode
+[submodule "lib/shellfire/urlencode"]
+	path = lib/shellfire/urlencode
+	url = https://github.com/shellfire-dev/urlencode
