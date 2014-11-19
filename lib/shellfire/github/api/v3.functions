@@ -6,11 +6,6 @@
 # URI templates are a nice idea, but the vagueness of the rules (eg variable names can also be percent encoded, if not, need percent encoding), the "don't output the prefix if all expansions are null" (which requires one to cache the entire output, just in case), the '+' operator (yuck, special encoding rules for literals which all of a sudden aren't quite literal, with a special case for % again requiring look-ahead), yuck and list / map explosion (depending on what the binder decides, not the template) are another mess - by the same crowd. It would have been VERY simple to just say "the rest of the URL is treated as already encoded. Variables should be encoded." HTTP with REST-like APIs won out because of simplicity and sanity. Frankly, the worst examples are the HTTP Accept-* and Content-* headers, which are badly implemented everywhere, not least in the one web server the web big wigs personally hack on - Apache. Frankly, %-encoding itself is another mess (at least 4 contradictory RFCs, special rules for form bodies, and no one even questions why it is necessary in 2014).
 # It seems REST has now gained the "enterprise tooling" and "self describing schema stuff" we loathed about WS-DeathStar.
 
-# JSON awk: https://github.com/step-/JSON.awk
-# JSON.awk beats JSON.sh on time, but doesn't work with Mac OS X awk or mawk
-# Still have json-bash to try - currently needs bash
-# Also http://kmkeen.com/jshon/ , is a call-out, but seems effective
-
 core_usesIn curl
 core_usesIn urlencode
 
