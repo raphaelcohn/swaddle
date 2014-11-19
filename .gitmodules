@@ -22,3 +22,6 @@
 [submodule "lib/shellfire/curl"]
 	path = lib/shellfire/curl
 	url = https://github.com/shellfire-dev/curl
+[submodule "lib/shellfire/jsonreader"]
+	path = lib/shellfire/jsonreader
+	url = https://github.com/shellfire-dev/jsonreader
