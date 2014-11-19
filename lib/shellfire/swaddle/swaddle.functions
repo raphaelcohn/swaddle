@@ -99,7 +99,7 @@ swaddle_githubReleases()
 	
 	github_api_v3_initialise "$githubApiTokenFile"
 	
-	github_api_v3_releases_create "$githubOwner" "$githubRepository" "$actualTagName" 'master' "$(configure_getConfigurationSetting swaddle version)" "Release version \`$(configure_getConfigurationSetting swaddle version)\` of repository \`$(configure_getConfigurationSetting swaddle repositoryName)\`." false false
+	github_api_v3_releases_create "$githubOwner" "$githubRepository" "$actualTagName" 'master' "$(configure_getConfigurationSetting swaddle version)" "Release version \`$(configure_getConfigurationSetting swaddle version)\` of repository \`$(configure_getConfigurationSetting swaddle repository_name)\`." false false
 	
 	_swaddle_githubReleases_event()
 	{
