@@ -29,7 +29,7 @@ swaddle_git_findSwaddlesPathGitRoot()
 	_swaddle_git_branch="$(git branch --list --no-color | awk '$1 ~ /\*/ {print $2}')"
 }
 
-swaddle_git_swaddlingCanUseGit()
+swaddle_git_swaddlingCanNotUseGit()
 {
 	core_variable_isFalse "$_swaddle_git_swaddlingCanUseGit"
 }
