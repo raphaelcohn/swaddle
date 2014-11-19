@@ -28,3 +28,6 @@
 [submodule "lib/shellfire/jsonwriter"]
 	path = lib/shellfire/jsonwriter
 	url = https://github.com/shellfire-dev/jsonwriter
+[submodule "lib/shellfire/github"]
+	path = lib/shellfire/github
+	url = https://github.com/shellfire-dev/github
