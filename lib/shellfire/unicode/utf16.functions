@@ -1,0 +1,24 @@
+core_usesIn unicode
+
+unicode_utf16_encodeCodePoint()
+{
+	local endianess="$1"
+	local codePoint=$(($2+0))
+	
+	if [ $codePoint -lt 65536 ]; then
+		_unicode_writeUnsignedShort${endianess} $codePoint
+	elif [ $codePoint -le 1114111 ]; then
+	    _unicode_writeUnsignedShort${endianess} $((((code_point >> 10) + 55232))
+	    _unicode_writeUnsignedShort${endianess} $((((code_point & 1023) + 56320))
+	else
+		core_exitError $core_commandLine_exitCode_SOFTWARE "Invalid code point"
+	fi
+}
+
+unicode_utf16_surrogatePairToCodePoint()
+{
+	local high=$(($1+0))
+	local low=$(($2+0))
+	
+	printf '%s' $(((high - 55296) * 1024 + (low - 56320) + 65536))
+}

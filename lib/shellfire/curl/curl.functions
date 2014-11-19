@@ -1,0 +1,352 @@
+core_usesIn curl
+core_usesIn urlencode
+
+# Initialised Parameters:-
+#  * curl_userAgent
+#  * curl_maxiumRedirects
+#  * curl_retries
+# Out-of-band parameters:-
+#  * curl_
+# By verb parameters:-
+#  HEAD, GET
+#  * curl_GET_range (optional)
+#  POST
+#  * curl_POST (mandatory)
+
+core_dependency_requires '*' curl cat
+curl_retrieve()
+{
+	# Use 'user:password' for Basic Auth.  Specify just 'user' for password prompting with Basic Auth. Use 'token:x-oauth-basic' for OAuth authentication. Use ':' for NTLM (--ntlm) or Kerberos5 (--negotiate).
+	# Use '' for no authentication, or to use authentication via .netrc
+	local authentication="$1"
+	
+	local credentials="$2"
+	
+	local verb="$3"
+	
+	local url="$4"
+	
+	# outputFilePath may be '-' for stdout and '/dev/null' if unwanted.
+	local outputFilePath="$5"
+	
+	shift 5
+			
+	if core_variable_isUnset curl_secureUrlFilePath; then
+		_curl_initialise 'shellfire'
+	fi
+	
+	local options
+	local options_initialised
+	core_variable_array_initialise options
+	
+	# Prevent default configuration from being loaded
+	core_variable_array_append -q
+	
+	core_variable_array_append options --user-agent "$curl_userAgent"
+	
+	if core_variable_isTrue "$curl_supportsRetries"; then
+		core_variable_array_append options --retry "$curl_retries"
+		core_variable_array_append options --retry-delay "$curl_retryDelay"
+		core_variable_array_append options --retry-max-time "$curl_retryMaximumDelay"
+	fi
+	
+	core_variable_array_append options --compressed
+	
+	if core_variable_isTrue "$curl_supportsNetrc"; then
+		
+		local _curl_changeNetrcLocation_curlrcFile=''
+		_curl_changeNetrcLocation _program_etcPath "$core_libraryName"/netrc
+		_curl_changeNetrcLocation _program_etcPath "$_program_namespace"/netrc
+		_curl_changeNetrcLocation CURL_HOME .netrc
+		_curl_changeNetrcLocation HOME .netrc
+		_curl_changeNetrcLocation HOME ."$core_libraryName".netrc
+		_curl_changeNetrcLocation HOME ."$_program_name".netrc
+		if [ -n "$_curl_changeNetrcLocation_curlrcFile" ]; then
+			core_variable_array_append options --netrc-file "$_curl_changeNetrcLocation_curlrcFile"
+		fi
+		
+	elif core_path_isReadableNonEmptyFilePath ~/.netrc; then
+		
+		core_variable_array_append options --netrc
+		
+	fi
+
+	_curl_appendConfigFileIfExtant _program_etcPath "$core_libraryName"/curlrc
+	_curl_appendConfigFileIfExtant _program_etcPath "$_program_namespace"/curlrc
+	_curl_appendConfigFileIfExtant CURL_HOME .curlrc
+	_curl_appendConfigFileIfExtant HOME .curlrc
+	_curl_appendConfigFileIfExtant HOME ."$core_libraryName".curlrc
+	_curl_appendConfigFileIfExtant HOME ."$_program_name".curlrc
+	
+	# Script-friendly output
+	core_variable_array_append options --silent --show-error
+	
+	core_variable_array_append options --location
+	
+	core_variable_array_append options --location-trusted
+	
+	core_variable_array_append options --max-redirs "$curl_maximumRedirects"
+	
+	core_variable_array_append options --tlsv1
+	
+	# Uses HTTP Date header if available to set the timestamp of any downloaded file
+	core_variable_array_append options --remote-time
+
+	core_variable_array_append options --request "$verb"
+	
+	case "$verb" in
+		
+		HEAD|GET)
+			:
+		;;
+		
+		POST)
+			core_variable_array_append options --data-binary @"$curl_uploadFile"
+		;;
+		
+		PATCH)
+			core_variable_array_append options --data-binary @"$curl_uploadFile"
+		;;
+		
+		PUT)
+			core_variable_array_append options --upload-file "$curl_uploadFile"
+		;;
+		
+		DELETE)
+			core_variable_array_append options --request DELETE
+		;;
+		
+		*)
+			core_exitError $core_commandLine_exitCode_SOFTWARE "Curl verb '$verb' is not supported."
+		;;
+		
+	esac
+	
+	# Range is valid for any HTTP verb, although it is used almost exclusively with GET
+	if core_variable_isSet curl_range; then
+		if [ -n "$curl_range" ]; then
+			core_variable_array_append options --range "$curl_range"
+		fi
+	fi
+	
+	# Continue-At is valid for any HTTP verb, although it is used mostly with PUT and less commonly with POST and PATCH
+	if core_variable_isSet curl_range; then
+		if [ -n "$curl_continueAt" ]; then
+			core_variable_array_append options --continue-at "$curl_continueAt"
+		fi
+	fi
+	
+	core_variable_array_append options --referer ';auto'
+	
+	core_variable_array_append options --output "$outputFilePath"
+	
+	core_variable_array_append options --dump-header "$curl_outputHeadersFilePath"
+	
+	if [ "$(core_init_verbosity)" -gt 1 ]; then
+		core_variable_array_append options --stderr "$curl_stderrFilePath"
+		core_variable_array_append options --write-out '%{http_code}\t%{url_effective}\t%{ssl_verify_result}\t%{http_connect}\t%{time_total}\t%{size_download}\t%{speed_download}\t%{num_redirects}\n'
+	
+		if [ "$(core_init_verbosity)" -gt 2 ]; then
+			core_variable_array_append options --trace-time --trace-ascii "$curl_traceAsciiFilePath"
+		fi
+	fi
+	
+	# We pass credentials, URLs and Headers via a temporary, user-only config file so that sensitive information (eg auth tokens in query strings) aren't exposed
+	# Of course, nothing stops one used .netrc and/or other config files to do this, too
+	{
+		curl_writeConfigValue url "$url"
+	
+		case "$authentication" in
+			
+			none)
+				if [ -n "$user" ]; then
+					core_exitError $core_commandLine_exitCode_SOFTWARE "Don't specify an user with authentication 'none'"
+				fi
+			;;
+			
+			# We do not support GSS-Level
+			basic|digest|ntlm|negotiate)
+				curl_writeConfigValue "$authentication"
+				curl_writeConfigValue user "$credentials"
+			;;
+			
+		esac
+		
+	
+		local headerName
+		local headerValue
+		while [ $# -ne 0 ]
+		do
+			headerName="$1"
+			headerValue="$2"
+			shift 2
+		
+			if [ -z "$headerValue" ]; then
+				curl_writeConfigValue header "${headerName};"
+			else
+				curl_writeConfigValue header "${headerName}: ${headerValue}"
+			fi
+		done
+	}>"$curl_secureParametersFilePath"
+	core_variable_array_append options --config "$curl_secureParametersFilePath"
+	
+	set +e
+	core_variable_array_passToFunctionAsArguments options curl
+	set -e
+	# Worse than a 404 or even a 5xx; something terrible has happened (eg broken TCP connection after retries)
+	local curl_exitCode=$?
+	
+	if [ $curl_exitCode -ne 0 ]; then
+		core_exitError $core_commandLine_exitCode_UNAVAILABLE "Could not retrieve url '$url' using curl. Curl exit code was '$curl_exitCode'"
+	fi
+	
+	if [ "$(core_init_verbosity)" -gt 1 ]; then
+		{
+			printf '%s\n' "stderr:-"
+			cat "$curl_stderrFilePath"
+			printf '\n'
+	
+			if [ "$(core_init_verbosity)" -gt 2 ]; then
+				printf '%s\n' "ascii-trace:-"
+				cat "$curl_traceAsciiFilePath"
+				printf '\n'
+			fi
+		} 1>&2
+	fi
+	
+	IFS=' ' read -r curl_httpVersion curl_httpCode curl_httpDescription <"$curl_outputHeadersFilePath"
+	tail -n +2 "$curl_outputHeadersFilePath" | tr -d '\r' >"$curl_parsedHeadersFilePath"
+}
+
+core_dependency_requires '*' tr
+curl_iterateHeaders()
+{
+	local callback="$1"
+	shift 1
+	
+	local mixedCaseHeaderName
+	local headerName
+	local headerValue
+	
+	while IFS=': ' read -r mixedCaseHeaderName headerValue
+	do
+		headerName="$(tr 'A-Z' 'a-z' "$mixedCaseHeaderName")"
+		$callback "$@"
+	done
+}
+
+core_usesIn version
+core_dependency_requires '*' curl awk
+_curl_initialise()
+{
+	curl_userAgent="$1"
+	# Default is 50. -1 makes it limitless.
+	curl_maximumRedirects=5
+	curl_retries=10
+	curl_retryDelay=0
+	curl_retryMaximumDelay=30
+	
+	local TMP_FILE
+	
+	# Used to pass sensitive URLs and Headers (eg those containing passwords) that should not be leaked to the command-line (eg those containing sensitive tokens - GitHub's API is an example of this)
+	core_temporaryFiles_newFileToRemoveOnExit
+	curl_secureParametersFilePath="$TMP_FILE"
+		
+	core_temporaryFiles_newFileToRemoveOnExit
+	curl_outputHeadersFilePath="$TMP_FILE"
+	
+	core_temporaryFiles_newFileToRemoveOnExit
+	curl_parsedHeadersFilePath="$TMP_FILE"
+	
+	if [ "$(core_init_verbosity)" -gt 1 ]; then
+		
+		core_temporaryFiles_newFileToRemoveOnExit
+		curl_stderrFilePath="$TMP_FILE"
+		
+		core_temporaryFiles_newFileToRemoveOnExit
+		curl_traceAsciiFilePath="$TMP_FILE"
+		
+	fi
+	
+	# Curl versioning determines specific features
+	# CentOS 5 and 6 are still in widespread use, and use archaic curl versions
+	
+	local curlVersion="$(curl --version)"
+	
+	if version_isGreaterThanOrEqualTo "$curlVersion" 7.21.5; then
+		curl_supportsNetrc='yes'
+	else
+		curl_supportsNetrc='no'
+	fi
+	
+	if version_isGreaterThanOrEqualTo "$curlVersion" 7.12.3; then
+		curl_supportsRetries='yes'
+	else
+		curl_supportsRetries='no'
+	fi
+}
+
+curl_writeConfigValue()
+{
+	# Values in double quotes have \escape sequences expanded; without double quotes, whitespaces aren't allowed. One can't win.
+	if [ $# -eq 2 ]; then
+		printf "%s = "%s"\n" "$1" "$2"
+	else
+		printf '%s\n' "$1"
+	fi
+}
+
+# Switch can be specified multiple times, last one wins
+_curl_changeNetrcLocation()
+{
+	local variableNameOfPath="$1"
+	local fileName="$2"
+	
+	if core_variable_isUnset "$variableNameOfPath"; then
+		# This logic handles HOME being unset
+		if [ "$variableNameOfPath" = 'HOME' ]; then
+			if [ "$fileName" ='.curlc' ]; then
+				if core_path_isReadableNonEmptyFilePath ~/.netrc; then
+					_curl_changeNetrcLocation_curlrcFile=~/.netrc
+				fi
+			fi
+		fi
+		return 0
+	fi
+	
+	local core_variable_indirectValue_result
+	core_variable_indirectValue "$variableNameOfPath"
+	
+	local curlrcFile="$core_variable_indirectValue_result"/"$fileName"
+	
+	if core_path_isReadableNonEmptyFilePath "$curlrcFile"; then
+		_curl_changeNetrcLocation_curlrcFile="$curlrcFile"
+	fi
+}
+
+_curl_appendConfigFileIfExtant()
+{
+	local variableNameOfPath="$1"
+	local fileName="$2"
+	
+	if core_variable_isUnset "$variableNameOfPath"; then
+		# This logic handles HOME being unset
+		if [ "$variableNameOfPath" = 'HOME' ]; then
+			if [ "$fileName" ='.curlc' ]; then
+				if core_path_isReadableNonEmptyFilePath ~/.curlrc; then
+					core_variable_array_append --config ~/.curlrc
+				fi
+			fi
+		fi
+		return 0
+	fi
+	
+	local core_variable_indirectValue_result
+	core_variable_indirectValue "$variableNameOfPath"
+	
+	local curlrcFile="$core_variable_indirectValue_result"/"$fileName"
+	
+	if core_path_isReadableNonEmptyFilePath "$curlrcFile"; then
+		core_variable_array_append --config "$curlrcFile"
+	fi
+}

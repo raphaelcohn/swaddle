@@ -73,6 +73,27 @@ swaddle_sourceConfiguration()
 	configure_source "$swaddle_swaddlingPath" swaddling
 }
 
+core_usesIn curl
+core_usesIn urlencode
+core_usesIn github_api v3
+core_functions_register _swaddle_functions swaddle_githubReleases
+swaddle_githubReleases()
+{
+	swaddle_githubApiTokenFilePath="$swaddle_swaddlingPath"/.github-personal-access-token
+	if [ -z "$swaddle_githubApiTokenFilePath" ]; then
+		return 0
+	fi
+	
+	github_api_v3_initialise "$swaddle_githubApiTokenFilePath"
+	
+	local owner="raphaelcohn"
+	local repo="swaddle"
+	
+	github_api_v3_releases_list "$owner" "$repo"
+	jshon -a -e url -u <"$github_api_v3_responseFilePath"
+	exit 99
+}
+
 core_dependency_requires '*' grep rsync
 core_usesIn swaddle git
 core_functions_register _swaddle_functions swaddle_publishToGithubPagesPrepare
@@ -212,7 +233,6 @@ swaddle_publishToGithubPagesFinish()
 		
 		swaddle_publishToGithubPagesFinish_tag 0
 		
-		# Pushes to source of clone - which is local folder. yucky.
 		if ! git push --quiet --all; then
 			if ! git push --quiet --all --set-upstream origin gh-pages; then
 				core_message WARN "Can't push '$swaddle_outputPath' to GitHub Pages"

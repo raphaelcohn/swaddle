@@ -1,0 +1,24 @@
+core_usesIn unicode
+
+unicode_utf8_encodeCodePoint()
+{
+	local codePoint=$(($1+0))
+	
+	if [ $codePoint -le 127 ]; then
+		_unicode_writeByte $codePoint
+	elif [ $codePoint -le 2047 ]; then
+		_unicode_writeByte $(((codePoint >> 6) + 192))
+		_unicode_writeByte $(((codePoint & 63) + 128))
+	elif [ $codePoint -le 65535 ]; then
+	    _unicode_writeByte $(((codePoint >> 12) + 224))
+	    _unicode_writeByte $((((codePoint >> 6) & 63) + 128))
+	    _unicode_writeByte $(((codePoint & 63) + 128))
+	elif [ $codePoint -le 1114111 ]; then
+	    _unicode_writeByte $(((codePoint >> 18) + 240))
+	    _unicode_writeByte $((((codePoint >> 12) & 63) + 128))
+	    _unicode_writeByte $((((codePoint >> 6) & 63) + 128))
+	    _unicode_writeByte $(((codePoint & 63) + 128))
+	else
+		core_exitError $core_commandLine_exitCode_SOFTWARE "Invalid code point"
+	fi
+}

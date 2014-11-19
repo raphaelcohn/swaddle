@@ -1,0 +1,18 @@
+_unicode_writeByte()
+{
+	printf "\\$(printf '%o' $1)"
+}
+
+_unicode_writeUnsignedShortBigEndian()
+{
+	local unsignedShort=$1
+	_unicode_writeByte $((unsignedShort >> 8))
+	_unicode_writeByte $((unsignedShort & 65280))
+}
+
+_unicode_writeUnsignedShortLittleEndian()
+{
+	local unsignedShort=$1
+	_unicode_writeByte $((unsignedShort & 65280))
+	_unicode_writeByte $((unsignedShort >> 8))
+}

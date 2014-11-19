@@ -1,0 +1,71 @@
+version_isLessThan()
+{
+	version_is eq 0 "$@"
+}
+
+version_isEqualTo()
+{
+	version_is eq 1 "$@"
+}
+
+version_isGreaterThan()
+{
+	version_is eq 2 "$@"
+}
+
+version_isLessThanOrEqualTo()
+{
+	version_is le 1 "$@"
+}
+
+version_isGreaterThanOrEqualTo()
+{
+	version_is ge 1 "$@"
+}
+
+version_is()
+{
+	local operator=$1
+	local expectedCode=$2
+	shift 2
+	
+	set +e
+	version_compare "$@"
+	local exitCode=$?
+	set -e
+	if [ $exitCode -$operator $expectedCode ]; then
+		return 0
+	fi
+	return 1
+}
+
+# 0 is less than
+# 1 is equal to
+# 2 is greater than
+version_compare()
+{
+	local leftVersion="$1"
+	local rightVersion="$2"
+	
+	if [ "$leftVersion" = "$rightVersion" ]; then
+		return 1
+	fi
+	
+	local leastVersion
+	read -r leastVersion <<-EOF
+		$(_version_compare_sort)
+	EOF
+	
+	if [ "$leastVersion" = "$leftVersion" ]; then
+		return 0
+	fi
+	return 2
+}
+
+_version_compare_sort()
+{
+	sort -n -t '.' <<-EOF
+		${leftVersion}
+		${rightVersion}
+	EOF
+}

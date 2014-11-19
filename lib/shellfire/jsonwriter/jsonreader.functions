@@ -1,0 +1,613 @@
+core_usesIn unicode utf8 utf16
+
+jsonreader_parse()
+{
+	local jsonFilePath="$1"
+	
+	local event_value_null=true
+	local event_value_true=true
+	local event_value_false=true
+	local event_value_string=true
+	local event_value_number=true
+	local event_value_array=true
+	local event_value_object=true
+	
+	if core_variable_isUnset _jsonreader_singleCharactersFilePath; then
+		_jsonreader_initialise
+	fi
+	
+	local buffer=''
+	local character=''
+	local pushBackForNumberParsing=''
+	local eofIsAllowedInParsingNumberBecauseThisIsRootValue=yes
+	
+	_jsonreader_toSingleCharacters
+	{
+		_jsonreader_skipWhitespace
+		
+		_jsonreader_parseValue
+
+		_jsonreader_skipFinalWhitespace
+		
+	} <"$_jsonreader_singleCharactersFilePath"
+}
+
+_jsonreader_initialise()
+{
+	local TMP_FILE
+	
+	# Used to pass sensitive URLs and Headers (eg those containing passwords) that should not be leaked to the command-line (eg those containing sensitive tokens - GitHub's API is an example of this)
+	core_temporaryFiles_newFileToRemoveOnExit
+	_jsonreader_singleCharactersFilePath="$TMP_FILE"
+	
+	_jsonreader_SP=' '
+	_jsonreader_HT="$(printf '\t')"
+	_jsonreader_CR="$(printf '\r')"
+	_jsonreader_LF=''
+}
+
+_jsonreader_errorEndOfFile()
+{
+	core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing did not expect EOF"
+}
+
+_jsonreader_skipWhitespace()
+{
+	while _jsonreader_next
+	do
+		case "$character" in
+		
+			"$_jsonreader_SP"|"$_jsonreader_HT"|"$_jsonreader_CR"|"$_jsonreader_LF")
+				continue
+			;;
+			
+			*)
+				return 0
+			;;
+	
+		esac
+	done
+	
+	_jsonreader_errorEndOfFile
+}
+
+_jsonreader_skipFinalWhitespace()
+{
+	while _jsonreader_next
+	do
+		case "$character" in
+
+			"$_jsonreader_SP"|"$_jsonreader_HT"|"$_jsonreader_CR"|"$_jsonreader_LF")
+				continue
+			;;
+		
+			*)
+				core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing did not non-whitespace after root value"
+			;;
+		
+		esac
+	done
+}
+
+_jsonreader_parseValue()
+{
+	case "$character" in
+		
+		'n')
+			_jsonreader_parseNull
+		;;
+		
+		't')
+			_jsonreader_parseTrue
+		;;
+		
+		'f')
+			_jsonreader_parseFalse
+		;;
+		
+		'"')
+			_jsonreader_parseString $event_value_string
+		;;
+		
+		'-'|'0'|'1'|'2'|'3'|'4'|'5'|'6'|'7'|'8'|'9')
+			_jsonreader_parseNumber
+		;;
+		
+		'[')
+			eofIsAllowedInParsingNumberBecauseThisIsRootValue=no
+			_jsonreader_parseArray
+		;;
+		
+		'{')
+			eofIsAllowedInParsingNumberBecauseThisIsRootValue=no
+			_jsonreader_parseObject
+		;;
+		
+		*)
+			core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing did not expect '$character'"
+		;;
+		
+	esac
+}
+
+_jsonreader_parseArray()
+{
+	$event_value_array start
+	
+	local index=0
+	while true
+	do
+		_jsonreader_skipWhitespace
+		
+		if [ "$character" = ']' ]; then
+			$event_value_array end $((index+1))
+			return 0
+		fi
+		
+		if [ $index -ne 0 ]; then
+			if [ "$character" != ',' ]; then
+				core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing did not expect '$character' instead of comma in array"
+			fi
+			_jsonreader_skipWhitespace
+		fi
+		
+		_jsonreader_parseValue
+		
+		index=$((index+1))
+		
+	done
+}
+
+_jsonreader_parseObject()
+{
+	$event_value_object start
+	
+	local index=0
+	local key
+	while true
+	do
+		_jsonreader_skipWhitespace
+		
+		if [ "$character" = '}' ]; then
+			$event_value_object end $((index+1))
+			return 0
+		fi
+		
+		if [ $index -ne 0 ]; then
+			if [ "$character" != ',' ]; then
+				core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing did not expect '$character' instead of comma in object"
+			fi
+			_jsonreader_skipWhitespace
+		fi
+		
+		if [ "$character" != '"' ]; then
+			core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing did not expect '$character' to start object key"
+		fi
+		
+		_jsonreader_parseString true
+		key="$buffer"
+		
+		_jsonreader_skipWhitespace
+		
+		if [ "$character" != ':' ]; then
+			core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing did not expect '$character'after object key"
+		fi
+		
+		_jsonreader_skipWhitespace
+		
+		_jsonreader_parseValue
+		
+		index=$((index+1))
+	done
+}
+
+_jsonreader_parseNull()
+{
+	buffer="$character"
+	{
+		_jsonreader_nextToBuffer
+		_jsonreader_nextToBuffer
+		_jsonreader_nextToBuffer
+	} || _jsonreader_errorEndOfFile
+	if [ "$buffer" != 'null' ]; then
+		core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing expected 'null', not '$buffer'"
+	fi
+	$event_value_null
+	buffer=''
+}
+
+_jsonreader_parseTrue()
+{
+	buffer="$character"
+	{
+		_jsonreader_nextToBuffer
+		_jsonreader_nextToBuffer
+		_jsonreader_nextToBuffer
+	} || _jsonreader_errorEndOfFile
+	if [ "$buffer" != 'true' ]; then
+		core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing expected 'true', not '$buffer'"
+	fi
+	$event_value_true
+	buffer=''
+}
+
+_jsonreader_parseFalse()
+{
+	buffer="$character"
+	{
+		_jsonreader_nextToBuffer
+		_jsonreader_nextToBuffer
+		_jsonreader_nextToBuffer
+		_jsonreader_nextToBuffer
+	} || _jsonreader_errorEndOfFile
+	if [ "$buffer" != 'false' ]; then
+		core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing expected 'false', not '$buffer'"
+	fi
+	$event_value_false
+	buffer=''
+}
+
+_jsonreader_parseString()
+{
+	local event="$1"
+	
+	buffer=''
+	while _jsonreader_next
+	do
+		case "$character" in 
+			
+			'"')
+				$event "$buffer"
+				$event_value_string "$buffer"
+				return 0
+			;;
+			
+			'\')
+				_jsonreader_parseStringEscape
+			;;
+			
+			*)
+				buffer="${buffer}${character}"
+			;;
+			
+		esac
+	done
+	
+	_jsonreader_errorEndOfFile
+}
+
+_jsonreader_parseStringEscape()
+{
+	_jsonreader_next || _jsonreader_errorEndOfFile
+	
+	case "$character" in
+		
+		'"'|'\'|'/')
+			buffer="${buffer}${character}"
+			return 0
+		;;
+		
+		'n')
+			buffer="${buffer}
+"
+			return 0
+		;;
+		
+		'b'|'f'|'r'|'t')
+			buffer="${buffer}$(printf "\\${character}")"
+			return 0
+		;;
+		
+		'u')
+			:
+		;;
+				
+		*)
+			core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing expected an escape, not character '$character'"
+		;;
+		
+	esac
+	
+	# Unicode escape, high surrogate
+	local unicodeValue=0
+	_jsonreader_parseStringEscape_readUnicodeSequence
+	if _jsonreader_parseStringEscape_isNotHighSurrogate $unicodeValue; then
+		
+		buffer="${buffer}$(utf8_encodeCodePoint "$unicodeValue")"
+		return 0
+	fi
+	
+	# Unicode escape, low surrogate
+	local firstUnicodeValue="$unicodeValue"
+	
+	{
+		_jsonreader_next
+		if [ "$character" != '\' ]; then
+			core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing expected the '\' start of a low surrogate \u escape, not '$character'"
+		fi
+		
+		_jsonreader_next
+		if [ "$character" != 'u' ]; then
+			core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing expected the 'u' of a '\i' start of a low surrogate \u escape, not '$character'"
+		fi
+	} || _jsonreader_errorEndOfFile
+	
+	unicodeValue=0
+	_jsonreader_parseStringEscape_readUnicodeSequence
+	_jsonreader_parseStringEscape_isLowSurrogateOnly
+	
+	local codePoint=$(unicode_utf16_surrogatePairToCodePoint "$firstUnicodeValue" "$unicodeValue")
+	buffer="${buffer}$(utf8_encodeCodePoint "$codePoint")"
+}
+	
+_jsonreader_parseStringEscape_readUnicodeSequence()
+{
+	local unicodeEscape='0x'
+	local count=0
+	while [ $count -lt 4 ]
+	do
+		_jsonreader_next || _jsonreader_errorEndOfFile
+		case "$character" in
+		
+			[0-9]|[A-F]|[a-f])
+				unicodeSequence="${unicodeSequence}${character}"
+			;;
+		
+			*)
+				core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing expected an Unicode character in a string \u escape, not '$character'"
+			;;
+		
+		esac
+	done
+	unicodeEscape="${unicodeEscape}${character}"
+	unicodeValue=$((unicodeEscape+0))
+}
+
+# aka leading surrogate
+_jsonreader_parseStringEscape_isHighSurrogate()
+{
+	if [ $1 -lt 55296 ]; then
+		return 0
+	fi
+	
+	if [ $1 -gt 57343 ]; then
+		return 0
+	fi
+	
+	if [ $1 -gt 56319 ]; then
+		core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing expected a high surrogate, not a low surrogate"
+	fi
+	
+	return 1
+}
+
+_jsonreader_parseStringEscape_isLowSurrogateOnly()
+{
+	if [ $1 -lt 55296 ]; then
+		core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing expected a low surrogate"
+	fi
+	
+	if [ $1 -gt 57343 ]; then
+		core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing expected a low surrogate"
+	fi
+	
+	if [ $1 -gt 56319 ]; then
+		return 0
+	fi
+	
+	core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing expected a low surrogate"
+}
+
+_jsonreader_parseNumber()
+{
+	# We can't know we're "done" with a number until we drop off the end
+		# For object, array, we don't
+		# For string, true, false, null, we don't
+	# We can legitimately have EOF if this at the root level, thanks to RFC 7159
+	
+	local number="$character"
+	
+	case "$character" in
+		
+		'-')
+			_jsonreader_next || _jsonreader_errorEndOfFile
+			number="${number}${character}"
+		;;
+		
+	esac
+	
+	if [ "$character" = '0' ]; then
+		
+		_jsonreader_next || _jsonreader_errorEndOfFileIfNotParsingRootNumber
+		
+		case "$character" in
+			
+			'.')
+				_jsonreader_parseNumber_fraction
+				return 0
+			;;
+			
+			'e'|'E')
+				_jsonreader_parseNumber_exponent
+				return 0
+			;;
+			
+			*)
+				pushBackForNumberParsing="$character"
+				# can be '-0'
+				$event_value_number "$number"
+				return 0
+			;;
+			
+		esac
+		
+	fi
+	
+	while true
+	do
+		_jsonreader_next || _jsonreader_errorEndOfFileIfNotParsingRootNumber
+		
+		case "$character" in
+			
+			'.')
+				_jsonreader_parseNumber_fraction
+				return 0
+			;;
+			
+			'e'|'E')
+				_jsonreader_parseNumber_exponent
+				return 0
+			;;
+			
+			[0-9])
+				number="${number}${character}"
+			;;
+			
+			*)
+				pushBackForNumberParsing="$character"
+				$event_value_number "$number"
+				return 0
+			;;
+			
+		esac
+	done
+}
+
+_jsonreader_parseNumber_fraction()
+{
+	number="${number}."
+	
+	_jsonreader_next || _jsonreader_errorEndOfFile
+	case "$character" in
+		
+		[0-9])
+			number="${number}${character}"
+		;;
+		
+		*)
+			core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing expected a digit after fraction (.) in number, not '$character'"
+		;;
+		
+	esac
+	
+	while true
+	do
+		_jsonreader_next || _jsonreader_errorEndOfFileIfNotParsingRootNumber
+		
+		case "$character" in
+			
+			[0-9])
+				number="${number}${character}"
+			;;
+			
+			'e'|'E')
+				_jsonreader_parseNumber_exponent
+			;;
+			
+			*)
+				pushBackForNumberParsing="$character"
+				$event_value_number "$number"
+				return 0
+			;;
+			
+		esac
+	done
+}
+
+_jsonreader_parseNumber_exponent()
+{
+	number="${number}E"
+	
+	_jsonreader_next || _jsonreader_errorEndOfFile
+	
+	case "$character" in
+		
+		'+'|'-')
+			number="${number}${character}"
+			_jsonreader_next || _jsonreader_errorEndOfFile
+		;;
+		
+		*)
+			number="${number}+"
+		;;
+		
+	esac
+	
+	case "$character" in
+	
+		[0-9])
+			number="${number}${character}"
+		;;
+		
+		*)
+			core_exitError $core_commandLine_exitCode_DATAERR "JSON parsing expected a digit after exponent in number, not '$character'"
+		;;
+		
+	esac
+	
+	while true
+	do
+		_jsonreader_next || _jsonreader_errorEndOfFileIfNotParsingRootNumber
+	
+		case "$character" in
+	
+			[0-9])
+				number="${number}${character}"
+			;;
+		
+			*)
+				pushBackForNumberParsing="$character"
+				$event_value_number "$number"
+				return 0
+			;;
+		
+		esac
+		
+	done
+}
+
+_jsonreader_next()
+{
+	if [ -n "$pushBackForNumberParsing" ]; then
+		character="$pushBackForNumberParsing"
+		pushBackForNumberParsing=''
+	fi
+	
+	IFS='' read -r character
+}
+
+_jsonreader_errorEndOfFileIfNotParsingRootNumber()
+{
+	if core_variable_isTrue "$eofIsAllowedInParsingNumberBecauseThisIsRootValue"
+		$event_value_number "$number"
+	else
+		_jsonreader_errorEndOfFile
+	fi
+}
+
+_jsonreader_nextToBuffer()
+{
+	_jsonreader_next
+	buffer="${buffer}${character}"
+}
+
+_jsonreader_toSingleCharacters()
+{
+	if core_variable_isUnset _jsonreader_singleCharactersFilePath; then
+		_jsonreader_initialise
+	fi
+	
+	awk '
+BEGIN {
+	srand()
+	FS=""
+	RS="n/o/m/a/t/c/h" rand()
+}
+
+{
+	for (i = 1; i <= NF; i++)
+	{
+		print $i
+	}
+}' <"$jsonFilePath" >"$_jsonreader_singleCharactersFilePath"
+}

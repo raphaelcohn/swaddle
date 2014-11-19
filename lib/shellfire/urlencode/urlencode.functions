@@ -1,0 +1,262 @@
+# One of several possibilities from https://stackoverflow.com/questions/296536/urlencode-from-a-bash-script
+# Encoding should actually be done on each part of the path, eg /my/url/path should be encoded as my, url and path
+core_dependency_requires '*' curl
+urlencode_pathPiece()
+{
+	local pathPiece="$1"
+	
+	# newer versions return 0, older versions 3
+	set +e
+	local data="$(curl --silent --output /dev/null --write-out '%{url_effective}' --get --url '' --data-urlencode "$pathPiece")"
+	set -e
+	printf '%s' "${data##/?}"
+}
+
+# http://tools.ietf.org/html/rfc6570#section-2.1  is a bit silly
+core_dependency_requires '*' sed
+urlencode_literal()
+{
+	local uriFragment="$1"
+	core_message WARN "We currently do not URI-encode URL template fragments"
+	
+	# Character-by-character conversion is required
+	# Convert: CTL SP " ' < > \ ^ ` |
+	# Convert only if not a percent encoding: %
+	# Conert but impossible: { }  (as used to delimit expresions)!
+	
+	printf '%s' "$uriFragment"| sed -e 's;\$;$;g'
+}
+
+# http://tools.ietf.org/html/rfc6570
+core_dependency_requires '*' sed
+urlencode_template()
+{
+	# We assume templates are already-encoded
+	local template="$1"
+	
+	# -E for BSD, -r for GNU / Busybox extended
+	
+	#echo 'hello{name}john{more}end' | gsed -r -e 's;\$;\\\$;g' -e "s;^([^}]+)\{;\$\(urlencode_literal '\1'\){;g" -e "s;\}([^{]+)\$;}\$\(urlencode_literal '\1'\);g" -e "s;\}([^}{]+)\{;}\$\(urlencode_literal '\1'\){;g" -e "s;\{([^{}]+)\};\$\(urlencode_template_replace '\1'\);g"
+	
+	local executableTemplate="$(printf '%s' "$template" | sed -r -e 's;\$;\\\$;g' -e "s;^([^}]+)\{;\$\(urlencode_literal '\1'\){;g" -e "s;\}([^{]+)\$;}\$\(urlencode_literal '\1'\);g" -e "s;\}([^}{]+)\{;}\$\(urlencode_literal '\1'\){;g" -e "s;\{([^{}]+)\};\$\(urlencode_template_replace '\1'\);g")"
+	
+	eval "$executableTemplate"
+}
+
+urlencode_template_replace()
+{
+	local expandedExpresion="$1"
+	# $ has been replaced with \$, but '$' is NOT valid
+	
+	if core_variable_isUnset urlencode_template_temporaryFile; then
+		local TMP_FILE
+		core_temporaryFiles_newFileToRemoveOnExit
+		urlencode_template_temporaryFile="$TMP_FILE"
+	fi
+	
+	# There is no prefix if the result of expansion is an empty string
+	local prefix
+	local potentialOperator="$(core_variable_firstCharacter "$1")"
+	{
+		case "$potentialOperator" in
+		
+			# we'll use urlencode_template_replace_XXXX for variable names
+			'+')
+				prefix=''
+				urlencode_template_replace_operate "$(core_variable_allButFirst "$expandedExpresion")" ',' urlencode_literal urlencode_template_replace_operator_printNameEqualsNothing
+			;;
+		
+			'#')
+				prefix='#'
+				urlencode_template_replace_operate "$(core_variable_allButFirst "$expandedExpresion")" ',' urlencode_pathPiece urlencode_template_replace_operator_printNameEqualsNothing
+			;;
+		
+			'.')
+				prefix='.'
+				urlencode_template_replace_operate "$(core_variable_allButFirst "$expandedExpresion")" '.' urlencode_pathPiece urlencode_template_replace_operator_printNameEqualsNothing
+			;;
+		
+			'/')
+				prefix='/'
+				urlencode_template_replace_operate "$(core_variable_allButFirst "$expandedExpresion")" '/' urlencode_pathPiece urlencode_template_replace_operator_printNameEqualsNothing
+			;;
+		
+			';')
+				prefix=';'
+				urlencode_template_replace_operate "$(core_variable_allButFirst "$expandedExpresion")" ';' urlencode_pathPiece urlencode_template_replace_operator_printNameEqualsVarEquals
+			;;
+		
+			'?')
+				prefix='?'
+				urlencode_template_replace_operate "$(core_variable_allButFirst "$expandedExpresion")" '&' urlencode_pathPiece urlencode_template_replace_operator_printNameEqualsVarEquals
+			;;
+		
+			'&')
+				prefix='&'
+				urlencode_template_replace_operate "$(core_variable_allButFirst "$expandedExpresion")" '&' urlencode_pathPiece urlencode_template_replace_operator_printNameEqualsVarEquals
+			;;
+		
+			'='|','|'!'|'@'|'|')
+				prefix=''
+				core_message WARN "Reserved operator '$potentialOperator' is not supported"
+				return 1
+			;;
+		
+			*)
+				prefix=''
+				urlencode_template_replace_operate "$expandedExpresion" ',' urlencode_pathPiece urlencode_template_replace_operator_printNameEqualsNothing
+			;;
+		
+		esac
+	} >"$urlencode_template_temporaryFile"
+	if [ -s "$urlencode_template_temporaryFile" ]; then
+		urlencode_template_result="${prefix}$(<"$urlencode_template_temporaryFile")"
+	fi
+}
+
+# Not supported:-
+# - keys (maps)
+# - percent-encoded variable names (silly idea - clearly they don't need to be)
+urlencode_template_replace_operate()
+{
+	local expressionLessOperator="$1"
+	local separator="$2"
+	local encodingFunction="$3"
+	local printNameEquals="$4"
+	
+	local IFS=',' set -- $expressionLessOperator
+	
+	local variableName
+	local ourVariableName
+	local isAfterFirst=0
+	local core_variable_indirectValue_result
+	
+	for variableName in "$@"
+	do
+		if [ $isAfterFirst -eq 1 ]; then
+			printf '%s' "$separator"
+		else
+			isAfterFirst=1
+		fi
+		
+		# Level 4 Exploded
+		if core_variable_endsWith "$variableName" '*'; then
+			variableName="$(core_variable_allButLast "$variableName")"
+			ourVariableName=urlencode_template_variable_${variableName}
+			if core_variable_array_isSet "$ourVariableName"; then
+				
+				local listIsAfterFirst=0
+				urlencode_template_replace_operate_callback1()
+				{
+					if [ $listIsAfterFirst -eq 1 ]; then
+						printf '%s' "$separator"
+					else
+						listIsAfterFirst=1
+					fi
+					$printNameEquals
+					$encodingFunction "$core_variable_array_element"
+				}
+				core_variable_array_iterate "$ourVariableName" urlencode_template_replace_operate_callback1
+				
+			elif core_variable_isSet "$ourVariableName"; then
+				
+				# exploded single value
+
+				$printNameEquals
+				core_variable_indirectValue "$ourVariableName"
+				$encodingFunction "$core_variable_indirectValue_result"
+				
+			else
+				
+				core_message INFO "Exploded Level 4 variable '$variableName' is unset; ignoring"
+				
+			fi
+			
+		# Level 4 Substring	
+		elif core_variable_contains "$variableName" ':'; then
+			
+			local length
+			IFS=':' read -r variableName length <<-EOF
+				${variableName}
+			EOF
+	
+			case "$length" in
+			    
+				*[!0-9]*)
+					core_message WARN "Substring Level 4 variable '$variableName' has a non-integer length"
+					return 1
+				;;
+				
+			esac
+			
+			if [ $length -gt 10000 ]; then
+				core_message WARN "Substring Level 4 variable '$variableName' has exceeds maximum length ($length)"
+				return 1
+			fi
+
+			ourVariableName=urlencode_template_variable_${variableName}
+			if core_variable_array_isSet "$ourVariableName"; then
+				core_message WARN "Variable '$variableName' is an array with a substring"
+				return 1
+			elif core_variable_isUnset "$ourVariableName"; then
+				core_message INFO "Variable '$variableName' with a substring is unset; ignoring"
+				continue
+			fi
+			
+			$printNameEquals
+			
+			core_variable_indirectValue "$ourVariableName"
+			local totalLength="${#core_variable_indirectValue_result}"
+			if [ $length -ge $totalLength ]; then
+				$encodingFunction "$core_variable_indirectValue_result"
+			else
+				$encodingFunction "$(core_variable_allButLastN "$core_variable_indirectValue_result" $((totalLength-length)))"
+			fi
+			
+		# Level 4 but no oddities
+		else
+						
+			if core_variable_array_isSet "$ourVariableName"; then
+				
+				$printNameEquals
+				
+				local listIsAfterFirst=0
+				urlencode_template_replace_operate_callback2()
+				{
+					if [ $listIsAfterFirst -eq 1 ]; then
+						printf ','
+					else
+						listIsAfterFirst=1
+					fi
+					$encodingFunction "$core_variable_array_element"
+				}
+				core_variable_array_iterate "$ourVariableName" urlencode_template_replace_operate_callback2
+				
+			elif core_variable_isSet "$ourVariableName"; then
+				
+				$printNameEquals
+				
+				core_variable_indirectValue "$ourVariableName"
+				$encodingFunction "$core_variable_indirectValue_result"
+				
+			else
+				
+				core_message INFO "Variable '$variableName' is unset; ignoring"
+				
+			fi
+			
+		fi
+		
+	done
+}
+
+urlencode_template_replace_operator_printNameEqualsNothing()
+{
+	:
+}
+
+urlencode_template_replace_operator_printNameEqualsVarEquals()
+{
+	# Won't work is the variableName is ALREADY %-encoded, which, apparently, is allowed...
+	printf '%s=' "$($encodingFunction "$variableName")"
+}
