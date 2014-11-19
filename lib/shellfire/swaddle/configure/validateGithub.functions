@@ -1,0 +1,12 @@
+configure_validateGithubTokenFile()
+{
+	if [ -z "$1" ]; then
+		return 0
+	fi
+	
+	if core_path_isReadableNonEmptyFilePath "$1"; then
+		return 0
+	fi
+
+	core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not an extant, readable, non-empty file."
+}

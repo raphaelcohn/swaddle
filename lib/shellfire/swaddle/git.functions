@@ -9,20 +9,24 @@ swaddle_git_pathIsInGitRepository()
 	fi
 }
 
+core_dependency_requires '*' awk
 swaddle_git_findSwaddlesPathGitRoot()
 {
 	if swaddle_git_pathIsInGitRepository "$swaddle_swaddlingPath"; then
 		_swaddle_git_swaddlingCanUseGit=1
 	else
 		_swaddle_git_swaddlingCanUseGit=0
+		return 0
 	fi
 	
-	local currentFolderPath
+	local currentFolderPath="$swaddle_swaddlingPath"
 	while [ ! -d "$currentFolderPath"/.git ]
 	do
 		currentFolderPath="$(core_compatibility_dirname "$currentFolderPath")"
 	done
 	_swaddle_git_swaddlingPathGitRoot="$currentFolderPath"
+	
+	_swaddle_git_branch="$(git branch --list --no-color | awk '$1 ~ /\*/ {print $2}')"
 }
 
 swaddle_git_swaddlingCanUseGit()

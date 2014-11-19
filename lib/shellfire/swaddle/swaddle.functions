@@ -65,6 +65,7 @@ core_functions_register _swaddle_functions swaddle_resetConfiguration
 swaddle_resetConfiguration()
 {
 	configure_reset swaddle
+	configure_reset swaddle_github
 }
 
 core_functions_register _swaddle_functions swaddle_sourceConfiguration
@@ -78,24 +79,36 @@ core_usesIn jsonreader
 core_functions_register _swaddle_functions swaddle_githubReleases
 swaddle_githubReleases()
 {
-	swaddle_githubApiTokenFilePath="$swaddle_swaddlingPath"/.github-personal-access-token
-	
-	
-	
-	
-	if [ -z "$swaddle_githubApiTokenFilePath" ]; then
+	local githubOwner="$(configure_getConfigurationSetting swaddle_github owner)"
+	if [ -z "$githubOwner" ]; then
 		return 0
 	fi
 	
-	github_api_v3_initialise "$swaddle_githubApiTokenFilePath"
+	local githubRepository="$(configure_getConfigurationSetting swaddle_github repository)"
+	if [ -z "$githubRepository" ]; then
+		return 0
+	fi
 	
-	local owner="raphaelcohn"
-	local repo="swaddle"
+	local githubApiTokenFile="$(configure_getConfigurationSetting swaddle_github api_token_file)"
+	if [ -z "$githubApiTokenFile" ]; then
+		return 0
+	fi
 	
-	github_api_v3_releases_list "$owner" "$repo"
-	set -x
-	jsonreader_parse "$github_api_v3_responseFilePath"
-	set +x
+	local actualTagName=''
+	_swaddle_tagAndPush "$_swaddle_git_swaddlingPathGitRoot" "$_swaddle_git_branch" 'gh-releases'
+	
+	github_api_v3_initialise "$githubApiTokenFile"
+	
+	github_api_v3_releases_create "$githubOwner" "$githubRepository" "$actualTagName" 'master' "$(configure_getConfigurationSetting swaddle version)" "Release version \`$(configure_getConfigurationSetting swaddle version)\` of repository \`$(configure_getConfigurationSetting swaddle repositoryName)\`." false false
+	
+	_swaddle_githubReleases_event()
+	{
+		if jsonreader_eventMatches :${jsonreader_path_index}/upload_url value string; then
+			_swaddle_github_uploadUrlTemplate="$eventValue"
+		fi
+	}
+	jsonreader_parse "$github_api_v3_responseFilePath" _swaddle_githubReleases_event
+	
 	exit 90
 }
 
@@ -110,7 +123,7 @@ swaddle_publishToGithubPagesPrepare()
 		return 0
 	fi
 	
-	if swaddle_git_swaddlingCanUseGit; then
+	if swaddle_git_swaddlingCanNotUseGit; then
 		core_message WARN "Can't publish to GitHub pages (git unavailable or swaddling is not in a git repository)"
 		return 0
 	fi
@@ -194,6 +207,54 @@ swaddle_build()
 core_functions_register _swaddle_functions swaddle_resetConfiguration
 core_functions_register _swaddle_functions swaddle_sourceConfiguration
 
+_swaddle_tagAndPush()
+{
+	local gitRepositoryPath="$1"
+	local origin="$2"
+	local tagBase="$3"
+	
+	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	local version="$(configure_getConfigurationSetting swaddle version)"
+	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"
+	
+	local tagMessage="Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'"
+	local tagName="${tagBase}_${repositoryName}_${version}"
+	
+	pushd "$gitRepositoryPath"
+	
+		_swaddle_tag_retry 0
+		
+		if ! git push --quiet --all; then
+			if ! git push --quiet --all --set-upstream origin "$origin"; then
+				core_message WARN "Can't push '$gitRepositoryPath' to '$origin'"
+			fi
+		fi
+		
+	popd
+}
+
+_swaddle_tag_retry()
+{
+	local iterationCount=$1
+	if [ $iterationCount -ne 0 ]; then
+		local thisAttemptTagMessage="$tagMessage (revision $iterationCount)"
+		local thisAttemptTagName="${tagName}_${iterationCount}"
+	else
+		local thisAttemptTagMessage="$tagMessage"
+		local thisAttemptTagName="$tagName"
+	fi
+	
+	if core_variable_isTrue "$(swaddle_configure_sign)"; then
+		git tag --sign --local-user="$(swaddle_configure_signer)" --message="$thisAttemptTagMessage" "$thisAttemptTagName" 2>/dev/null || _swaddle_tag_retry $((iterationCount+1))
+	else
+		git tag --annotate --message="$thisAttemptTagMessage" "$thisAttemptTagName" 2>/dev/null || _swaddle_tag_retry $((iterationCount+1))
+	fi
+	
+	if [ -z "$actualTagName" ]; then
+		actualTagName="$thisAttemptTagName"
+	fi
+}
+
 core_functions_register _swaddle_functions swaddle_publishToGithubPagesFinish
 swaddle_publishToGithubPagesFinish()
 {
@@ -204,28 +265,7 @@ swaddle_publishToGithubPagesFinish()
 	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
 	local version="$(configure_getConfigurationSetting swaddle version)"
 	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"
-	
-	local tagMessage="Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'"
-	local tagName="gh-pages_${repositoryName}_${version}"
-	
-	swaddle_publishToGithubPagesFinish_tag()
-	{
-		local iterationCount=$1
-		if [ $iterationCount -ne 0 ]; then
-			local thisAttemptTagMessage="$tagMessage (revision $iterationCount)"
-			local thisAttemptTagName="${tagName}_${iterationCount}"
-		else
-			local thisAttemptTagMessage="$tagMessage"
-			local thisAttemptTagName="$tagName"
-		fi
 		
-		if core_variable_isTrue "$(swaddle_configure_sign)"; then
-			git tag --sign --local-user="$(swaddle_configure_signer)" --message="$thisAttemptTagMessage" "$thisAttemptTagName" 2>/dev/null || swaddle_publishToGithubPagesFinish_tag $((iterationCount+1))
-		else
-			git tag --annotate --message="$thisAttemptTagMessage" "$thisAttemptTagName" 2>/dev/null || swaddle_publishToGithubPagesFinish_tag $((iterationCount+1))
-		fi
-	}
-	
 	pushd "$swaddle_outputPath"
 		
 		git add --all . 1>/dev/null
@@ -236,13 +276,8 @@ swaddle_publishToGithubPagesFinish()
 			git commit --quiet --all --author="$(swaddle_configure_maintainer)" --signoff --date="$timestampInEpochSeconds" -m "Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'"
 		fi
 		
-		swaddle_publishToGithubPagesFinish_tag 0
-		
-		if ! git push --quiet --all; then
-			if ! git push --quiet --all --set-upstream origin gh-pages; then
-				core_message WARN "Can't push '$swaddle_outputPath' to GitHub Pages"
-			fi
-		fi
-		
 	popd
+	
+	local actualTagName=''
+	_swaddle_tagAndPush "$swaddle_outputPath" gh-pages gh-pages
 }

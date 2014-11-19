@@ -8,8 +8,6 @@ swaddle_configure_register_configuration()
 	local repositoryName="$(core_compatibility_basename "$swaddle_swaddlingPath")"
 	configure_register Value NotEmpty swaddle repository_name "$repositoryName"
 	
-	configure_register Value NotEmpty swaddle host_base_url
-	
 	if core_variable_isSet HOME; then
 		if core_path_isReadableAndSearchableFolderPath "$HOME/.gnupg"; then
 			configure_register Value ReadableSearchableFolderPath swaddle keyring "$HOME/.gnupg"
@@ -39,7 +37,7 @@ core_dependency_requires '*' git date awk
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverVersionAndMtime
 swaddle_configure_register_attemptToDiscoverVersionAndMtime()
 {
-	if swaddle_git_swaddlingCanUseGit; then
+	if swaddle_git_swaddlingCanNotUseGit; then
 		configure_register Value NotEmpty swaddle timestamp 0
 		configure_register Value NotEmpty swaddle version '0'
 		configure_register Value NotEmpty swaddle iteration '1'
@@ -71,7 +69,7 @@ core_dependency_requires '*' head
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverRpmLicence
 swaddle_configure_register_attemptToDiscoverRpmLicence()
 {
-	if swaddle_git_swaddlingCanUseGit; then
+	if swaddle_git_swaddlingCanNotUseGit; then
 		configure_register Value RpmLicence swaddle_rpm licence
 		return 0
 	fi
@@ -116,35 +114,65 @@ swaddle_configure_register_attemptToDiscoverRpmLicence()
 	configure_register Value RpmLicence swaddle_rpm licence "$licence"
 }
 
-core_dependency_requires '*' git awk
-core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverUrl
-swaddle_configure_register_attemptToDiscoverUrl()
+core_dependency_requires '*' git awk sed
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverUrlAndGitHubParameters
+swaddle_configure_register_attemptToDiscoverUrlAndGitHubParameters()
 {
+	configure_register Value NotEmpty swaddle host_base_url
 	configure_register Value Any swaddle bugs_url ''
 	
-	if swaddle_git_swaddlingCanUseGit; then
+	if core_path_isReadableNonEmptyFilePath "$swaddle_swaddlingPath"/.github-personal-access-token; then
+		configure_register Value GithubTokenFile swaddle_github api_token_file "$swaddle_swaddlingPath"/.github-personal-access-token
+	else
+		configure_register Value GithubTokenFile swaddle_github api_token_file ''
+	fi
+	
+	if swaddle_git_swaddlingCanNotUseGit; then
 		configure_register Value NotEmpty swaddle url
+		configure_register Value Any swaddle_github owner ''
+		configure_register Value Any swaddle_github repository ''
 		return 0
 	fi
 	
-	local fetchUrl
+	local pushUrl
 	pushd "$swaddle_swaddlingPath"
 	
-		fetchUrl="$(git remote show -n origin | awk '$1 ~ /Fetch/ {print $3}')"
-		if [ "$fetchUrl" = 'origin' ]; then
+		pushUrl="$(git remote show -n origin | awk '$1 ~ /Push/ {print $3}')"
+		if [ "$pushUrl" = 'origin' ]; then
 			return 0
 		fi
 		
 	popd
+		
+	local ownerSlashRepository
+	# eg git@github.com:shellfire-dev/jsonreader.git
+	if core_variable_matches "$pushUrl" git@github.com:*/*.git; then
+		ownerSlashRepository="$(printf '%s' "$pushUrl" | sed -e 's;git\@github.com:;;g' -e 's;\.git;;g')"
+	# eg https://github.com/shellfire-dev/core.git
+	elif core_variable_matches "$pushUrl" https://github.com/*/*.git; then
+		ownerSlashRepository="$(printf '%s' "$pushUrl" | sed -e 's;https://github.com/;;g' -e 's;\.git;;g')"
+	else
+		configure_register Value NotEmpty swaddle url "$pushUrl"
+		configure_register Value Any swaddle_github owner ''
+		configure_register Value Any swaddle_github repository ''
+	fi
 	
-	configure_register Value NotEmpty swaddle url "$fetchUrl"
+	local owner
+	local repository
+	IFS='/' read -r owner repository <<-EOF
+		${ownerSlashRepository}
+	EOF
+
+	configure_register Value NotEmpty swaddle url "https://github.com/$owner/$repository"
+	configure_register Value Any swaddle_github owner "$owner"
+	configure_register Value Any swaddle_github repository "$repository"
 }
 
 core_dependency_requires '*' date
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverRpmChangelog
 swaddle_configure_register_attemptToDiscoverRpmChangelog()
 {
-	if swaddle_git_swaddlingCanUseGit; then
+	if swaddle_git_swaddlingCanNotUseGit; then
 		return 0
 	fi
 	

@@ -15,7 +15,7 @@ swaddle_repository()
 swaddle_repository_configure()
 {
 	local reset
-	for reset in swaddle swaddle_web swaddle_${repositoryKind} swaddle_${packageKind}
+	for reset in swaddle swaddle_web swaddle_github swaddle_${repositoryKind} swaddle_${packageKind}
 	do
 		configure_reset "$reset"
 	done
@@ -24,7 +24,7 @@ swaddle_repository_configure()
 
 	# swaddle_deb used for section, priority, supports if missing when generating packages
 	local reset
-	for reset in swaddle swaddle_web swaddle_${repositoryKind} swaddle_${packageKind}
+	for reset in swaddle swaddle_web swaddle_github swaddle_${repositoryKind} swaddle_${packageKind}
 	do
 		configure_validate "$reset"
 	done
