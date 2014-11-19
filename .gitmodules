@@ -10,3 +10,6 @@
 [submodule "lib/shellfire/urlencode"]
 	path = lib/shellfire/urlencode
 	url = https://github.com/shellfire-dev/urlencode
+[submodule "lib/shellfire/version"]
+	path = lib/shellfire/version
+	url = https://github.com/shellfire-dev/version
