@@ -73,13 +73,16 @@ swaddle_sourceConfiguration()
 	configure_source "$swaddle_swaddlingPath" swaddling
 }
 
-core_usesIn curl
-core_usesIn urlencode
-core_usesIn github_api v3
+core_usesIn github api/v3
+core_usesIn jsonreader
 core_functions_register _swaddle_functions swaddle_githubReleases
 swaddle_githubReleases()
 {
 	swaddle_githubApiTokenFilePath="$swaddle_swaddlingPath"/.github-personal-access-token
+	
+	
+	
+	
 	if [ -z "$swaddle_githubApiTokenFilePath" ]; then
 		return 0
 	fi
@@ -90,8 +93,10 @@ swaddle_githubReleases()
 	local repo="swaddle"
 	
 	github_api_v3_releases_list "$owner" "$repo"
-	jshon -a -e url -u <"$github_api_v3_responseFilePath"
-	exit 99
+	set -x
+	jsonreader_parse "$github_api_v3_responseFilePath"
+	set +x
+	exit 90
 }
 
 core_dependency_requires '*' grep rsync
