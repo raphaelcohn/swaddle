@@ -13,3 +13,6 @@
 [submodule "lib/shellfire/version"]
 	path = lib/shellfire/version
 	url = https://github.com/shellfire-dev/version
+[submodule "lib/shellfire/xmlwriter"]
+	path = lib/shellfire/xmlwriter
+	url = https://github.com/shellfire-dev/xmlwriter
