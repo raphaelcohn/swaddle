@@ -19,3 +19,6 @@
 [submodule "lib/shellfire/configure"]
 	path = lib/shellfire/configure
 	url = https://github.com/shellfire-dev/configure
+[submodule "lib/shellfire/curl"]
+	path = lib/shellfire/curl
+	url = https://github.com/shellfire-dev/curl
