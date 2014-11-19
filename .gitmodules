@@ -16,3 +16,6 @@
 [submodule "lib/shellfire/xmlwriter"]
 	path = lib/shellfire/xmlwriter
 	url = https://github.com/shellfire-dev/xmlwriter
+[submodule "lib/shellfire/configure"]
+	path = lib/shellfire/configure
+	url = https://github.com/shellfire-dev/configure
