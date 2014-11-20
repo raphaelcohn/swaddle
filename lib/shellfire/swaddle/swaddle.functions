@@ -98,18 +98,20 @@ swaddle_githubReleases()
 	_swaddle_tagAndPush "$_swaddle_git_swaddlingPathGitRoot" "$_swaddle_git_branch" 'gh-releases'
 	
 	github_api_v3_initialise "$githubApiTokenFile"
-
-	set -x
+	
 	github_api_v3_releases_create "$githubOwner" "$githubRepository" "$actualTagName" 'master' "$(configure_getConfigurationSetting swaddle version)" "Release version \`$(configure_getConfigurationSetting swaddle version)\` of repository \`$(configure_getConfigurationSetting swaddle repository_name)\`." false false
 	
 	_swaddle_githubReleases_event()
 	{
-		if jsonreader_eventMatches :${jsonreader_path_index}/upload_url value string; then
+		# :${jsonreader_path_index}/upload_url
+		if jsonreader_eventMatches '/upload_url' value string; then
 			_swaddle_github_uploadUrlTemplate="$eventValue"
 		fi
 	}
 	jsonreader_parse "$github_api_v3_responseFilePath" _swaddle_githubReleases_event
 	
+	# https://uploads.github.com/repos/raphaelcohn/swaddle/releases/719595/assets{?name}
+	echo "$_swaddle_github_uploadUrlTemplate"
 	exit 90
 }
 
