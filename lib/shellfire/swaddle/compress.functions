@@ -22,7 +22,7 @@ swaddle_compress_variants()
 	shift 4
 
 	local keepUncompressedFile=no
-	_swaddle_build_package_tar_compress_callback()
+	_swaddle_compress_variants_callback()
 	{
 		local compressor="$core_variable_array_element"
 		if [ "$compressor" = 'none' ]; then
@@ -36,7 +36,7 @@ swaddle_compress_variants()
 		fi
 	}
 	
-	configure_iterateOverArrayWithDefaultsIfEmpty "$namespace" "$valueName" _swaddle_build_package_tar_compress_callback "$@"
+	configure_iterateOverArrayWithDefaultsIfEmpty "$namespace" "$valueName" _swaddle_compress_variants_callback "$@"
 	
 	if core_variable_isFalse "$keepUncompressedFile"; then
 		rm "$originalFilePath"
