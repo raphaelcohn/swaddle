@@ -36,9 +36,9 @@ swaddle_build_package_rar_create()
 	swaddle_touch_setMtimeAndAtime "$parentPath"
 	
 	local baseName="${_swaddle_build_swaddleName}_${_swaddle_build_package_rar_version}_${_swaddle_build_package_translatedArchitecture}"
-	_swaddle_build_package_rar_fileName="$parentPath"/"$baseName".rar
+	_swaddle_build_package_rar_filePath="$parentPath"/"$baseName".rar
 	
-	rm -f "$_swaddle_build_package_rar_fileName"
+	rm -f "$_swaddle_build_package_rar_filePath"
 	
 	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_rar bomb)"; then
 		local directory="$_swaddle_build_package_root"
@@ -52,10 +52,12 @@ swaddle_build_package_rar_create()
 	
 	pushd "$directory"
 	
-		rar a -m5 -md4097 -ol -ow -r -tl "$_swaddle_build_package_rar_fileName" "$contents" 1>/dev/null 2>/dev/null
-		configure_getConfigurationSetting swaddle_package description | rar c "$_swaddle_build_package_rar_fileName" 1>/dev/null 2>/dev/null
+		rar a -m5 -md4097 -ol -ow -r -tl "$_swaddle_build_package_rar_filePath" "$contents" 1>/dev/null 2>/dev/null
+		configure_getConfigurationSetting swaddle_package description | rar c "$_swaddle_build_package_rar_filePath" 1>/dev/null 2>/dev/null
 	
 	popd
 	
-	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_rar_fileName"
+	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_rar_filePath"
+	
+	swaddle_publishers_publish "${_swaddle_build_swaddleName} RAR Archive" "$_swaddle_build_package_rar_filePath" 'application/x-rar-compressed'
 }

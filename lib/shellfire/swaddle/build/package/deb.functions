@@ -447,6 +447,8 @@ swaddle_build_package_deb_createDeb()
 	# Oddly, debian packages can actually be compressed further (this is because they are 'ar' archives)
 	
 	swaddle_touch_setMtimeAndAtime "$debFilePath"
+	
+	swaddle_publishers_publish "${_swaddle_build_swaddleName} (Debian Package)" "$debFilePath" 'application/vnd.debian.binary-package'
 }
 
 _swaddle_build_package_deb_poolAZ()

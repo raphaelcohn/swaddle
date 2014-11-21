@@ -25,6 +25,7 @@ swaddle_build_package_7z_compute7zVersion()
 	fi
 }
 
+core_usesIn swaddle publishers
 core_dependency_requires '*' 7z mkdir rm mv
 core_functions_register _swaddle_build_package_7z_functions swaddle_build_package_7z_create
 swaddle_build_package_7z_create()
@@ -36,9 +37,9 @@ swaddle_build_package_7z_create()
 	swaddle_touch_setMtimeAndAtime "$parentPath"
 	
 	local baseName="${_swaddle_build_swaddleName}_${_swaddle_build_package_7z_version}_${_swaddle_build_package_translatedArchitecture}"
-	_swaddle_build_package_7z_fileName="$parentPath"/"$baseName".7z
+	_swaddle_build_package_7z_filePath="$parentPath"/"$baseName".7z
 	
-	rm -f "$_swaddle_build_package_7z_fileName"
+	rm -f "$_swaddle_build_package_7z_filePath"
 	
 	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_7z bomb)"; then
 		local directory="$_swaddle_build_package_root"
@@ -52,9 +53,11 @@ swaddle_build_package_7z_create()
 	
 	pushd "$directory"
 	
-		7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "$_swaddle_build_package_7z_fileName" "$contents" 1>/dev/null 2>/dev/null
+		7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "$_swaddle_build_package_7z_filePath" "$contents" 1>/dev/null 2>/dev/null
 	
 	popd
 	
-	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_7z_fileName"
+	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_7z_filePath"
+	
+	swaddle_publishers_publish "${_swaddle_build_swaddleName} 7z Archive" "$_swaddle_build_package_7z_filePath" 'application/x-7z-compressed'
 }

@@ -94,6 +94,57 @@ swaddle_compress_extension()
 	esac
 }
 
+swaddle_compress_mimeType()
+{
+	case "$1" in
+		
+		none)
+			printf 'application/octet-stream'
+		;;
+		
+		lzop)
+			printf 'application/x-lzop'
+		;;
+		
+		zip)
+			printf 'application/zip'
+		;;
+		
+		gzip)
+			printf 'application/gzip'
+		;;
+		
+		bzip2)
+			printf 'application/x-bzip2'
+		;;
+		
+		rzip)
+			printf 'application/octet-stream'
+		;;
+		
+		lzma)
+			printf 'application/x-lzma'
+		;;
+		
+		xz)
+			printf 'application/x-xz'
+		;;
+		
+		lzip)
+			printf 'application/x-lzip'
+		;;
+		
+		zpaq)
+			printf 'application/octet-stream'
+		;;
+		
+		lrzip)
+			printf 'application/x-lrzip'
+		;;
+		
+	esac
+}
+
 core_dependency_requires '*' cat lzop touch
 swaddle_compress_lzop()
 {
@@ -184,7 +235,7 @@ swaddle_compress_lzip()
 core_dependency_requires '*' zpaq touch
 swaddle_compress_zpaq()
 {
-	zpaq pnsiqc "$1".zpaq "$1"
+	zpaq a "$1".zpaq "$1"
 	touch -r "$1" "$1".zpaq
 }
 

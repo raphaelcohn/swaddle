@@ -1,0 +1,57 @@
+# We also have configuration that isn't being handled yet
+
+core_usesIn swaddle publishers
+core_usesIn github api/v3
+core_usesIn jsonreader
+swaddle_publishers_githubreleases_prepare()
+{
+	local githubOwner="$(configure_getConfigurationSetting swaddle_github owner)"
+	if [ -z "$githubOwner" ]; then
+		return 0
+	fi
+	
+	local githubRepository="$(configure_getConfigurationSetting swaddle_github repository)"
+	if [ -z "$githubRepository" ]; then
+		return 0
+	fi
+	
+	local githubApiTokenFile="$(configure_getConfigurationSetting swaddle_github api_token_file)"
+	if [ -z "$githubApiTokenFile" ]; then
+		return 0
+	fi
+	
+	local actualTagName=''
+	swaddle_publishers_tagAndPush "$_swaddle_git_swaddlingPathGitRoot" "$_swaddle_git_branch" 'gh-releases'
+	
+	github_api_v3_initialise "$githubApiTokenFile"
+	
+	github_api_v3_releases_create "$githubOwner" "$githubRepository" "$actualTagName" 'master' "$(configure_getConfigurationSetting swaddle version)" "Release version \`$(configure_getConfigurationSetting swaddle version)\` of repository \`$(configure_getConfigurationSetting swaddle repository_name)\`." true true
+	
+	_swaddle_github_uploadUrlTemplate=''
+	_swaddle_githubReleases_event()
+	{
+		# :${jsonreader_path_index}/upload_url
+		if jsonreader_eventMatches '/upload_url' value string; then
+			_swaddle_github_uploadUrlTemplate="$eventValue"
+		fi
+	}
+	jsonreader_parse "$github_api_v3_responseFilePath" _swaddle_githubReleases_event
+}
+
+swaddle_publishers_githubreleases_publish()
+{
+	local descriptiveName="$1"
+	local filePath="$2"
+	local contentType="$3"
+	
+	if [ -z "$_swaddle_github_uploadUrlTemplate" ]; then
+		return 0
+	fi
+	
+	github_api_v3_releases_uploadAsset "$_swaddle_github_uploadUrlTemplate" "$filePath" "$contentType" "$descriptiveName"
+}
+
+swaddle_publishers_githubreleases_finish()
+{
+	:
+}

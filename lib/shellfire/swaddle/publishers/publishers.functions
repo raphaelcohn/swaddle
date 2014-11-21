@@ -1,0 +1,73 @@
+core_usesIn swaddle/publishers githubpages githubreleases
+
+swaddle_publishers_initialise()
+{
+	core_variable_array_initialise _swaddle_publishers
+	core_variable_array_append _swaddle_publishers githubpages githubreleases
+}
+
+swaddle_publishers_iterate()
+{
+	local publishAction="$1"
+	shift 1
+	
+	_swaddle_publishers_iterate()
+	{
+		swaddle_publishers_${core_variable_array_element}_${publishAction} "$@"
+	}
+	
+	core_variable_array_iterate _swaddle_publishers _swaddle_publishers_iterate "$@"
+}
+
+swaddle_publishers_publish()
+{
+	swaddle_publishers_iterate publish "$@"
+}
+
+swaddle_publishers_tagAndPush()
+{
+	local gitRepositoryPath="$1"
+	local origin="$2"
+	local tagBase="$3"
+	
+	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	local version="$(configure_getConfigurationSetting swaddle version)"
+	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"
+	
+	local tagMessage="Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'"
+	local tagName="${tagBase}_${repositoryName}_${version}"
+	
+	pushd "$gitRepositoryPath"
+	
+		swaddle_publishers_tagRetry 0
+		
+		if ! git push --quiet --all; then
+			if ! git push --quiet --all --set-upstream origin "$origin"; then
+				core_message WARN "Can't push '$gitRepositoryPath' to '$origin'"
+			fi
+		fi
+		
+	popd
+}
+
+swaddle_publishers_tagRetry()
+{
+	local iterationCount=$1
+	if [ $iterationCount -ne 0 ]; then
+		local thisAttemptTagMessage="$tagMessage (revision $iterationCount)"
+		local thisAttemptTagName="${tagName}_${iterationCount}"
+	else
+		local thisAttemptTagMessage="$tagMessage"
+		local thisAttemptTagName="$tagName"
+	fi
+	
+	if core_variable_isTrue "$(swaddle_configure_sign)"; then
+		git tag --sign --local-user="$(swaddle_configure_signer)" --message="$thisAttemptTagMessage" "$thisAttemptTagName" 2>/dev/null || swaddle_publishers_tagRetry $((iterationCount+1))
+	else
+		git tag --annotate --message="$thisAttemptTagMessage" "$thisAttemptTagName" 2>/dev/null || swaddle_publishers_tagRetry $((iterationCount+1))
+	fi
+	
+	if [ -z "$actualTagName" ]; then
+		actualTagName="$thisAttemptTagName"
+	fi
+}
