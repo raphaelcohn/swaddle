@@ -5,9 +5,9 @@ core_usesIn swaddle/repository/yum primaryXmlFile otherXmlFile filelistsXmlFile 
 core_dependency_requires '*' mkdir date
 swaddle_repository_yum()
 {	
-	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	local repositoryName="$(configure_getValue swaddle repository_name)"
 	local hostBaseUrl
-	swaddle_repository_yum_adjustUrl hostBaseUrl "$(configure_getConfigurationSetting swaddle host_base_url)"
+	swaddle_repository_yum_adjustUrl hostBaseUrl "$(configure_getValue swaddle host_base_url)"
 
 	local _swaddle_repository_yum_repositoryPath="$_swaddle_repository_parentPath"/"$repositoryName"
 	local _swaddle_repository_yum_repodataPath="$_swaddle_repository_yum_repositoryPath"/repodata

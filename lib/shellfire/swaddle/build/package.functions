@@ -64,7 +64,7 @@ swaddle_build_package_synchroniseToPackageRoot()
 	rm -f "$destinationFakerootTemporaryFilePath"
 	printf '' >"$destinationFakerootTemporaryFilePath"
 
-	local fixPermissionsBinaryOrFunction="$(configure_getConfigurationSetting swaddle fix_permissions)"
+	local fixPermissionsBinaryOrFunction="$(configure_getValue swaddle fix_permissions)"
 	
 	# If there are file conflicts (eg same file in multiple structures), first sync source wins
 	set --

@@ -49,7 +49,7 @@ swaddle_build_package_deb_registerConfiguration()
 
 swaddle_build_package_deb()
 {
-	local multiarch="$(configure_getConfigurationSetting swaddle_deb multiarch)"
+	local multiarch="$(configure_getValue swaddle_deb multiarch)"
 	if [ "$_swaddle_build_package_translatedArchitecture" = 'all' ]; then
 		if [ "$multiarch" = 'same' ]; then
 			core_exitError $core_commandLine_exitCode_CONFIG "A deb package can't have Architecture 'all' and also Multi-Arch 'same'."
@@ -61,9 +61,9 @@ swaddle_build_package_deb()
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_computeDebianVersion
 swaddle_build_package_deb_computeDebianVersion()
 {
-	local epoch="$(configure_getConfigurationSetting swaddle epoch)"
-	local version="$(configure_getConfigurationSetting swaddle version)"
-	local iteration="$(configure_getConfigurationSetting swaddle iteration)"
+	local epoch="$(configure_getValue swaddle epoch)"
+	local version="$(configure_getValue swaddle version)"
+	local iteration="$(configure_getValue swaddle iteration)"
 	if [ -z "$epoch" ]; then
 		_swaddle_build_package_deb_debianVersion="$version"-"$iteration"
 	elif [ "$epoch" = '0' ]; then
@@ -289,8 +289,8 @@ swaddle_build_package_deb_createControlFile()
 			Architecture: ${_swaddle_build_package_translatedArchitecture}
 			Maintainer: $(swaddle_configure_maintainer)
 			Installed-Size: $(_swaddle_build_package_deb_installedSize)
-			Essential: $(configure_getConfigurationSetting swaddle_deb essential)
-			Build-Essential: $(configure_getConfigurationSetting swaddle_deb build_essential)
+			Essential: $(configure_getValue swaddle_deb essential)
+			Build-Essential: $(configure_getValue swaddle_deb build_essential)
 		EOF
 		_swaddle_build_package_deb_commaSeparatedControlField Uploaders uploaders
 		_swaddle_build_package_deb_commaSeparatedControlField Depends depends
@@ -303,16 +303,16 @@ swaddle_build_package_deb_createControlFile()
 		_swaddle_build_package_deb_commaSeparatedControlField Task tasks
 		_swaddle_build_package_deb_commaSeparatedControlField Task tags
 		cat <<-EOF
-			Section: $(configure_getConfigurationSetting swaddle_deb section)
-			Priority: $(configure_getConfigurationSetting swaddle_deb priority)
-			Homepage: $(configure_getConfigurationSetting swaddle url)
+			Section: $(configure_getValue swaddle_deb section)
+			Priority: $(configure_getValue swaddle_deb priority)
+			Homepage: $(configure_getValue swaddle url)
 			Bugs: $(swaddle_configure_bugsUrl)
-			Origin: $(configure_getConfigurationSetting swaddle vendor)
-			Supported: $(configure_getConfigurationSetting swaddle_deb supported)
+			Origin: $(configure_getValue swaddle vendor)
+			Supported: $(configure_getValue swaddle_deb supported)
 		EOF
 		_swaddle_build_package_deb_commaSeparatedControlField Built-Using built_using
 		if [ "$_swaddle_build_package_translatedArchitecture" != 'all' ]; then
-			_swaddle_build_package_deb_commaSeparatedControlField Multi-Arch "$(configure_getConfigurationSetting swaddle_deb multiarch)"
+			_swaddle_build_package_deb_commaSeparatedControlField Multi-Arch "$(configure_getValue swaddle_deb multiarch)"
 		fi
 		_swaddle_build_package_deb_extraControlFields
 		_swaddle_build_package_deb_description
@@ -392,7 +392,7 @@ swaddle_build_package_deb_tarData()
 	
 	_swaddle_build_package_deb_dataTarballFileName="$tarFileName"
 	 
-	 local compression="$(configure_getConfigurationSetting swaddle_deb compression)"
+	 local compression="$(configure_getValue swaddle_deb compression)"
 	 if [ "$compression" = 'none' ]; then
 		 _swaddle_build_package_deb_dataTarballFileName='data.tar'
 	 else
@@ -424,7 +424,7 @@ swaddle_build_package_deb_createDeb()
 	local poolSource="$_swaddle_build_swaddleName"
 	local poolAZ
 	_swaddle_build_package_deb_poolAZ
-	local poolComponent="$(configure_getConfigurationSetting swaddle_deb component)"
+	local poolComponent="$(configure_getValue swaddle_deb component)"
 	
 	local parentPath="$_swaddle_repository_parentPath"/pool/"$poolComponent"/"$poolAZ"/"$poolSource"
 	mkdir -m 0755 -p "$parentPath"
@@ -532,7 +532,7 @@ _swaddle_build_package_deb_description()
 {
 	local isFirst=1
 	local line
-	configure_getConfigurationSetting swaddle_package description | sed -e 's/^\w*$/\./g' | while IFS='' read -r line
+	configure_getValue swaddle_package description | sed -e 's/^\w*$/\./g' | while IFS='' read -r line
 	do
 		if [ $isFirst -eq 1 ]; then
 			printf 'Description:'

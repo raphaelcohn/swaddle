@@ -1,36 +1,36 @@
 # Derived from http://packages.ubuntu.com/lucid/
 core_snippet_embed raw validate_deb_section
-configure_validateDebSection()
+configure_validate_DebSection()
 {
-	configure_validateValue validate_deb_section "$1"
+	configure_isValueValid validate_deb_section "$1"
 }
 
 #https://www.debian.org/doc/manuals/debian-faq/ch-pkg_basics.en.html#s-priority
 core_snippet_embed raw validate_deb_priority
-configure_validateDebPriority()
+configure_validate_DebPriority()
 {
-	configure_validateValue validate_deb_priority "$1"
+	configure_isValueValid validate_deb_priority "$1"
 }
 
 core_snippet_embed raw validate_deb_component
-configure_validateDebComponent()
+configure_validate_DebComponent()
 {
-	configure_validateValue validate_deb_component "$1"
+	configure_isValueValid validate_deb_component "$1"
 }
 
 core_snippet_embed raw validate_deb_multiarch
-configure_validateDebMultiArch()
+configure_validate_DebMultiArch()
 {
-	configure_validateValue validate_deb_multiarch "$1"
+	configure_isValueValid validate_deb_multiarch "$1"
 }
 
 core_snippet_embed raw validate_deb_task
-configure_validateDebTask()
+configure_validate_DebTask()
 {
-	configure_validateValue validate_deb_task "$1"
+	configure_isValueValid validate_deb_task "$1"
 }
 
-configure_validateDebPackageArchitecture()
+configure_validate_DebPackageArchitecture()
 {
 	if [ "$1" = 'all' ]; then
 		return 0
@@ -38,7 +38,7 @@ configure_validateDebPackageArchitecture()
 	configure_validateAptArchitecture "$1"
 }
 
-configure_validateDebCompression()
+configure_validate_DebCompression()
 {
 	case "$1" in
 

@@ -13,10 +13,10 @@ swaddle_webserverFiles_create()
 {
 	local rootFolderPath="$1"
 	
-	local useIndexNameInDirectoryLinks="$(configure_getConfigurationSetting swaddle_web use_index_name_in_directory_links)"
+	local useIndexNameInDirectoryLinks="$(configure_getValue swaddle_web use_index_name_in_directory_links)"
 	local sign="$(swaddle_configure_sign)"
 	local maintainer="$(swaddle_configure_maintainer)"
-	local indexFileName="$(configure_getConfigurationSetting swaddle_web index_name)"
+	local indexFileName="$(configure_getValue swaddle_web index_name)"
 	local inputFileName=index.md
 	
 	if [ "$inputFileName" = "$indexFileName" ]; then
@@ -232,7 +232,7 @@ swaddle_webserverFiles_signatureMarkdown()
 {
 	if core_variable_isTrue "$sign"; then
 	
-		local keyserver="$(configure_getConfigurationSetting swaddle keyserver)"
+		local keyserver="$(configure_getValue swaddle keyserver)"
 		if [ -z "$keyserver" ]; then
 			signatureMarkdown="Signed using the key \`$(swaddle_configure_signer)\` with fingerprint \`$(swaddle_gpg_exportSigningKeyFingerprint)\`."
 		else

@@ -10,18 +10,18 @@
 
 # RPM sign stuff
 %define _signature gpg
-%define _gpg_path $(configure_getConfigurationSetting swaddle keyring)
+%define _gpg_path $(configure_getValue swaddle keyring)
 %define _gpg_name $(swaddle_configure_signer)
 %define _gpgbin $(core_compatibility_which gpg)
 
 # Disable checking for unpackaged files
 # %undefine __check_files
 
-# Digest method is '$(configure_getConfigurationSetting swaddle_rpm digest)'
+# Digest method is '$(configure_getValue swaddle_rpm digest)'
 # %define _source_fileswaddle_digest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
 %define _binary_fileswaddle_digest_algorithm $(_swaddle_build_package_rpm_digestAlgorithm)
 
-# Compression method is '$(configure_getConfigurationSetting swaddle_rpm compression)'
+# Compression method is '$(configure_getValue swaddle_rpm compression)'
 # %define _source_payload $(_swaddle_build_package_rpm_compression)
 %define _binary_payload $(_swaddle_build_package_rpm_compression)
 
@@ -30,8 +30,8 @@ $(_swaddle_build_package_rpm_filterFrom provides regex_filter_from_requires)
 $(_swaddle_build_package_rpm_filterSetup regex_filter_from_provides regex_filter_from_requires)
 
 Name: ${_swaddle_build_swaddleName}
-Version: $(configure_getConfigurationSetting swaddle version)
-Epoch: $(configure_getConfigurationSetting swaddle epoch)
+Version: $(configure_getValue swaddle version)
+Epoch: $(configure_getValue swaddle epoch)
 Release: $(_swaddle_build_package_rpm_release)
 Summary: $(_swaddle_build_package_rpm_summaryDescription)
 AutoReqProv: $(_swaddle_build_package_rpm_yesNo auto_req_prov)
@@ -41,10 +41,10 @@ AutoProv: $(_swaddle_build_package_rpm_yesNo auto_prov)
 # CentOS 5 is now on life-support and will be dead after 31st March 2017
 BuildRoot: %buildroot
 Prefix: /
-Group: $(configure_getConfigurationSetting swaddle_rpm category)
-License: $(configure_getConfigurationSetting swaddle_rpm licence)
-Vendor: $(configure_getConfigurationSetting swaddle vendor)
-URL: $(configure_getConfigurationSetting swaddle url)
+Group: $(configure_getValue swaddle_rpm category)
+License: $(configure_getValue swaddle_rpm licence)
+Vendor: $(configure_getValue swaddle vendor)
+URL: $(configure_getValue swaddle url)
 BugURL: $(swaddle_configure_bugsUrl)
 Packager: $(swaddle_configure_maintainer)
 
@@ -100,5 +100,5 @@ $(_swaddle_build_package_rpm_trigger triggerpostun trigger-fixerrors)
 $(_swaddle_build_package_rpm_files)
 
 %changelog
-$(configure_getConfigurationSetting swaddle_rpm changelog)
+$(configure_getValue swaddle_rpm changelog)
 

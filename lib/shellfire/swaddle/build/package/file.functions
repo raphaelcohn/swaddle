@@ -14,9 +14,9 @@ swaddle_build_package_file()
 core_functions_register _swaddle_build_package_file_functions swaddle_build_package_file_computeFileVersion
 swaddle_build_package_file_computeFileVersion()
 {
-	local epoch="$(configure_getConfigurationSetting swaddle epoch)"
-	local version="$(configure_getConfigurationSetting swaddle version)"
-	local iteration="$(configure_getConfigurationSetting swaddle iteration)"
+	local epoch="$(configure_getValue swaddle epoch)"
+	local version="$(configure_getValue swaddle version)"
+	local iteration="$(configure_getValue swaddle iteration)"
 	if [ -z "$epoch" ]; then
 		_swaddle_build_package_file_version="$version"-"$iteration"
 	elif [ "$epoch" = '0' ]; then
@@ -30,13 +30,13 @@ core_dependency_requires '*' file mkdir rm mv cp
 core_functions_register _swaddle_build_package_file_functions swaddle_build_package_file_create
 swaddle_build_package_file_create()
 {
-	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	local repositoryName="$(configure_getValue swaddle repository_name)"
 	local parentPath="$_swaddle_repository_parentPath"/"$repositoryName"
 	
 	mkdir -m 0755 -p "$parentPath"
 	swaddle_touch_setMtimeAndAtime "$parentPath"
 	
-	local chosenFile="$(configure_getConfigurationSetting swaddle_file path)"
+	local chosenFile="$(configure_getValue swaddle_file path)"
 	if [ -n "$chosenFile" ]; then
 		if [ ! -f "$_swaddle_build_package_root"/"$chosenFile" ]; then
 			core_exitError $core_commandLine_exitCode_CONFIG "The file '$chosenFile' does not exist as a file"

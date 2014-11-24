@@ -1,4 +1,4 @@
-configure_validateGithubTokenFile()
+configure_validate_GithubTokenFile()
 {
 	if [ -z "$1" ]; then
 		return 0

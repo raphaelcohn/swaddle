@@ -13,9 +13,9 @@ swaddle_build_package_rar()
 core_functions_register _swaddle_build_package_rar_functions swaddle_build_package_rar_computeRarVersion
 swaddle_build_package_rar_computeRarVersion()
 {
-	local epoch="$(configure_getConfigurationSetting swaddle epoch)"
-	local version="$(configure_getConfigurationSetting swaddle version)"
-	local iteration="$(configure_getConfigurationSetting swaddle iteration)"
+	local epoch="$(configure_getValue swaddle epoch)"
+	local version="$(configure_getValue swaddle version)"
+	local iteration="$(configure_getValue swaddle iteration)"
 	if [ -z "$epoch" ]; then
 		_swaddle_build_package_rar_version="$version"-"$iteration"
 	elif [ "$epoch" = '0' ]; then
@@ -29,7 +29,7 @@ core_dependency_requires '*' rar mkdir rm mv
 core_functions_register _swaddle_build_package_rar_functions swaddle_build_package_rar_create
 swaddle_build_package_rar_create()
 {
-	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	local repositoryName="$(configure_getValue swaddle repository_name)"
 	local parentPath="$_swaddle_repository_parentPath"/"$repositoryName"
 	
 	mkdir -m 0755 -p "$parentPath"
@@ -40,7 +40,7 @@ swaddle_build_package_rar_create()
 	
 	rm -f "$_swaddle_build_package_rar_filePath"
 	
-	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_rar bomb)"; then
+	if core_variable_isTrue "$(configure_getValue swaddle_rar bomb)"; then
 		local directory="$_swaddle_build_package_root"
 		local contents=.
 	else
@@ -53,7 +53,7 @@ swaddle_build_package_rar_create()
 	pushd "$directory"
 	
 		rar a -m5 -md4097 -ol -ow -r -tl "$_swaddle_build_package_rar_filePath" "$contents" 1>/dev/null 2>/dev/null
-		configure_getConfigurationSetting swaddle_package description | rar c "$_swaddle_build_package_rar_filePath" 1>/dev/null 2>/dev/null
+		configure_getValue swaddle_package description | rar c "$_swaddle_build_package_rar_filePath" 1>/dev/null 2>/dev/null
 	
 	popd
 	

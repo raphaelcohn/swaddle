@@ -13,9 +13,9 @@ swaddle_build_package_7z()
 core_functions_register _swaddle_build_package_7z_functions swaddle_build_package_7z_compute7zVersion
 swaddle_build_package_7z_compute7zVersion()
 {
-	local epoch="$(configure_getConfigurationSetting swaddle epoch)"
-	local version="$(configure_getConfigurationSetting swaddle version)"
-	local iteration="$(configure_getConfigurationSetting swaddle iteration)"
+	local epoch="$(configure_getValue swaddle epoch)"
+	local version="$(configure_getValue swaddle version)"
+	local iteration="$(configure_getValue swaddle iteration)"
 	if [ -z "$epoch" ]; then
 		_swaddle_build_package_7z_version="$version"-"$iteration"
 	elif [ "$epoch" = '0' ]; then
@@ -30,7 +30,7 @@ core_dependency_requires '*' 7z mkdir rm mv
 core_functions_register _swaddle_build_package_7z_functions swaddle_build_package_7z_create
 swaddle_build_package_7z_create()
 {
-	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	local repositoryName="$(configure_getValue swaddle repository_name)"
 	local parentPath="$_swaddle_repository_parentPath"/"$repositoryName"
 	
 	mkdir -m 0755 -p "$parentPath"
@@ -41,7 +41,7 @@ swaddle_build_package_7z_create()
 	
 	rm -f "$_swaddle_build_package_7z_filePath"
 	
-	if core_variable_isTrue "$(configure_getConfigurationSetting swaddle_7z bomb)"; then
+	if core_variable_isTrue "$(configure_getValue swaddle_7z bomb)"; then
 		local directory="$_swaddle_build_package_root"
 		local contents=.
 	else

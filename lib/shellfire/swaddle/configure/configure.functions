@@ -2,29 +2,29 @@ core_usesIn swaddle/configure validateApt validateDeb validateGithub validateRpm
 
 swaddle_configure_maintainer()
 {
-	printf '%s <%s>' "$(configure_getConfigurationSetting swaddle maintainer_name)" "$(configure_getConfigurationSetting swaddle maintainer_email)"
+	printf '%s <%s>' "$(configure_getValue swaddle maintainer_name)" "$(configure_getValue swaddle maintainer_email)"
 }
 
 swaddle_configure_signer()
 {
-	printf '%s (%s) <%s>' "$(configure_getConfigurationSetting swaddle maintainer_name)" "$(configure_getConfigurationSetting swaddle maintainer_comment)" "$(configure_getConfigurationSetting swaddle maintainer_email)"
+	printf '%s (%s) <%s>' "$(configure_getValue swaddle maintainer_name)" "$(configure_getValue swaddle maintainer_comment)" "$(configure_getValue swaddle maintainer_email)"
 }
 
 swaddle_configure_sign()
 {
-	configure_getConfigurationSetting swaddle sign
+	configure_getValue swaddle sign
 }
 
 swaddle_configure_timestamp()
 {
-	configure_getConfigurationSetting swaddle timestamp
+	configure_getValue swaddle timestamp
 }
 
 swaddle_configure_bugsUrl()
 {
-	local bugsUrl="$(configure_getConfigurationSetting swaddle bugs_url)"
+	local bugsUrl="$(configure_getValue swaddle bugs_url)"
 	if [ -z "$bugsUrl" ]; then
-		bugsUrl="$(configure_getConfigurationSetting swaddle url)"
+		bugsUrl="$(configure_getValue swaddle url)"
 	fi
 	printf '%s' "$bugsUrl"
 }

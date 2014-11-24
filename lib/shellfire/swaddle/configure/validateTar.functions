@@ -1,4 +1,4 @@
-configure_validateTarCompression()
+configure_validate_TarCompression()
 {
 	case "$1" in
 

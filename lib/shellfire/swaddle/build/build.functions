@@ -52,7 +52,7 @@ swaddle_build_packages()
 
 swaddle_build_packagesPackageKindToRepositoryPath()
 {
-	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	local repositoryName="$(configure_getValue swaddle repository_name)"
 	local repositoryKind
 	case "$_swaddle_build_package_kind" in
 		

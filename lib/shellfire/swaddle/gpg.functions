@@ -3,7 +3,7 @@ core_usesIn configure
 core_dependency_requires '*' gpg
 swaddle_gpg()
 {
-	gpg --home "$(configure_getConfigurationSetting swaddle keyring)" "$@"
+	gpg --home "$(configure_getValue swaddle keyring)" "$@"
 }
 
 swaddle_gpg_exportSigningKey()
@@ -45,7 +45,7 @@ swaddle_gpg_publishSigningKey()
 		return 0
 	fi
 	
-	local keyserver="$(configure_getConfigurationSetting swaddle keyserver)"
+	local keyserver="$(configure_getValue swaddle keyserver)"
 	if [ -z "$keyserver" ]; then
 		return 0
 	fi

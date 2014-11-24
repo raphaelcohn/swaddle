@@ -5,17 +5,17 @@ core_usesIn github/api/v3 releases
 core_usesIn jsonreader
 swaddle_publishers_githubreleases_prepare()
 {
-	local githubOwner="$(configure_getConfigurationSetting swaddle_github owner)"
+	local githubOwner="$(configure_getValue swaddle_github owner)"
 	if [ -z "$githubOwner" ]; then
 		return 0
 	fi
 	
-	local githubRepository="$(configure_getConfigurationSetting swaddle_github repository)"
+	local githubRepository="$(configure_getValue swaddle_github repository)"
 	if [ -z "$githubRepository" ]; then
 		return 0
 	fi
 	
-	local githubApiTokenFile="$(configure_getConfigurationSetting swaddle_github api_token_file)"
+	local githubApiTokenFile="$(configure_getValue swaddle_github api_token_file)"
 	if [ -z "$githubApiTokenFile" ]; then
 		return 0
 	fi
@@ -25,7 +25,7 @@ swaddle_publishers_githubreleases_prepare()
 	
 	github_api_v3_initialise "$githubApiTokenFile"
 	
-	github_api_v3_releases_create "$githubOwner" "$githubRepository" "$actualTagName" 'master' "$(configure_getConfigurationSetting swaddle version)" "Release version \`$(configure_getConfigurationSetting swaddle version)\` of repository \`$(configure_getConfigurationSetting swaddle repository_name)\`." true true
+	github_api_v3_releases_create "$githubOwner" "$githubRepository" "$actualTagName" 'master' "$(configure_getValue swaddle version)" "Release version \`$(configure_getValue swaddle version)\` of repository \`$(configure_getValue swaddle repository_name)\`." true true
 	
 	_swaddle_github_uploadUrlTemplate=''
 	_swaddle_githubReleases_event()

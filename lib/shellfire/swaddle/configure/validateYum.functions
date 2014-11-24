@@ -1,7 +1,7 @@
 core_usesIn configure
 
 core_snippet_embed raw validate_yum_architecture
-configure_validateYumArchitecture()
+configure_validate_YumArchitecture()
 {
-	configure_validateValue validate_yum_architecture "$1"
+	configure_isValueValid validate_yum_architecture "$1"
 }

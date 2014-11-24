@@ -2,7 +2,7 @@ core_usesIn swaddle digest webserverFiles
 
 swaddle_repository_apt()
 {
-	local repositoryPath="$_swaddle_repository_parentPath"/dists/"$(configure_getConfigurationSetting swaddle repository_name)"
+	local repositoryPath="$_swaddle_repository_parentPath"/dists/"$(configure_getValue swaddle repository_name)"
 	
 	swaddle_repository_apt_createTemporaryFolderPath
 	swaddle_repository_apt_createDistsFolderPath
@@ -177,7 +177,7 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 							
 							_swaddle_repository_apt_sortAndConcatenateFragments "Translation-$languageCode" _swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex_callback
 						}
-						configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_apt' 'translations' _swaddle_repository_apt_createDistsComponentsTranslations_callback "$(configure_getConfigurationSetting swaddle_apt language)"
+						configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_apt' 'translations' _swaddle_repository_apt_createDistsComponentsTranslations_callback "$(configure_getValue swaddle_apt language)"
 					} >Index
 
 					swaddle_touch_setMtimeAndAtime Index
@@ -241,15 +241,15 @@ swaddle_repository_apt_createDistsRelease()
 	
 	{
 		cat <<-EOF
-			Origin: $(configure_getConfigurationSetting swaddle vendor)
-			Label: $(configure_getConfigurationSetting swaddle vendor)
-			Suite: $(configure_getConfigurationSetting swaddle repository_name)
-			Version: $(configure_getConfigurationSetting swaddle version)
-			Codename: $(configure_getConfigurationSetting swaddle repository_name)
+			Origin: $(configure_getValue swaddle vendor)
+			Label: $(configure_getValue swaddle vendor)
+			Suite: $(configure_getValue swaddle repository_name)
+			Version: $(configure_getValue swaddle version)
+			Codename: $(configure_getValue swaddle repository_name)
 			Date: ${releaseDate}
 			Architectures: $(core_variable_array_string "$architectures" ' ')
 			Components: $(core_variable_array_string  _swaddle_repository_apt_components ' ')
-			Description: $(configure_getConfigurationSetting swaddle vendor) $(configure_getConfigurationSetting swaddle repository_name) $(configure_getConfigurationSetting swaddle version)
+			Description: $(configure_getValue swaddle vendor) $(configure_getValue swaddle repository_name) $(configure_getValue swaddle version)
 			NotAutomatic: no
 			ButAutomaticUpgrades: no
 		EOF
@@ -309,13 +309,13 @@ swaddle_repository_apt_exportSigningKey()
 
 swaddle_repository_apt_createAptSourcesList()
 {
-	local hostBaseUrl="$(configure_getConfigurationSetting swaddle host_base_url)"
+	local hostBaseUrl="$(configure_getValue swaddle host_base_url)"
 	if core_variable_endsWith "$hostBaseUrl" '/'; then
 		local length=${#hostBaseUrl}
 		hostBaseUrl="$(core_variable_allButLastN "$hostBaseUrl" 1)"
 	fi
 	
-	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	local repositoryName="$(configure_getValue swaddle repository_name)"
 	
 	local filePath="$repositoryPath"/sources.list
 	printf '%s\n' "deb $hostBaseUrl/apt $repositoryName $(core_variable_array_string  _swaddle_repository_apt_components ' ')" >"$filePath"
@@ -326,7 +326,7 @@ swaddle_repository_apt_createAptSourcesList()
 swaddle_repository_apt_createInstallScript()
 {
 	local filePath="$repositoryPath"/install.sh
-	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
+	local repositoryName="$(configure_getValue swaddle repository_name)"
 	
 	local mktemp="\$(mktemp $repositoryName.key.XXXXXXXXX)"
 	local temporaryKeyFile='$temporaryKeyFile'
@@ -390,11 +390,11 @@ core_dependency_requires '*' cat
 swaddle_repository_apt_createDistsComponentReleaseFile()
 {
 	cat >Release <<-EOF
-		Archive: $(configure_getConfigurationSetting swaddle repository_name)
-		Version: $(configure_getConfigurationSetting swaddle version)
+		Archive: $(configure_getValue swaddle repository_name)
+		Version: $(configure_getValue swaddle version)
 		Component: ${poolComponent}
-		Origin: $(configure_getConfigurationSetting swaddle vendor)
-		Label: $(configure_getConfigurationSetting swaddle vendor)
+		Origin: $(configure_getValue swaddle vendor)
+		Label: $(configure_getValue swaddle vendor)
 		Architecture: ${packageArchitecture}
 	EOF
 	swaddle_touch_setMtimeAndAtime Release
@@ -432,7 +432,7 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 {	
 	packageArchitecture="$(swaddle_repository_apt_parseDeb_extractField Architecture all)"
 	package="$(swaddle_repository_apt_parseDeb_extractField Package "$poolSource")"
-	section="$(swaddle_repository_apt_parseDeb_extractField Section "$(configure_getConfigurationSetting swaddle_deb section)")"
+	section="$(swaddle_repository_apt_parseDeb_extractField Section "$(configure_getValue swaddle_deb section)")"
 	
 	local ourBugsUrl="$(swaddle_configure_bugsUrl)"
 	local bugsUrlDefault="$(swaddle_repository_apt_parseDeb_extractField Homepage "$ourBugsUrl")"
@@ -440,7 +440,7 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 	{
 		swaddle_repository_apt_parseDeb_extractAndPrintControlField Package "$package"
 		swaddle_repository_apt_parseDeb_extractAndPrintControlField Essential 'no'
-		swaddle_repository_apt_parseDeb_extractAndPrintControlField Priority "$(configure_getConfigurationSetting swaddle_deb priority)"
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Priority "$(configure_getValue swaddle_deb priority)"
 		swaddle_repository_apt_parseDeb_extractAndPrintControlField Section "$section"
 		swaddle_repository_apt_parseDeb_extractAndPrintControlField Installed-Size '1'
 		swaddle_repository_apt_parseDeb_extractAndPrintControlField Maintainer "$(swaddle_configure_maintainer)"
@@ -475,7 +475,7 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 			swaddle_repository_apt_parseDeb_extractAndPrintControlField "$fieldName"
 		done
 
-		swaddle_repository_apt_parseDeb_extractAndPrintControlField Homepage "$(configure_getConfigurationSetting swaddle url)"
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Homepage "$(configure_getValue swaddle url)"
 		
 		for fieldName in Npp-Applications Npp-Description Npp-Filename Npp-Mimetype Npp-Name Gstreamer-Decoders Gstreamer-Elements Gstreamer-Encoders Gstreamer-Uri-Sinks Gstreamer-Uri-Sources Gstreamer-Version
 		do
@@ -484,8 +484,8 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 
 		swaddle_repository_apt_parseDeb_extractAndPrintControlField Bugs "$bugsUrlDefault"
 		swaddle_repository_apt_parseDeb_extractAndPrintControlField Build-Essential 'no'
-		swaddle_repository_apt_parseDeb_extractAndPrintControlField Origin "$(configure_getConfigurationSetting swaddle vendor)"
-		swaddle_repository_apt_parseDeb_extractAndPrintControlField Supported "$(configure_getConfigurationSetting swaddle_deb supported)"
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Origin "$(configure_getValue swaddle vendor)"
+		swaddle_repository_apt_parseDeb_extractAndPrintControlField Supported "$(configure_getValue swaddle_deb supported)"
 		swaddle_repository_apt_parseDeb_extractAndPrintControlField Task
 
 		printf '\n'
@@ -630,7 +630,7 @@ swaddle_repository_apt_parseDeb_printControlField()
 core_dependency_requires '*' mkdir md5sum
 swaddle_repository_apt_parseDeb_createTranslationFragment()
 {
-	local languageCode="$(configure_getConfigurationSetting swaddle_apt language)"
+	local languageCode="$(configure_getValue swaddle_apt language)"
 	local translationPath="$repositoryPath"/"$poolComponent"/i18n
 	
 	mkdir -m 0755 -p "$translationPath"

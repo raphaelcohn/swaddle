@@ -81,8 +81,8 @@ swaddle_publishers_githubpages_finish()
 		return 0
 	fi
 	
-	local repositoryName="$(configure_getConfigurationSetting swaddle repository_name)"
-	local version="$(configure_getConfigurationSetting swaddle version)"
+	local repositoryName="$(configure_getValue swaddle repository_name)"
+	local version="$(configure_getValue swaddle version)"
 	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"
 		
 	pushd "$swaddle_outputPath"

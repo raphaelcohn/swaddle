@@ -1,7 +1,7 @@
 core_usesIn configure
 core_usesIn swaddle/configure validateYum
 
-configure_validateRpmPackageArchitecture()
+configure_validate_RpmPackageArchitecture()
 {
 	if [ "$1" = 'noarch' ]; then
 		return 0
@@ -11,17 +11,17 @@ configure_validateRpmPackageArchitecture()
 
 # Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
 core_snippet_embed raw validate_rpm_licence
-configure_validateRpmLicence()
+configure_validate_RpmLicence()
 {
-	configure_validateValue validate_rpm_licence "$1"
+	configure_isValueValid validate_rpm_licence "$1"
 }
 
 # Some rules on the GROUP TAG: https://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/Packagers_Guide/chap-Packagers_Guide-Spec_File_Reference-Preamble.html
 # Derived from /usr/share/doc/rpm-4.8.0/ on Centos 6.5
 core_snippet_embed raw validate_rpm_group
-configure_validateRpmGroup()
+configure_validate_RpmGroup()
 {
-	configure_validateValue validate_rpm_group "$1"
+	configure_isValueValid validate_rpm_group "$1"
 	
 	if core_variable_isSet _swaddle_build_swaddleName; then
 		if core_variable_endsWith "$_swaddle_build_swaddleName" '-doc'; then
@@ -32,7 +32,7 @@ configure_validateRpmGroup()
 	fi
 }
 
-configure_validateRpmDigest()
+configure_validate_RpmDigest()
 {
 	case "$1" in
 
@@ -47,7 +47,7 @@ configure_validateRpmDigest()
 	esac
 }
 
-configure_validateRpmCompression()
+configure_validate_RpmCompression()
 {
 	case "$1" in
 

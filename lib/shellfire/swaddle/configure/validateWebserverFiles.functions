@@ -1,4 +1,4 @@
-configure_validateWebserverFilesDigest()
+configure_validate_WebserverFilesDigest()
 {
 	case "$1" in
 

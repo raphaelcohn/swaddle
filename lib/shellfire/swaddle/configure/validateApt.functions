@@ -2,18 +2,18 @@ core_usesIn configure
 core_usesIn swaddle/configure validateDeb
 
 core_snippet_embed raw validate_apt_language
-configure_validateAptLanguage()
+configure_validate_AptLanguage()
 {
-	configure_validateValue validate_apt_language "$1"
+	configure_isValueValid validate_apt_language "$1"
 }
 
 core_snippet_embed raw validate_apt_architecture
-configure_validateAptArchitecture()
+configure_validate_AptArchitecture()
 {
-	configure_validateValue validate_apt_architecture "$1"
+	configure_isValueValid validate_apt_architecture "$1"
 }
 
-configure_validateAptCompression()
+configure_validate_AptCompression()
 {
 	if [ "$1" = 'none' ]; then
 		return 0
