@@ -82,7 +82,7 @@ swaddle_build_package_tar_compress()
 			*)
 				local mimeType="$(swaddle_compress_mimeType "$compressor")"
 				local uppercaseFileCompression="$(printf '%s' "$compressor" | tr 'a-z' 'A-Z')"
-				local name="$_swaddle_build_swaddleName tarball ($uppercaseFileCompression)"
+				local name="$_swaddle_build_swaddleName tarball ($uppercaseFileCompression compressed)"
 			;;
 			
 		esac
