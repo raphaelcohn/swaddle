@@ -1,7 +1,7 @@
 # We also have configuration that isn't being handled yet
 
 core_usesIn swaddle publishers
-core_usesIn github api/v3
+core_usesIn github/api/v3 releases
 core_usesIn jsonreader
 swaddle_publishers_githubreleases_prepare()
 {
