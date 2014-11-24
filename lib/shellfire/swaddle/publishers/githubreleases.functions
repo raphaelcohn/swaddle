@@ -30,8 +30,7 @@ swaddle_publishers_githubreleases_prepare()
 	_swaddle_github_uploadUrlTemplate=''
 	_swaddle_githubReleases_event()
 	{
-		# :${jsonreader_path_index}/upload_url
-		if jsonreader_eventMatches '/upload_url' value string; then
+		if jsonreader_eventMatches '/upload_url' string; then
 			_swaddle_github_uploadUrlTemplate="$eventValue"
 		fi
 	}
