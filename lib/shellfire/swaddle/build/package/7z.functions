@@ -59,5 +59,5 @@ swaddle_build_package_7z_create()
 	
 	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_7z_filePath"
 	
-	swaddle_publishers_publish "${_swaddle_build_swaddleName} 7z Archive" "$_swaddle_build_package_7z_filePath" 'application/x-7z-compressed'
+	swaddle_publishers_publish "${_swaddle_build_swaddleName} 7z archive" "$_swaddle_build_package_7z_filePath" 'application/x-7z-compressed'
 }

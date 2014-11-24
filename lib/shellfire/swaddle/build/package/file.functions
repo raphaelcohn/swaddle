@@ -68,11 +68,11 @@ swaddle_build_package_file_create()
 	fi
 	local useFilePath="$_swaddle_build_package_root"/"$chosenFile"
 	
-	_swaddle_build_package_file_fileName="$parentPath"/"${_swaddle_build_swaddleName}_${_swaddle_build_package_file_version}_${_swaddle_build_package_translatedArchitecture}"
+	_swaddle_build_package_file_filePath="$parentPath"/"${_swaddle_build_swaddleName}_${_swaddle_build_package_file_version}_${_swaddle_build_package_translatedArchitecture}"
 	
-	rm -f "$_swaddle_build_package_file_fileName"
-	cp "$useFilePath" "$_swaddle_build_package_file_fileName" 
-	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_file_fileName"
+	rm -f "$_swaddle_build_package_file_filePath"
+	cp "$useFilePath" "$_swaddle_build_package_file_filePath" 
+	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_file_filePath"
 }
 
 core_dependency_requires '*' file tr
@@ -80,6 +80,13 @@ core_usesIn swaddle compress
 core_functions_register _swaddle_build_package_file_functions swaddle_build_package_file_compress
 swaddle_build_package_file_compress()
 {
+	local description
+	if [ -x "$_swaddle_build_package_file_filePath" ]; then
+		description='executable'
+	else
+		description='file'
+	fi
+	
 	_swaddle_build_package_file_compress_callback()
 	{
 		case "$compressor" in
@@ -90,13 +97,13 @@ swaddle_build_package_file_compress()
 				if core_variable_endsWith '; charset=binary'; then
 					mimeType="$(core_variable_allButLastN ${#unwantedEnding})"
 				fi
-				local name="$_swaddle_build_swaddleName"
+				local name="$_swaddle_build_swaddleName $description"
 			;;
 			
 			*)
 				local mimeType="$(swaddle_compress_mimeType "$compressor")"
 				local uppercaseFileCompression="$(printf '%s' "$compressor" | tr 'a-z' 'A-Z')"
-				local name="$_swaddle_build_swaddleName (compressed with $uppercaseFileCompression)"
+				local name="$_swaddle_build_swaddleName $description ($uppercaseFileCompression compressed)"
 			;;
 			
 		esac
@@ -104,5 +111,5 @@ swaddle_build_package_file_compress()
 		swaddle_publishers_publish "$name" "$compressedFileName" "$mimeType"
 	}
 	
-	swaddle_compress_variants 'swaddle_file' 'compressions' "$_swaddle_build_package_file_fileName" _swaddle_build_package_file_compress_callback 'gzip' 'lrzip' 'zip'
+	swaddle_compress_variants 'swaddle_file' 'compressions' "$_swaddle_build_package_file_filePath" _swaddle_build_package_file_compress_callback 'gzip' 'lrzip'
 }

@@ -69,7 +69,7 @@ swaddle_build_package_zip_create()
 	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_zip_filePath"
 	
 	local archiveKind="$(printf '%s' "$extension" | tr 'a-z' 'A-Z')"
-	swaddle_publishers_publish "${_swaddle_build_swaddleName} $archiveKind Archive" "$_swaddle_build_package_zip_filePath" 'application/zip'
+	swaddle_publishers_publish "${_swaddle_build_swaddleName} $archiveKind archive" "$_swaddle_build_package_zip_filePath" 'application/zip'
 }
 
 _swaddle_build_package_zip_create()
