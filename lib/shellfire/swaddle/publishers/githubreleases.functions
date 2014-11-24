@@ -26,15 +26,6 @@ swaddle_publishers_githubreleases_prepare()
 	github_api_v3_initialise "$githubApiTokenFile"
 	
 	github_api_v3_releases_create "$githubOwner" "$githubRepository" "$actualTagName" 'master' "$(configure_getValue swaddle version)" "Release version \`$(configure_getValue swaddle version)\` of repository \`$(configure_getValue swaddle repository_name)\`." true true
-	
-	_swaddle_github_uploadUrlTemplate=''
-	_swaddle_githubReleases_event()
-	{
-		if jsonreader_eventMatches '/upload_url' string; then
-			_swaddle_github_uploadUrlTemplate="$eventValue"
-		fi
-	}
-	jsonreader_parse "$github_api_v3_responseFilePath" _swaddle_githubReleases_event
 }
 
 swaddle_publishers_githubreleases_publish()
@@ -43,11 +34,11 @@ swaddle_publishers_githubreleases_publish()
 	local filePath="$2"
 	local contentType="$3"
 	
-	if [ -z "$_swaddle_github_uploadUrlTemplate" ]; then
+	if [ -z "$github_api_v3_releases_uploadUrlTemplate" ]; then
 		return 0
 	fi
 	
-	github_api_v3_releases_uploadAsset "$_swaddle_github_uploadUrlTemplate" "$filePath" "$contentType" "$descriptiveName"
+	github_api_v3_releases_uploadAsset "$github_api_v3_releases_uploadUrlTemplate" "$filePath" "$contentType" "$descriptiveName"
 }
 
 swaddle_publishers_githubreleases_finish()
