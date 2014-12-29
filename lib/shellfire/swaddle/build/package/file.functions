@@ -39,7 +39,7 @@ swaddle_build_package_file_create()
 	local chosenFile="$(configure_getValue swaddle_file path)"
 	if [ -n "$chosenFile" ]; then
 		if [ ! -f "$_swaddle_build_package_root"/"$chosenFile" ]; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The file '$chosenFile' does not exist as a file"
+			core_exitError $core_commandLine_exitCode_CONFIG "The file '$chosenFile' does not exist as a file at '$_swaddle_build_package_root/$chosenFile'"
 		fi
 	else
 		pushd "$_swaddle_build_package_root"
