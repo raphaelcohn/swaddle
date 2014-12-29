@@ -85,7 +85,7 @@ swaddle_build_package_synchroniseToPackageRoot()
 		
 		if core_variable_isTrue "$fixPermissions"; then
 			swaddle_touch_setMtimeAndAtimeAllRecursively "$folderStructurePath"
-			swaddle_simulateroot_execute chown -R root:root "$folderStructurePath"
+			swaddle_simulateroot_execute chown -R 0:0 "$folderStructurePath"
 		fi
 		
 		permissionsForFolderStructureFilePath="$folderStructurePath".permissions
