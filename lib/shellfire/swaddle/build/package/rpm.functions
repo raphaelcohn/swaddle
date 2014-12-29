@@ -114,6 +114,9 @@ swaddle_build_package_rpm_generateSpecFile()
 	core_snippet_retrieveAndSourceAsHereDoc swaddle_rpm_spec_template >"$_swaddle_build_package_rpm_specFile"
 	
 	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_rpm_specFile"
+	
+	# Now that the spec file exists, we need to remove root permissions so rpmbuild's %clean will not fail
+	swaddle_simulateroot_ownAsExecutingUser "$_swaddle_build_package_root"
 }
 
 core_usesIn swaddle webserverFiles
