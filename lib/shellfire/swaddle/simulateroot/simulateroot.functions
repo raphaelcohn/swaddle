@@ -25,7 +25,7 @@ swaddle_simulateroot_initialise()
 	core_exitError $core_commandLine_exitCode_OSFILE "No command to simulate or use root available (fakeroot-ng, fakeroot, sudo) to run '$@'"
 }
 
-swaddle_simulateroot_usingPackageStateFile()
+swaddle_simulateroot_execute()
 {
 	swaddle_simulateroot "$_swaddle_simulateroot_settingsFilePath" "$@"
 }
