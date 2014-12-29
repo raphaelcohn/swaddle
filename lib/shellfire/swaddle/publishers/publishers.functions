@@ -42,7 +42,7 @@ swaddle_publishers_tagAndPush()
 		swaddle_publishers_tagRetry 0
 		
 		if ! git push --quiet --all; then
-			if ! git push --quiet --all --set-upstream origin "$origin"; then
+			if ! git push --quiet --set-upstream origin "$origin"; then
 				core_message WARN "Can't push '$gitRepositoryPath' to '$origin'"
 			fi
 		fi
