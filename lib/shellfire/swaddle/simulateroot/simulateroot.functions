@@ -9,7 +9,7 @@ swaddle_simulateroot_initialise()
 	
 	# There are bugs in fakeroot on Mac OS X Yosemite
 	if [ "$(uname)" = 'Darwin' ]; then
-		_swaddle_simulateroot_usingPackageStateFile=swaddle_simulateroot_sudo
+		_swaddle_simulateroot_execute=swaddle_simulateroot_sudo
 		return
 	fi
 	
@@ -17,7 +17,7 @@ swaddle_simulateroot_initialise()
 	for simulation in fakerootng fakeroot sudo
 	do
 		if swaddle_simulateroot_${simulation}_test; then
-			_swaddle_simulateroot_usingPackageStateFile=swaddle_simulateroot_${simulation}
+			_swaddle_simulateroot_execute=swaddle_simulateroot_${simulation}
 			return 0
 		fi
 	done
@@ -27,5 +27,5 @@ swaddle_simulateroot_initialise()
 
 swaddle_simulateroot_execute()
 {
-	swaddle_simulateroot "$_swaddle_simulateroot_settingsFilePath" "$@"
+	$_swaddle_simulateroot_execute "$@"
 }
