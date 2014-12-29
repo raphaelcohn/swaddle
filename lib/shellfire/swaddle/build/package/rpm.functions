@@ -314,7 +314,12 @@ _swaddle_build_package_rpm_release()
 core_dependency_requires '*' head
 _swaddle_build_package_rpm_summaryDescription()
 {
-	printf '%s' "$(configure_getValue swaddle_package description)" | head -n 1
+	local summary="$(configure_getValue swaddle_package description | head -n 1 )"
+	if [ -z "$summary" ]; then
+		core_message FAIL "configure value 'swaddle_package description' has a blank first line which can't be used for a summary"
+	fi
+	
+	printf '%s' "$summary"
 }
 
 _swaddle_build_package_rpm_iterateDependencies()
