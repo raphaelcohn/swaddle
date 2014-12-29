@@ -71,10 +71,10 @@ swaddle_build_package_synchroniseToPackageRoot()
 		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/skeleton/"$_swaddle_build_package_architecture" \
 		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/body/any \
 		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/skeleton/any \
-		"$_swaddle_build_sourcePath"/body/any \
-		"$_swaddle_build_sourcePath"/skeleton/any \
 		"$_swaddle_build_sourcePath"/body/"$_swaddle_build_package_architecture" \
-		"$_swaddle_build_sourcePath"/skeleton/"$_swaddle_build_package_architecture"
+		"$_swaddle_build_sourcePath"/skeleton/"$_swaddle_build_package_architecture" \
+		"$_swaddle_build_sourcePath"/body/any \
+		"$_swaddle_build_sourcePath"/skeleton/any
 	do
 		if ! core_path_isReadableAndSearchableFolderPath "$folderStructurePath"; then
 			continue
