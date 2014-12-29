@@ -80,8 +80,8 @@ swaddle_build_packagesByArchitecture()
 	core_variable_array_initialise architecturesToBuild
 
 	local pathContainingPackageFiles
-	local weAreBuildingAllArchitecture=0
-	local weAreBuildingNotAllArchitecture=0
+	local weAreBuildingTheAllArchitecture=0
+	local weAreBuildingSpecificArchitecturesOtherThanAll=0
 	for pathContainingPackageFiles in "$_swaddle_build_sourcePath"/skeleton "$_swaddle_build_sourcePath"/body "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/body "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/skeleton
 	do
 		if ! core_path_isReadableAndSearchableFolderPath "$pathContainingPackageFiles"; then
@@ -106,17 +106,13 @@ swaddle_build_packagesByArchitecture()
 					;;
 					
 					all)
-						if ! core_variable_array_contains architecturesToBuild all; then
-							core_variable_array_append architecturesToBuild all
-							weAreBuildingAllArchitecture=1
-						fi
+						core_variable_array_appendUniquely architecturesToBuild all
+						weAreBuildingTheAllArchitecture=1
 					;;
 					
 					*)
-						if ! core_variable_array_contains architecturesToBuild "$potentialArchitecture"; then
-							core_variable_array_append architecturesToBuild "$potentialArchitecture"
-							weAreBuildingNotAllArchitecture=1
-						fi
+						core_variable_array_appendUniquely architecturesToBuild "$potentialArchitecture"
+						weAreBuildingSpecificArchitecturesOtherThanAll=1
 					;;
 					
 				esac
@@ -127,17 +123,17 @@ swaddle_build_packagesByArchitecture()
 		
 	done
 
-	if [ $weAreBuildingNotAllArchitecture -eq 1 ]; then
-		if [ $weAreBuildingNotAllArchitecture -eq 1 ]; then
-			core_exitError $core_commandLine_exitCode_CONFIG "We are already building specific architectures; it is not permitted to then build the 'all' architecture"
+	if [ $weAreBuildingSpecificArchitecturesOtherThanAll -eq 1 ]; then
+		if [ $weAreBuildingTheAllArchitecture -eq 1 ]; then
+			core_exitError $core_commandLine_exitCode_CONFIG "We are building specific architectures '$(core_variable_array_string architecturesToBuild ' ')'; it is not logical to also build the 'all' architecture"
 		fi
 	fi
 	
 	# Default to building 'all'
-	if [ $weAreBuildingNotAllArchitecture -eq 0 ]; then
-		if [ $weAreBuildingAllArchitecture -eq 0 ]; then
+	if [ $weAreBuildingSpecificArchitecturesOtherThanAll -eq 0 ]; then
+		if [ $weAreBuildingTheAllArchitecture -eq 0 ]; then
 			core_variable_array_append architecturesToBuild 'all'
-			weAreBuildingAllArchitecture=1
+			weAreBuildingTheAllArchitecture=1
 		fi
 	fi
 	
