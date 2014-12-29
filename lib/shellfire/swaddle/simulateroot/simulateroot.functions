@@ -10,7 +10,7 @@ swaddle_simulateroot_initialise()
 	# There are bugs in fakeroot on Mac OS X Yosemite
 	if [ "$(uname)" = 'Darwin' ]; then
 		_swaddle_simulateroot_execute=swaddle_simulateroot_sudo_execute
-		_swaddle_simulateroot_execute=swaddle_simulateroot_sudo_ownAsExecutingUser
+		_swaddle_simulateroot_ownAsExecutingUser=swaddle_simulateroot_sudo_ownAsExecutingUser
 		return
 	fi
 	
