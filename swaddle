@@ -33,7 +33,7 @@ _program_commandLine_helpMessage()
 	_program_commandLine_helpMessage_usage="[OPTION]... -- [SWADDLE]..."
 	_program_commandLine_helpMessage_description="Builds packages by 'swaddling' them."
 	_program_commandLine_helpMessage_options="
-  -s, --swaddling-path PATH    Path to swaddling (package definitions).
+  -s, --swaddling-path PATH   Path to swaddling (package definitions).
                               Defaults to current working directory:-
                               $(pwd)
   -o, --output-path PATH      Path to use when creating packages.
