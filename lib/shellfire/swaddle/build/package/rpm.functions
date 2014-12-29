@@ -181,7 +181,7 @@ swaddle_package_rpm_rpmbuild()
 	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_repositoryPath"/"$_swaddle_build_package_translatedArchitecture"
 	swaddle_touch_setMtimeAndAtime "$_swaddle_repository_yum_repositoryPath"
 	
-	swaddle_publishers_publish "${_swaddle_build_swaddleName} RPM package" "$rpmFilePath" 'application/x-redhat-package-manager'
+	swaddle_publishers_publish "${_swaddle_build_swaddleName} package (RPM)" "$rpmFilePath" 'application/x-redhat-package-manager'
 }
 
 _swaddle_build_package_rpm_digestAlgorithm()

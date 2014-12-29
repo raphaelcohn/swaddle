@@ -447,7 +447,7 @@ swaddle_build_package_deb_createDeb()
 	
 	swaddle_touch_setMtimeAndAtime "$debFilePath"
 	
-	swaddle_publishers_publish "${_swaddle_build_swaddleName} Debian package" "$debFilePath" 'application/vnd.debian.binary-package'
+	swaddle_publishers_publish "${_swaddle_build_swaddleName} package (Debian)" "$debFilePath" 'application/vnd.debian.binary-package'
 }
 
 _swaddle_build_package_deb_poolAZ()
