@@ -1,0 +1,10 @@
+swaddle_simulateroot_fakeroot_test()
+{
+	core_compatibility_whichNoOutput fakeroot
+}
+
+core_dependency_requires '*' fakeroot
+swaddle_simulateroot_fakeroot()
+{
+	fakeroot -u -i "$_swaddle_simulateroot_settingsFilePath" -s "$fakerootEnvironmentOutputPath" -- "$@"
+}

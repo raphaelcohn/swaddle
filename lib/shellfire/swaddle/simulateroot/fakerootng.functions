@@ -1,0 +1,10 @@
+swaddle_simulateroot_fakerootng_test()
+{
+	core_compatibility_whichNoOutput fakeroot-ng
+}
+
+core_dependency_requires '*' fakeroot-ng
+swaddle_simulateroot_fakerootng()
+{
+	fakeroot-ng -p "$_swaddle_simulateroot_settingsFilePath" -- "$@"
+}

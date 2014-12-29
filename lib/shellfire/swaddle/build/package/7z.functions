@@ -45,7 +45,7 @@ swaddle_build_package_7z_create()
 		local directory="$_swaddle_build_package_root"
 		local contents=.
 	else
-		swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" mv "$_swaddle_build_package_root" "$_swaddle_build_package_temporaryFolderPath"/"$baseName"
+		swaddle_simulateroot_execute mv "$_swaddle_build_package_root" "$_swaddle_build_package_temporaryFolderPath"/"$baseName"
 		
 		local directory="$_swaddle_build_package_temporaryFolderPath"
 		local contents="$baseName"

@@ -382,7 +382,7 @@ swaddle_build_package_deb_tarData()
 	
 	local tarball="$_swaddle_build_package_temporaryFolderPath"/data.tar
 	
-	swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" tar \
+	swaddle_simulateroot_execute tar \
 		--create \
 		--file "$tarball" \
 		--no-acls \
@@ -412,7 +412,7 @@ _swaddle_build_package_deb_permissionsForAr()
 	
 	swaddle_touch_setMtimeAndAtime "$filePath"
 	chmod 0644 "$filePath"
-	swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" chown 0:0 "$filePath"
+	swaddle_simulateroot_execute chown 0:0 "$filePath"
 }
 
 core_usesIn swaddle webserverFiles
@@ -433,7 +433,7 @@ swaddle_build_package_deb_createDeb()
 	
 	pushd "$_swaddle_build_package_temporaryFolderPath"
 	
-		swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" ar -q -c "$debFilePath" \
+		swaddle_simulateroot_execute ar -q -c "$debFilePath" \
 			debian-binary \
 			"$_swaddle_build_package_deb_controlTarballFileName" \
 			"$_swaddle_build_package_deb_dataTarballFileName"

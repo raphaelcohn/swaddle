@@ -2,9 +2,37 @@ core_usesIn swaddle configure
 core_dependency_requires '*' touch date
 swaddle_touch_setMtimeAndAtime()
 {
-	local filePath="$1"
-
 	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"
 	local mtime="$(date -d @$timestampInEpochSeconds +'%Y%m%d%H%M.%S')"
-	touch -m -a -c -h -t "$mtime" "$filePath"
+	touch -m -a -c -h -t "$mtime" "$@"
+}
+
+swaddle_touch_setMtimeAndAtimeAllRecursively()
+{
+	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"
+	local mtime="$(date -d @$timestampInEpochSeconds +'%Y%m%d%H%M.%S')"
+	_swaddle_touch_setMtimeAndAtimeAllRecursively "$@"
+}
+
+_swaddle_touch_setMtimeAndAtimeAllRecursively()
+{
+	for filePath in "$@"
+	do
+		if [ ! -e "$filePath" ]; then
+			continue
+		fi
+	
+		if [ -L "$filePath" ]; then
+			continue
+		fi
+	
+		if [ -d "$filePath" ]; then
+			set +f
+			set -- "$filePath"/*
+			set -f
+			_swaddle_touch_setMtimeAndAtimeAllRecursively "$@"
+		fi
+		
+		touch -m -a -c -h -t "$mtime" "$filePath"
+	done	
 }

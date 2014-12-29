@@ -1,0 +1,31 @@
+core_usesIn swaddle/simulateroot sudo fakeroot fakerootng
+
+core_dependency_requires '*' rm uname
+swaddle_simulateroot_initialise()
+{
+	_swaddle_simulateroot_settingsFilePath="$_swaddle_build_package_root".simulateroot
+	rm -rf "$_swaddle_simulateroot_settingsFilePath"
+	printf '' >"$_swaddle_simulateroot_settingsFilePath"
+	
+	# There are bugs in fakeroot on Mac OS X Yosemite
+	if [ "$(uname)" = 'Darwin' ]; then
+		_swaddle_simulateroot_usingPackageStateFile=swaddle_simulateroot_sudo
+		return
+	fi
+	
+	local simulation
+	for simulation in fakerootng fakeroot sudo
+	do
+		if swaddle_simulateroot_${simulation}_test; then
+			_swaddle_simulateroot_usingPackageStateFile=swaddle_simulateroot_${simulation}
+			return 0
+		fi
+	done
+	
+	core_exitError $core_commandLine_exitCode_OSFILE "No command to simulate or use root available (fakeroot-ng, fakeroot, sudo) to run '$@'"
+}
+
+swaddle_simulateroot_usingPackageStateFile()
+{
+	swaddle_simulateroot "$_swaddle_simulateroot_settingsFilePath" "$@"
+}

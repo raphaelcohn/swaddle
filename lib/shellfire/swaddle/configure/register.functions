@@ -206,7 +206,7 @@ swaddle_configure_register_miscellany()
 	configure_register Value NotEmpty swaddle epoch '0'
 	configure_register Value NotEmpty swaddle vendor
 	configure_register Value NotEmpty swaddle_package description
-	configure_register Value Any swaddle fix_permissions 'swaddle_fakeroot_fixPermissions'
+	configure_register Value Boolean swaddle fix_permissions yes
 }
 
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_byPackageKind

@@ -1,0 +1,10 @@
+swaddle_simulateroot_sudo_test()
+{
+	core_compatibility_whichNoOutput sudo
+}
+
+core_dependency_requires '*' sudo
+swaddle_simulateroot_sudo()
+{
+	sudo -p "Please enter the password for %p to run as root (required to change folder permissions; consider using fakeroot-ng or fakeroot instead): " "$@"
+}

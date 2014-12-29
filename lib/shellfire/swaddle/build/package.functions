@@ -54,22 +54,18 @@ swaddle_build_package_validateConfiguration()
 	configure_validate swaddle_${_swaddle_build_package_kind}
 }
 
-core_dependency_requires '*' rsync sort rm mkdir sort
+core_dependency_requires '*' chown rm mkdir rsync
 core_functions_register _swaddle_build_package_functions swaddle_build_package_synchroniseToPackageRoot
 swaddle_build_package_synchroniseToPackageRoot()
 {
-	_swaddle_build_package_rootFakerootFilePath="$_swaddle_build_package_root".fakeroot
+	swaddle_simulateroot_initialise
 	
-	local destinationFakerootTemporaryFilePath="$_swaddle_build_package_root".fakeroot.tmp
-	rm -f "$destinationFakerootTemporaryFilePath"
-	printf '' >"$destinationFakerootTemporaryFilePath"
-
-	local fixPermissionsBinaryOrFunction="$(configure_getValue swaddle fix_permissions)"
+	local fixPermissions="$(configure_getValue swaddle fix_permissions)"
 	
-	# If there are file conflicts (eg same file in multiple structures), first sync source wins
+	# List of paths to pass as sources to rsync
 	set --
 	local folderStructurePath
-	local fakerootEnvironmentFilePath
+	local permissionsForFolderStructureFilePath
 	for folderStructurePath in \
 		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/body/"$_swaddle_build_package_architecture" \
 		"$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/skeleton/"$_swaddle_build_package_architecture" \
@@ -80,28 +76,25 @@ swaddle_build_package_synchroniseToPackageRoot()
 		"$_swaddle_build_sourcePath"/body/"$_swaddle_build_package_architecture" \
 		"$_swaddle_build_sourcePath"/skeleton/"$_swaddle_build_package_architecture"
 	do
-		fakerootEnvironmentFilePath="$folderStructurePath".fakeroot
-		
-		# We do this before checking the path exists, so they can create it, too
-		if [ -n "$fixPermissionsBinaryOrFunction" ]; then
-			
-			if core_functions_exists "$fixPermissionsBinaryOrFunction"; then
-				$fixPermissionsBinaryOrFunction "$fakerootEnvironmentFilePath" "$folderStructurePath"
-			else
-				swaddle_fakeroot "$fakerootEnvironmentFilePath" "$fakerootEnvironmentFilePath" $fixPermissionsBinaryOrFunction "$fakerootEnvironmentFilePath" "$folderStructurePath"
-			fi
-		fi
-		
-		if [ -f "$fakerootEnvironmentFilePath" ]; then
-			cat "$fakerootEnvironmentFilePath" >>"$destinationFakerootTemporaryFilePath"
-		fi
-		
 		if ! core_path_isReadableAndSearchableFolderPath "$folderStructurePath"; then
 			continue
 		fi
-		
+
 		# Trailing '/' matters to rsync, remember!
 		set -- "$@" "$folderStructurePath"/
+		
+		if core_variable_isTrue "$fixPermissions"; then
+			swaddle_touch_setMtimeAndAtimeAllRecursively "$folderStructurePath"
+			swaddle_simulateroot_execute chown -R root:root "$folderStructurePath"
+		fi
+		
+		permissionsForFolderStructureFilePath="$folderStructurePath".permissions
+		if core_path_isReadableNonEmptyExecutableFilePath "$permissionsForFolderStructureFilePath"; then
+			pushd "$folderStructurePath"
+				swaddle_simulateroot_execute "$permissionsForFolderStructureFilePath" || core_exitError core_commandLine_exitCode_CONFIG "Failed to execute '$permissionsForFolderStructureFilePath'"
+			popd
+		fi
+		
 	done
 	
 	if [ $# -eq 0 ]; then
@@ -112,15 +105,9 @@ swaddle_build_package_synchroniseToPackageRoot()
 		mkdir -m 0755 -p "$_swaddle_build_package_root"
 		return 0
 	fi
-
-	local destinationFakerootFilePath="$_swaddle_build_package_rootFakerootFilePath"
-	if [ -f "$destinationFakerootFilePath" ]; then
-		cat "$destinationFakerootFilePath" >>"$destinationFakerootTemporaryFilePath"
-	fi
-	sort -u "$destinationFakerootTemporaryFilePath" >"$destinationFakerootFilePath"
-	rm "$destinationFakerootTemporaryFilePath"
-	
-	swaddle_fakeroot "$_swaddle_build_package_rootFakerootFilePath" "$_swaddle_build_package_rootFakerootFilePath" rsync --quiet --archive --acls --xattrs --hard-links --delete --delete-after --delete-excluded --exclude=.gitignore "$@" "$_swaddle_build_package_root"/
+		
+	# If there are file conflicts (eg same file in multiple structures), first sync source wins
+	swaddle_simulateroot_execute rsync --quiet --super --archive --acls --xattrs --hard-links --delete --delete-after --delete-excluded --exclude=.gitignore "$@" "$_swaddle_build_package_root"/
 }
 
 core_functions_register _swaddle_build_package_functions swaddle_build_package_kind
