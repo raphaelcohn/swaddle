@@ -2,12 +2,12 @@ configure_validate_TarCompression()
 {
 	case "$1" in
 
-		none|lzop|zip|gzip|bzip2|lzma|xz|lzip|rzip|lrzip)
+		none|lzop|gzip|bzip2|lzma|xz|lzip|rzip|lrzip)
 			:
 		;;
 
 		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression for a tar (it must be one of 'none', 'lzop', 'zip', 'gzip', 'bzip2', 'lzma', 'xz', 'lzip', 'rzip' or 'lrzip')."
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression for a tar (it must be one of 'none', 'lzop', 'gzip', 'bzip2', 'lzma', 'xz', 'lzip', 'rzip' or 'lrzip')."
 		;;
 		
 	esac
