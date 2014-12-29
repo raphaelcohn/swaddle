@@ -4,7 +4,12 @@ swaddle_simulateroot_fakerootng_test()
 }
 
 core_dependency_requires '*' fakeroot-ng
-swaddle_simulateroot_fakerootng()
+swaddle_simulateroot_fakerootng_execute()
 {
 	fakeroot-ng -p "$_swaddle_simulateroot_settingsFilePath" -- "$@"
+}
+
+swaddle_simulateroot_fakerootng_ownAsExecutingUser()
+{
+	:
 }

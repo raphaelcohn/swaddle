@@ -377,10 +377,9 @@ swaddle_build_package_deb_tarData()
 {
 	local options
 	local options_initialised
-	local tarFileName
-	
+
 	local tarball="$_swaddle_build_package_temporaryFolderPath"/data.tar
-	
+
 	swaddle_simulateroot_execute tar \
 		--create \
 		--file "$tarball" \
@@ -388,18 +387,17 @@ swaddle_build_package_deb_tarData()
 		--numeric-owner \
 		--directory "$_swaddle_build_package_root" \
 		.
-	
-	_swaddle_build_package_deb_dataTarballFileName="$tarFileName"
-	 
-	 local compression="$(configure_getValue swaddle_deb compression)"
-	 if [ "$compression" = 'none' ]; then
-		 _swaddle_build_package_deb_dataTarballFileName='data.tar'
-	 else
-		 swaddle_compress_$compression "$tarball"
-		 _swaddle_build_package_deb_dataTarballFileName="data.tar$(swaddle_compress_extension "$compression")"
-		 rm "$tarball"
-	 fi
-	 
+
+	local compression="$(configure_getValue swaddle_deb compression)"
+	if [ "$compression" = 'none' ]; then
+		_swaddle_build_package_deb_dataTarballFileName='data.tar'
+	else
+		swaddle_compress_$compression "$tarball"
+		_swaddle_build_package_deb_dataTarballFileName="data.tar$(swaddle_compress_extension "$compression")"
+		swaddle_simulateroot_ownAsExecutingUser "$tarball"
+		rm "$tarball"
+	fi
+
 	_swaddle_build_package_deb_permissionsForAr "$_swaddle_build_package_temporaryFolderPath"/"$_swaddle_build_package_deb_dataTarballFileName"
 }
 
@@ -436,7 +434,9 @@ swaddle_build_package_deb_createDeb()
 			debian-binary \
 			"$_swaddle_build_package_deb_controlTarballFileName" \
 			"$_swaddle_build_package_deb_dataTarballFileName"
-	
+
+		swaddle_simulateroot_ownAsExecutingUser "$debFilePath"
+		
 		rm -rf \
 			debian-binary \
 			"$_swaddle_build_package_deb_controlTarballFileName" \

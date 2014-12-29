@@ -4,7 +4,13 @@ swaddle_simulateroot_sudo_test()
 }
 
 core_dependency_requires '*' sudo
-swaddle_simulateroot_sudo()
+swaddle_simulateroot_sudo_execute()
 {
 	sudo -p "Please enter the password for %p to run as root (required to change folder permissions; consider using fakeroot-ng or fakeroot instead): " "$@"
+}
+
+swaddle_simulateroot_sudo_ownAsExecutingUser()
+{
+	local file="$1"
+	sudo -p "Please enter the password for %p to run as root (required to change folder permissions; consider using fakeroot-ng or fakeroot instead): " sh -c "chown -R \$SUDO_UID:\$SUDO_GID "$file""
 }
