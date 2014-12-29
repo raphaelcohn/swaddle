@@ -20,7 +20,7 @@ swaddle_git_findSwaddlesPathGitRoot()
 	fi
 	
 	local currentFolderPath="$swaddle_swaddlingPath"
-	while [ ! -d "$currentFolderPath"/.git ]
+	while [ ! -e "$currentFolderPath"/.git ]
 	do
 		currentFolderPath="$(core_compatibility_dirname "$currentFolderPath")"
 	done

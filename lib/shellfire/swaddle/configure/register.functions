@@ -5,9 +5,6 @@ core_functions_register _swaddle_configure_register_functions swaddle_git_findSw
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_configuration
 swaddle_configure_register_configuration()
 {
-	local repositoryName="$(core_compatibility_basename "$swaddle_swaddlingPath")"
-	configure_register Value NotEmpty swaddle repository_name "$repositoryName"
-	
 	if core_variable_isSet HOME; then
 		if core_path_isReadableAndSearchableFolderPath "$HOME/.gnupg"; then
 			configure_register Value ReadableSearchableFolderPath swaddle keyring "$HOME/.gnupg"
@@ -88,7 +85,7 @@ swaddle_configure_register_attemptToDiscoverRpmLicence()
 			break
 		fi
 		
-		if [ -d "$currentPath"/.git ]; then
+		if [ -e "$currentPath"/.git ]; then
 			configure_register Value RpmLicence swaddle_rpm licence
 			return 0
 		fi
@@ -132,6 +129,7 @@ swaddle_configure_register_attemptToDiscoverUrlAndGitHubParameters()
 		configure_register Value NotEmpty swaddle url
 		configure_register Value Any swaddle_github owner ''
 		configure_register Value Any swaddle_github repository ''
+		configure_register Value NotEmpty swaddle repository_name
 		return 0
 	fi
 	
@@ -156,6 +154,8 @@ swaddle_configure_register_attemptToDiscoverUrlAndGitHubParameters()
 		configure_register Value NotEmpty swaddle url "$pushUrl"
 		configure_register Value Any swaddle_github owner ''
 		configure_register Value Any swaddle_github repository ''
+		configure_register Value NotEmpty swaddle repository_name
+		return 0
 	fi
 	
 	local owner
@@ -167,6 +167,7 @@ swaddle_configure_register_attemptToDiscoverUrlAndGitHubParameters()
 	configure_register Value NotEmpty swaddle url "https://github.com/$owner/$repository"
 	configure_register Value Any swaddle_github owner "$owner"
 	configure_register Value Any swaddle_github repository "$repository"
+	configure_register Value NotEmpty swaddle repository_name "$repository"
 }
 
 core_dependency_requires '*' date
