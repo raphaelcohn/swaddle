@@ -1,4 +1,3 @@
-core_usesIn swaddle fakeroot
 core_usesIn swaddle touch
 core_usesIn swaddle configure
 
