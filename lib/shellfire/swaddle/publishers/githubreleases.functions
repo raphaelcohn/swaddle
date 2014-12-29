@@ -34,6 +34,10 @@ swaddle_publishers_githubreleases_publish()
 	local filePath="$2"
 	local contentType="$3"
 	
+	if core_variable_isUnset github_api_v3_releases_uploadUrlTemplate; then
+		return 0
+	fi
+	
 	if [ -z "$github_api_v3_releases_uploadUrlTemplate" ]; then
 		return 0
 	fi
