@@ -30,3 +30,8 @@ permissionsForFolderStructureFilePath="$folderStructurePath".permissions
 - could work with .etckeeper with minor changes (eg support for .etckeeper files, implement the maybe function)
 - could work with metastore (although this uses a binary format, keeps users / groups as names)
 - could just be a list of mkdir / chmod / chgrp / mkfifo, etc
+
+gpg vs gpg2 (only latter has cache, passphrase, etc)
+Need to create ~/.gnupg
+gpg --gen-key
+gpg-preset-passphrase
