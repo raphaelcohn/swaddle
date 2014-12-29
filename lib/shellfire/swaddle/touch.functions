@@ -30,7 +30,7 @@ _swaddle_touch_setMtimeAndAtimeAllRecursivelyUnderSimulatedRoot()
 			set +f
 			set -- "$filePath"/*
 			set -f
-			_swaddle_touch_setMtimeAndAtimeAllRecursively "$@"
+			_swaddle_touch_setMtimeAndAtimeAllRecursivelyUnderSimulatedRoot "$@"
 		fi
 		
 		swaddle_simulateroot_execute touch -m -a -c -h -t "$mtime" "$filePath"
