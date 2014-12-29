@@ -94,8 +94,8 @@ swaddle_build_package_file_compress()
 			none)
 				local mimeType="$(file "$compressedFileName")"
 				local unwantedEnding='; charset=binary'
-				if core_variable_endsWith '; charset=binary'; then
-					mimeType="$(core_variable_allButLastN ${#unwantedEnding})"
+				if core_variable_endsWith "$mimeType" "$unwantedEnding"; then
+					mimeType="$(core_variable_allButLastN "$mimeType" ${#unwantedEnding})"
 				fi
 				local name="$_swaddle_build_swaddleName $description"
 			;;
