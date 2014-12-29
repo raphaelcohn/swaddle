@@ -74,10 +74,6 @@ swaddle_build_package_tar_compress()
 			# Also application/x-gtar for tar.*
 			none)
 				local mimeType="application/x-tar"
-				local unwantedEnding='; charset=binary'
-				if core_variable_endsWith "$mimeType" "$unwantedEnding"; then
-					mimeType="$(core_variable_allButLastN "$mimeType" ${#unwantedEnding})"
-				fi
 				local name="$_swaddle_build_swaddleName tarball"
 			;;
 			
