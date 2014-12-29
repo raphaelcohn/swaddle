@@ -121,8 +121,9 @@ swaddle_configure_register_attemptToDiscoverUrlAndGitHubParameters()
 	configure_register Value NotEmpty swaddle host_base_url
 	configure_register Value Any swaddle bugs_url ''
 	
-	if core_path_isReadableNonEmptyFilePath "$swaddle_swaddlingPath"/.github-personal-access-token; then
-		configure_register Value GithubTokenFile swaddle_github api_token_file "$swaddle_swaddlingPath"/.github-personal-access-token
+	local potentialTokenFilePath=~/."${_program_namespace}"/github-personal-access-token
+	if core_path_isReadableNonEmptyFilePath "$potentialTokenFilePath"; then
+		configure_register Value GithubTokenFile swaddle_github api_token_file "$potentialTokenFilePath"
 	else
 		configure_register Value GithubTokenFile swaddle_github api_token_file ''
 	fi
