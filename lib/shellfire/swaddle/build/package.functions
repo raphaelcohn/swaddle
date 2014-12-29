@@ -83,8 +83,9 @@ swaddle_build_package_synchroniseToPackageRoot()
 		# Trailing '/' matters to rsync, remember!
 		set -- "$@" "$folderStructurePath"/
 		
+		# If this is a path such as "$_swaddle_build_sourcePath"/body/any AND simulateroot is sudo, then the time may already have been set AND the user made root
 		if core_variable_isTrue "$fixPermissions"; then
-			swaddle_touch_setMtimeAndAtimeAllRecursively "$folderStructurePath"
+			swaddle_touch_setMtimeAndAtimeAllRecursivelyUnderSimulatedRoot "$folderStructurePath"
 			swaddle_simulateroot_execute chown -R 0:0 "$folderStructurePath"
 		fi
 		

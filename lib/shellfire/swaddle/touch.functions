@@ -7,14 +7,14 @@ swaddle_touch_setMtimeAndAtime()
 	touch -m -a -c -h -t "$mtime" "$@"
 }
 
-swaddle_touch_setMtimeAndAtimeAllRecursively()
+swaddle_touch_setMtimeAndAtimeAllRecursivelyUnderSimulatedRoot()
 {
 	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"
 	local mtime="$(date -d @$timestampInEpochSeconds +'%Y%m%d%H%M.%S')"
-	_swaddle_touch_setMtimeAndAtimeAllRecursively "$@"
+	_swaddle_touch_setMtimeAndAtimeAllRecursivelyUnderSimulatedRoot "$@"
 }
 
-_swaddle_touch_setMtimeAndAtimeAllRecursively()
+_swaddle_touch_setMtimeAndAtimeAllRecursivelyUnderSimulatedRoot()
 {
 	for filePath in "$@"
 	do
@@ -33,6 +33,6 @@ _swaddle_touch_setMtimeAndAtimeAllRecursively()
 			_swaddle_touch_setMtimeAndAtimeAllRecursively "$@"
 		fi
 		
-		touch -m -a -c -h -t "$mtime" "$filePath"
+		swaddle_simulateroot_execute touch -m -a -c -h -t "$mtime" "$filePath"
 	done	
 }
