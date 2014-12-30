@@ -400,9 +400,7 @@ _swaddle_build_package_deb_createDataCopyright_copyrightText()
 		
 		count=$((count+1))
 		
-	done <<-EOF
-		$(configure_getValue swaddle copyright_text)
-	EOF
+	done <"$(configure_getValue swaddle copyright_file)"
 }
 
 _swaddle_build_package_deb_createDataCopyright_licenceText()
@@ -415,9 +413,7 @@ _swaddle_build_package_deb_createDataCopyright_licenceText()
 		else
 			printf " %s\n" "$licenceLine"
 		fi
-	done <<-EOF
-		$(configure_getValue swaddle copyright_text)
-	EOF
+	done <"$(configure_getValue swaddle licence_file)"
 }
 
 core_dependency_requires '*' tar rm
