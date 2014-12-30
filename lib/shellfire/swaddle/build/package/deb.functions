@@ -363,7 +363,7 @@ swaddle_build_package_deb_tarControl()
 }
 
 core_snippet_embed raw swaddle_deb_copyright_template
-core_dependency_requires '*' cp
+core_dependency_requires '*' cp chown
 swaddle_build_package_deb_createDataCopyright()
 {
 	local copyrightFile="$_swaddle_build_package_root"/usr/share/doc/"$_swaddle_build_swaddleName"/copyright

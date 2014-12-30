@@ -63,14 +63,16 @@ swaddle_configure_register_attemptToDiscoverVersionAndMtime()
 }
 
 core_dependency_requires '*' head
-core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverRpmLicence
-swaddle_configure_register_attemptToDiscoverRpmLicence()
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverLicence
+swaddle_configure_register_attemptToDiscoverLicence()
 {
-	if swaddle_git_swaddlingCanNotUseGit; then
+	_swaddle_configure_register_attemptToDiscoverLicence_failure()
+	{
 		configure_register Value Licence swaddle licence
-		return 0
-	fi
+		configure_register Value NotEmpty swaddle licence_text
+	}
 	
+	local iterationCount=1
 	local currentPath="$swaddle_swaddlingPath"
 	local licenceFilePath
 	while true
@@ -85,12 +87,19 @@ swaddle_configure_register_attemptToDiscoverRpmLicence()
 			break
 		fi
 		
-		if [ -e "$currentPath"/.git ]; then
-			configure_register Value Licence swaddle licence
+		if swaddle_git_swaddlingCanNotUseGit; then
+			# ie look for $swaddle_swaddlingPath/LICEN?E and $swaddle_swaddlingPath/../LICEN?E (latter is common as we have repo/swaddling/xxx)
+			if [ $iterationCount -eq 2 ]; then
+				_swaddle_configure_register_attemptToDiscoverLicence_failure
+				return 0
+			fi
+		elif [ -e "$currentPath"/.git ]; then
+			_swaddle_configure_register_attemptToDiscoverLicence_failure
 			return 0
 		fi
 		
 		currentPath="$currentPath"/..
+		iterationCount=$((iterationCount+1))
 	done
 		
 	local licence
@@ -102,13 +111,14 @@ swaddle_configure_register_attemptToDiscoverRpmLicence()
 		
 		*)
 			core_message NOTICE "Could not determine your licence automatically, please submit a pull request for swaddle"
-			configure_register Value Licence swaddle licence
+			_swaddle_configure_register_attemptToDiscoverLicence_failure
 			return 0
 		;;
 		
 	esac
 
 	configure_register Value Licence swaddle licence "$licence"
+	configure_register Value NotEmpty swaddle licence_text "$(<"$licenceFilePath")"
 }
 
 core_dependency_requires '*' git awk sed

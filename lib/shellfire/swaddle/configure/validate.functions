@@ -1,14 +1,6 @@
 core_usesIn configure
 core_usesIn swaddle/configure validateApt validateDeb validateFile validateGithub validateRpm validateYum validateWebserverFiles
 
-# Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
-# It seems Debian has different naming: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/#examples
-core_snippet_embed raw validate_licence
-configure_validate_Licence()
-{
-	configure_isValueValid validate_licence "$1"
-}
-
 configure_validate_Compression()
 {
 	case "$1" in
@@ -25,4 +17,50 @@ configure_validate_Compression()
 		;;
 		
 	esac
+}
+
+
+# Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
+# It seems Debian has different naming: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/#examples
+core_snippet_embed raw licences
+configure_validate_Licence()
+{
+	local configurationSettingValue="$1"
+	
+	case "$spdxIdentifier" in
+		
+		public-domain|unlicensed|licensed)
+			return 0
+		;;
+		
+	esac
+	
+	local TMP_FILE
+	core_temporaryFiles_newFileToRemoveOnExit
+	core_snippet_retrieve validate_licence no "$TMP_FILE"
+	local validValuesFilePath="$TMP_FILE"
+
+	local spdxIdentifier
+	local spdxName
+	local fedoraIdentifier
+	local found=0
+	while IFS="$(printf '\t')" read -r spdxIdentifier spdxName fedoraIdentifier
+	do
+		if [ "$configurationSettingValue" = "$spdxIdentifier" ]; then
+			found=1
+			break
+		fi
+	done <"$validValuesFilePath"
+	
+	if [ -n "$spdxIdentifier" ]; then
+		if [ "$configurationSettingValue" = "$spdxIdentifier" ]; then
+			found=1
+		fi
+	fi
+	
+	if [ $found -eq 0 ]; then
+		core_message WARN "The configuration setting '$configurationSettingName' ('$configurationSettingValue') is not a valid '$snippetName'."
+	fi
+	
+	rm "$validValuesFilePath"
 }
