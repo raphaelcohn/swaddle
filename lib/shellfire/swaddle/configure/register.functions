@@ -139,13 +139,8 @@ swaddle_configure_register_attemptToDiscoverCopyright()
 			break
 		fi
 		
-		copyrightFilePath="$currentPath"/COPYRIGHT
-		if core_path_isReadableNonEmptyFilePath "$copyrightFilePath"; then
-			break
-		fi
-		
 		if swaddle_git_swaddlingCanNotUseGit; then
-			# ie look for $swaddle_swaddlingPath/LICEN?E and $swaddle_swaddlingPath/../LICEN?E (latter is common as we have repo/swaddling/xxx)
+			# ie look for $swaddle_swaddlingPath/COPYRIGHT and $swaddle_swaddlingPath/../COPYRIGHT (latter is common as we have repo/swaddling/xxx)
 			if [ $iterationCount -eq 2 ]; then
 				_swaddle_configure_register_attemptToDiscoverCopyright_failure
 				return 0
