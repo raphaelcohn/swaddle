@@ -27,7 +27,7 @@ configure_validate_Licence()
 {
 	local configurationSettingValue="$1"
 	
-	case "$spdxIdentifier" in
+	case "$configurationSettingValue" in
 		
 		public-domain|unlicensed|licensed)
 			return 0
@@ -37,7 +37,7 @@ configure_validate_Licence()
 	
 	local TMP_FILE
 	core_temporaryFiles_newFileToRemoveOnExit
-	core_snippet_retrieve validate_licence no "$TMP_FILE"
+	core_snippet_retrieve licences no "$TMP_FILE"
 	local validValuesFilePath="$TMP_FILE"
 
 	local spdxIdentifier
@@ -59,7 +59,7 @@ configure_validate_Licence()
 	fi
 	
 	if [ $found -eq 0 ]; then
-		core_message WARN "The configuration setting '$configurationSettingName' ('$configurationSettingValue') is not a valid '$snippetName'."
+		core_message WARN "The configuration setting '$configurationSettingName' ('$configurationSettingValue') is not a known SPDX 'Licence'."
 	fi
 	
 	rm "$validValuesFilePath"

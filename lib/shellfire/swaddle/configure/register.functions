@@ -121,6 +121,42 @@ swaddle_configure_register_attemptToDiscoverLicence()
 	configure_register Value NotEmpty swaddle licence_text "$(<"$licenceFilePath")"
 }
 
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverLicence
+swaddle_configure_register_attemptToDiscoverCopyright()
+{
+	local iterationCount=1
+	local currentPath="$swaddle_swaddlingPath"
+	local copyrightFilePath
+	while true
+	do
+		copyrightFilePath="$currentPath"/COPYRIGHT
+		if core_path_isReadableNonEmptyFilePath "$copyrightFilePath"; then
+			break
+		fi
+		
+		copyrightFilePath="$currentPath"/COPYRIGHT
+		if core_path_isReadableNonEmptyFilePath "$copyrightFilePath"; then
+			break
+		fi
+		
+		if swaddle_git_swaddlingCanNotUseGit; then
+			# ie look for $swaddle_swaddlingPath/LICEN?E and $swaddle_swaddlingPath/../LICEN?E (latter is common as we have repo/swaddling/xxx)
+			if [ $iterationCount -eq 2 ]; then
+				_swaddle_configure_register_attemptToDiscoverLicence_failure
+				return 0
+			fi
+		elif [ -e "$currentPath"/.git ]; then
+			_swaddle_configure_register_attemptToDiscoverLicence_failure
+			return 0
+		fi
+		
+		currentPath="$currentPath"/..
+		iterationCount=$((iterationCount+1))
+	done
+	
+	configure_register Value NotEmpty swaddle copyright_text "$(<"$copyrightFilePath")"
+}
+
 core_dependency_requires '*' git awk sed
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverUrlAndGitHubParameters
 swaddle_configure_register_attemptToDiscoverUrlAndGitHubParameters()

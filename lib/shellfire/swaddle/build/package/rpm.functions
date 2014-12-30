@@ -325,6 +325,60 @@ _swaddle_build_package_rpm_summaryDescription()
 	printf '%s' "$summary"
 }
 
+_swaddle_build_package_rpm_licence()
+{
+	local configurationSettingValue="$(configure_getValue swaddle vendor)"
+	
+	case "$configurationSettingValue" in
+		
+		public-domain)
+			printf '%s' 'Public Domain'
+			return 0
+		;;
+		
+		unlicensed)
+			printf '%s' 'Unlicensed'
+			return 0
+		;;
+		
+		licensed)
+			printf '%s' 'Licensed'
+			return 0
+		;;
+		
+	esac
+	
+	local TMP_FILE
+	core_temporaryFiles_newFileToRemoveOnExit
+	# embedded in validate.functions
+	core_snippet_retrieve licences no "$TMP_FILE"
+	local validValuesFilePath="$TMP_FILE"
+
+	local spdxIdentifier
+	local spdxName
+	local fedoraIdentifier
+	local found=0
+	while IFS="$(printf '\t')" read -r spdxIdentifier spdxName fedoraIdentifier
+	do
+		if [ "$configurationSettingValue" = "$spdxIdentifier" ]; then
+			printf '%s' "$fedoraIdentifier"
+			rm "$validValuesFilePath"
+			return 0
+		fi
+	done <"$validValuesFilePath"
+	
+	if [ -n "$spdxIdentifier" ]; then
+		if [ "$configurationSettingValue" = "$spdxIdentifier" ]; then
+			printf '%s' "$fedoraIdentifier"
+			rm "$validValuesFilePath"
+			return 0
+		fi
+	fi
+	
+	core_message WARN "The configuration setting 'swaddle vendor' (SPDX '$configurationSettingValue') has no Fedora licence code equivalent."
+	rm "$validValuesFilePath"
+}
+
 _swaddle_build_package_rpm_iterateDependencies()
 {
 	local rpmTag="$1"
