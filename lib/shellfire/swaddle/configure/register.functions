@@ -69,7 +69,6 @@ swaddle_configure_register_attemptToDiscoverLicence()
 	_swaddle_configure_register_attemptToDiscoverLicence_failure()
 	{
 		configure_register Value Licence swaddle licence
-		configure_register Value NotEmpty swaddle licence_file
 	}
 	
 	local iterationCount=1
@@ -118,15 +117,17 @@ swaddle_configure_register_attemptToDiscoverLicence()
 	esac
 
 	configure_register Value Licence swaddle licence "$licence"
-	configure_register Value NotEmpty swaddle licence_file "$licenceFilePath"
 }
 
-core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverLicence
-swaddle_configure_register_attemptToDiscoverCopyright()
+core_dependency_requires '*' grep
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverCopyrightAndLicence
+swaddle_configure_register_attemptToDiscoverCopyrightAndLicence()
 {
 	_swaddle_configure_register_attemptToDiscoverCopyright_failure()
 	{
 		configure_register Value NotEmpty swaddle copyright_file
+		configure_register Value Licence swaddle licence
+		core_message NOTICE "Could not find a COPYRIGHT file"
 	}
 	
 	local iterationCount=1
@@ -155,6 +156,21 @@ swaddle_configure_register_attemptToDiscoverCopyright()
 	done
 	
 	configure_register Value NotEmpty swaddle copyright_file "$copyrightFilePath"
+	
+	local garbage1
+	local spdxLicenseName
+	local garbage2
+	IFS=' ' read -r garbage1 spdxLicenseName garbage2 <<-EOF
+		$(grep -m 1 '^License:.*$')
+	EOF
+	
+	if [ -z "$spdxLicenseName" ]; then
+		configure_register Value Licence swaddle licence
+		core_message NOTICE "Could not find a valid 'License:' line in the COPYRIGHT file '$copyrightFilePath'"
+		return 0
+	fi
+
+	configure_register Value Licence swaddle licence "$spdxLicenseName"
 }
 
 core_dependency_requires '*' git awk sed

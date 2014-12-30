@@ -382,38 +382,10 @@ swaddle_build_package_deb_createDataCopyright()
 	swaddle_simulateroot_execute chown 0:0 "$copyrightFile"
 }
 
+core_dependency_requires '*' cat
 _swaddle_build_package_deb_createDataCopyright_copyrightText()
 {
-	local count=0
-	local copyrightLine
-	while IFS='' read -r copyrightLine
-	do
-		if [ -z "$copyrightLine" ]; then
-			continue
-		fi
-		
-		if [ $count -ge 1 ]; then
-			printf '           '
-		fi
-		
-		printf '%s\n' "$copyrightLine"
-		
-		count=$((count+1))
-		
-	done <"$(configure_getValue swaddle copyright_file)"
-}
-
-_swaddle_build_package_deb_createDataCopyright_licenceText()
-{
-	local licenceLine
-	while IFS='' read -r licenceLine
-	do
-		if [ -z "$licenceLine" ]; then
-			printf ' .\n'
-		else
-			printf " %s\n" "$licenceLine"
-		fi
-	done <"$(configure_getValue swaddle licence_file)"
+	cat "$(configure_getValue swaddle copyright_file)"
 }
 
 core_dependency_requires '*' tar rm
