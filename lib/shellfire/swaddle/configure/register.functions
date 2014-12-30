@@ -67,7 +67,7 @@ core_functions_register _swaddle_configure_register_functions swaddle_configure_
 swaddle_configure_register_attemptToDiscoverRpmLicence()
 {
 	if swaddle_git_swaddlingCanNotUseGit; then
-		configure_register Value RpmLicence swaddle_rpm licence
+		configure_register Value Licence swaddle licence
 		return 0
 	fi
 	
@@ -86,7 +86,7 @@ swaddle_configure_register_attemptToDiscoverRpmLicence()
 		fi
 		
 		if [ -e "$currentPath"/.git ]; then
-			configure_register Value RpmLicence swaddle_rpm licence
+			configure_register Value Licence swaddle licence
 			return 0
 		fi
 		
@@ -102,13 +102,13 @@ swaddle_configure_register_attemptToDiscoverRpmLicence()
 		
 		*)
 			core_message NOTICE "Could not determine your licence automatically, please submit a pull request for swaddle"
-			configure_register Value RpmLicence swaddle_rpm licence
+			configure_register Value Licence swaddle licence
 			return 0
 		;;
 		
 	esac
 
-	configure_register Value RpmLicence swaddle_rpm licence "$licence"
+	configure_register Value Licence swaddle licence "$licence"
 }
 
 core_dependency_requires '*' git awk sed

@@ -9,13 +9,6 @@ configure_validate_RpmPackageArchitecture()
 	configure_validateYumArchitecture "$1"
 }
 
-# Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
-core_snippet_embed raw validate_rpm_licence
-configure_validate_RpmLicence()
-{
-	configure_isValueValid validate_rpm_licence "$1"
-}
-
 # Some rules on the GROUP TAG: https://docs.fedoraproject.org/en-US/Fedora_Draft_Documentation/0.1/html/Packagers_Guide/chap-Packagers_Guide-Spec_File_Reference-Preamble.html
 # Derived from /usr/share/doc/rpm-4.8.0/ on Centos 6.5
 core_snippet_embed raw validate_rpm_group

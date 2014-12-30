@@ -319,15 +319,6 @@ swaddle_build_package_deb_createControlFile()
 	} >"$controlFile"
 }
 
-core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createDebianBinary
-swaddle_build_package_deb_createDebianBinary()
-{
-	local _swaddle_build_package_deb_debianBinaryFilePath="$_swaddle_build_package_temporaryFolderPath"/debian-binary
-	printf '2.0\n' > "$_swaddle_build_package_deb_debianBinaryFilePath"
-	
-	_swaddle_build_package_deb_permissionsForAr "$_swaddle_build_package_deb_debianBinaryFilePath"
-}
-
 core_dependency_requires '*' tar rm
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_tarControl
 swaddle_build_package_deb_tarControl()
@@ -371,6 +362,26 @@ swaddle_build_package_deb_tarControl()
 	_swaddle_build_package_deb_permissionsForAr "$_swaddle_build_package_temporaryFolderPath"/"$_swaddle_build_package_deb_controlTarballFileName"
 }
 
+core_snippet_embed raw swaddle_deb_copyright_template
+core_dependency_requires '*' cp
+swaddle_build_package_deb_createDataCopyright()
+{
+	local copyrightFile="$_swaddle_build_package_root"/usr/share/doc/"$_swaddle_build_swaddleName"/copyright
+	if [ -e "$copyrightFile" ]; then
+		return 0
+	fi
+	
+	local temporaryCopyrightFile
+	local TMP_FILE
+	core_temporaryFiles_newFileToRemoveOnExit
+	temporaryCopyrightFile="$temporaryCopyrightFile"
+
+	core_snippet_retrieveAndSourceAsHereDoc swaddle_deb_copyright_template >"$temporaryCopyrightFile"
+	swaddle_simulateroot_execute cp -p "$temporaryCopyrightFile" "$copyrightFile"
+	swaddle_touch_setMtimeAndAtime "$temporaryCopyrightFile"
+	swaddle_simulateroot_execute chown 0:0 "$copyrightFile"
+}
+
 core_dependency_requires '*' tar rm
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_tarData
 swaddle_build_package_deb_tarData()
@@ -399,6 +410,15 @@ swaddle_build_package_deb_tarData()
 	fi
 
 	_swaddle_build_package_deb_permissionsForAr "$_swaddle_build_package_temporaryFolderPath"/"$_swaddle_build_package_deb_dataTarballFileName"
+}
+
+core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createDebianBinary
+swaddle_build_package_deb_createDebianBinary()
+{
+	local _swaddle_build_package_deb_debianBinaryFilePath="$_swaddle_build_package_temporaryFolderPath"/debian-binary
+	printf '2.0\n' > "$_swaddle_build_package_deb_debianBinaryFilePath"
+	
+	_swaddle_build_package_deb_permissionsForAr "$_swaddle_build_package_deb_debianBinaryFilePath"
 }
 
 # ar records uid, gid, mode and timestamp

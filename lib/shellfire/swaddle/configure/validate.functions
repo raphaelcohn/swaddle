@@ -1,0 +1,28 @@
+core_usesIn configure
+core_usesIn swaddle/configure validateApt validateDeb validateFile validateGithub validateRpm validateYum validateWebserverFiles
+
+# Derived from https://fedoraproject.org/wiki/Licensing:Main?rd=Licensing
+# It seems Debian has different naming: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/#examples
+core_snippet_embed raw validate_licence
+configure_validate_Licence()
+{
+	configure_isValueValid validate_licence "$1"
+}
+
+configure_validate_Compression()
+{
+	case "$1" in
+		
+		# Note that we omit 'zip'
+		# - for tar, it makes no real sense
+		# - for file, it works (using pigz) but conflicts with zip archives when uploaded to GitHub releases
+		none|lzop|gzip|bzip2|lzma|xz|lzip|rzip|lrzip)
+			:
+		;;
+
+		*)
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'none', 'lzop', 'gzip', 'bzip2', 'lzma', 'xz', 'lzip', 'rzip' or 'lrzip')."
+		;;
+		
+	esac
+}

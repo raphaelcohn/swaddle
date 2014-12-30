@@ -1,4 +1,4 @@
-core_usesIn swaddle/configure validateApt validateDeb validateGithub validateRpm validateTar validateYum validateWebserverFiles
+core_usesIn swaddle/configure validate
 
 swaddle_configure_maintainer()
 {

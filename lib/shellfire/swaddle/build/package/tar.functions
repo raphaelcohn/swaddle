@@ -3,7 +3,7 @@ core_usesIn swaddle webserverFiles
 swaddle_build_package_tar_registerConfiguration()
 {
 	configure_register Value Boolean swaddle_tar bomb 'no'
-	configure_register Array TarCompression swaddle_tar compressions
+	configure_register Array Compression swaddle_tar compressions
 }
 
 swaddle_build_package_tar()

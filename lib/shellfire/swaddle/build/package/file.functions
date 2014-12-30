@@ -3,7 +3,7 @@ core_usesIn swaddle webserverFiles
 swaddle_build_package_file_registerConfiguration()
 {
 	configure_register Value Any swaddle_file path ''
-	configure_register Array TarCompression swaddle_file compressions
+	configure_register Array Compression swaddle_file compressions
 }
 
 swaddle_build_package_file()
