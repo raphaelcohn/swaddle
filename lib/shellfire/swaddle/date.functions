@@ -1,0 +1,5 @@
+core_dependency_requires '*' date
+swaddle_date_formatTimestampAsHumanReadable()
+{
+	date -u -d @"$1" +'%a, %d %h %Y %H:%M:%S %Z'
+}

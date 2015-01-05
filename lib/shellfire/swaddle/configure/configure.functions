@@ -48,3 +48,10 @@ swaddle_configure_epochVersionIteration()
 		printf '%s' "$epoch":"$version"-"$iteration"
 	fi
 }
+
+core_usesIn swaddle date
+swaddle_configure_releaseDate()
+{
+	local timestamp="$(swaddle_configure_timestamp)"
+	swaddle_date_formatTimestampAsHumanReadable -u -d @$timestamp +'%a, %d %h %Y %H:%M:%S %Z'
+}

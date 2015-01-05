@@ -226,7 +226,8 @@ swaddle_repository_apt_createDistsContents()
 	swaddle_configure_apt_architectures _swaddle_repository_apt_createDistsContents_callback
 }
 
-core_dependency_requires '*' cat date ln stat
+core_usesIn swaddle configure
+core_dependency_requires '*' cat ln stat
 swaddle_repository_apt_createDistsRelease()
 {
 	local parentPath="$repositoryPath"
@@ -235,9 +236,6 @@ swaddle_repository_apt_createDistsRelease()
 	local configurationSettingValue
 	_configure_configurationSettingValue 'swaddle' 'apt_architectures'
 	local architectures="$configurationSettingValue"
-
-	local timestamp="$(swaddle_configure_timestamp)"
-	local releaseDate="$(date -u -d @$timestamp +'%a, %d %h %Y %H:%M:%S %Z')"
 	
 	{
 		cat <<-EOF
@@ -246,7 +244,7 @@ swaddle_repository_apt_createDistsRelease()
 			Suite: $(configure_getValue swaddle repository_name)
 			Version: $(configure_getValue swaddle version)
 			Codename: $(configure_getValue swaddle repository_name)
-			Date: ${releaseDate}
+			Date: $(swaddle_configure_releaseDate)
 			Architectures: $(core_variable_array_string "$architectures" ' ')
 			Components: $(core_variable_array_string  _swaddle_repository_apt_components ' ')
 			Description: $(configure_getValue swaddle vendor) $(configure_getValue swaddle repository_name) $(configure_getValue swaddle version)

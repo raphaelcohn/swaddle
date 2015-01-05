@@ -1,4 +1,4 @@
-core_usesIn swaddle compress digest
+core_usesIn swaddle compress digest date
 
 swaddle_webserverFiles_registerConfiguration()
 {
@@ -105,7 +105,7 @@ swaddle_webserverFiles_index()
 	
 	local dirname="$(core_compatibility_dirname "$filePath")"
 	local fileName="$(core_compatibility_basename "$filePath")"
-	local date="$(swaddle_webserverFiles_formatDate "$(stat -c '%Y' "$filePath")")"
+	local date="$(swaddle_date_formatTimestampAsHumanReadable "$(stat -c '%Y' "$filePath")")"
 	
 	if [ -d "$filePath" ]; then
 		local statFilePath="$filePath"/"$indexFileName"
@@ -214,7 +214,7 @@ Table:This repository was created using [swaddle](https://github.com/raphaelcohn
 core_dependency_requires '*' date
 swaddle_webserverFiles_releaseDate()
 {
-	releaseDate="$(swaddle_webserverFiles_formatDate "$(swaddle_configure_timestamp)")"
+	releaseDate="$(swaddle_date_formatTimestampAsHumanReadable "$(swaddle_configure_timestamp)")"
 }
 
 swaddle_webserverFiles_parentUrlMarkdown()
@@ -260,10 +260,4 @@ core_dependency_requires '*' pandoc
 swaddle_webserverFiles_pandoc()
 {
 	pandoc --from=markdown "$@" -o "$indexFilePath" "$inputFilePath"
-}
-
-core_dependency_requires '*' date
-swaddle_webserverFiles_formatDate()
-{
-	date -u -d @"$1" +'%a, %d %h %Y %H:%M:%S %Z'
 }
