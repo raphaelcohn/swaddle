@@ -1,4 +1,3 @@
-% SWADDLE(7) HEADER | FOOTER
 # swaddle
 
 swaddle creates RPM, Deb and tarball packages using shell script
