@@ -11,21 +11,6 @@ swaddle_build_package_tar()
 	core_functions_execute _swaddle_build_package_tar_functions "$@"
 }
 
-core_functions_register _swaddle_build_package_tar_functions swaddle_build_package_tar_computeTarVersion
-swaddle_build_package_tar_computeTarVersion()
-{
-	local epoch="$(configure_getValue swaddle epoch)"
-	local version="$(configure_getValue swaddle version)"
-	local iteration="$(configure_getValue swaddle iteration)"
-	if [ -z "$epoch" ]; then
-		_swaddle_build_package_tar_version="$version"-"$iteration"
-	elif [ "$epoch" = '0' ]; then
-		_swaddle_build_package_tar_version="$version"-"$iteration"
-	else
-		_swaddle_build_package_tar_version="$epoch":"$version"-"$iteration"
-	fi
-}
-
 core_dependency_requires '*' tar mv
 core_functions_register _swaddle_build_package_tar_functions swaddle_build_package_tar_createTarball
 swaddle_build_package_tar_createTarball()
@@ -36,7 +21,7 @@ swaddle_build_package_tar_createTarball()
 	mkdir -m 0755 -p "$tarballParentPath"
 	swaddle_touch_setMtimeAndAtime "$tarballParentPath"
 	
-	local baseName="${_swaddle_build_swaddleName}_${_swaddle_build_package_tar_version}_${_swaddle_build_package_translatedArchitecture}"
+	local baseName="${_swaddle_build_swaddleName}_$(swaddle_configure_epochVersionIteration)_${_swaddle_build_package_translatedArchitecture}"
 	_swaddle_build_package_tar_tarballFileName="$tarballParentPath"/"$baseName".tar
 	
 	swaddle_compress_variants_clean "$_swaddle_build_package_tar_tarballFileName"

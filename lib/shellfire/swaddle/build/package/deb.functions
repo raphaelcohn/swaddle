@@ -60,16 +60,7 @@ swaddle_build_package_deb()
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_computeDebianVersion
 swaddle_build_package_deb_computeDebianVersion()
 {
-	local epoch="$(configure_getValue swaddle epoch)"
-	local version="$(configure_getValue swaddle version)"
-	local iteration="$(configure_getValue swaddle iteration)"
-	if [ -z "$epoch" ]; then
-		_swaddle_build_package_deb_debianVersion="$version"-"$iteration"
-	elif [ "$epoch" = '0' ]; then
-		_swaddle_build_package_deb_debianVersion="$version"-"$iteration"
-	else
-		_swaddle_build_package_deb_debianVersion="$epoch":"$version"-"$iteration"
-	fi
+	_swaddle_build_package_deb_debianVersion="$(swaddle_configure_epochVersionIteration)"
 }
 
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createControlFolder

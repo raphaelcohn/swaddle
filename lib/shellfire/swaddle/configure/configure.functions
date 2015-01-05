@@ -34,3 +34,17 @@ swaddle_configure_apt_architectures()
 	local callback="$1"
 	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_apt' 'architectures' "$callback" 'amd64'
 }
+
+swaddle_configure_epochVersionIteration()
+{
+	local epoch="$(configure_getValue swaddle epoch)"
+	local version="$(configure_getValue swaddle version)"
+	local iteration="$(configure_getValue swaddle iteration)"
+	if [ -z "$epoch" ]; then
+		printf '%s' "$version"-"$iteration"
+	elif [ "$epoch" = '0' ]; then
+		printf '%s' "$version"-"$iteration"
+	else
+		printf '%s' "$epoch":"$version"-"$iteration"
+	fi
+}

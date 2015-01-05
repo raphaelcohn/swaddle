@@ -10,21 +10,6 @@ swaddle_build_package_rar()
 	core_functions_execute _swaddle_build_package_rar_functions "$@"
 }
 
-core_functions_register _swaddle_build_package_rar_functions swaddle_build_package_rar_computeRarVersion
-swaddle_build_package_rar_computeRarVersion()
-{
-	local epoch="$(configure_getValue swaddle epoch)"
-	local version="$(configure_getValue swaddle version)"
-	local iteration="$(configure_getValue swaddle iteration)"
-	if [ -z "$epoch" ]; then
-		_swaddle_build_package_rar_version="$version"-"$iteration"
-	elif [ "$epoch" = '0' ]; then
-		_swaddle_build_package_rar_version="$version"-"$iteration"
-	else
-		_swaddle_build_package_rar_version="$epoch":"$version"-"$iteration"
-	fi
-}
-
 core_dependency_requires '*' rar mkdir rm mv
 core_functions_register _swaddle_build_package_rar_functions swaddle_build_package_rar_create
 swaddle_build_package_rar_create()
@@ -35,7 +20,7 @@ swaddle_build_package_rar_create()
 	mkdir -m 0755 -p "$parentPath"
 	swaddle_touch_setMtimeAndAtime "$parentPath"
 	
-	local baseName="${_swaddle_build_swaddleName}_${_swaddle_build_package_rar_version}_${_swaddle_build_package_translatedArchitecture}"
+	local baseName="${_swaddle_build_swaddleName}_$(swaddle_configure_epochVersionIteration)_${_swaddle_build_package_translatedArchitecture}"
 	_swaddle_build_package_rar_filePath="$parentPath"/"$baseName".rar
 	
 	rm -f "$_swaddle_build_package_rar_filePath"
