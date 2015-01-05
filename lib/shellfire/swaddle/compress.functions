@@ -1,5 +1,3 @@
-core_usesIn swaddle webserverFiles
-
 core_dependency_requires '*' rm
 swaddle_compress_variants_clean()
 {
