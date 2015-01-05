@@ -1,0 +1,17 @@
+core_usesIn swaddle compress
+core_dependency_requires '*' pandoc rm
+swaddle_pandoc_readmeToManPage()
+{
+	local preferCompression="$1"
+	# eg /usr or /usr/local
+	local pathPrefix="$2"
+	
+	local section=7
+	local outputPath="${_swaddle_build_package_root}${pathPrefix}"/share/man/man${section}/${_swaddle_build_swaddleName}.${section}
+	pandoc --standalone --from=markdown_github --to=man --output="$outputPath"
+	
+	if core_variable_isTrue "$preferCompression"; then
+		swaddle_compress_gzip "$outputPath"
+		rm "$outputPath"
+	fi
+}
