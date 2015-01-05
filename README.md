@@ -35,3 +35,6 @@ gpg vs gpg2 (only latter has cache, passphrase, etc)
 Need to create ~/.gnupg
 gpg --gen-key
 gpg-preset-passphrase
+
+
+https://ask.fedoraproject.org/en/question/56107/can-gpg-agent-be-used-when-signing-rpm-packages/
