@@ -1,4 +1,4 @@
-core_usesIn swaddle compress
+core_usesIn swaddle compress date
 core_dependency_requires '*' tr pandoc rm
 swaddle_pandoc_readmeToManPage()
 {
@@ -21,7 +21,7 @@ swaddle_pandoc_readmeToManPage()
 	echo "
 % $(printf '%s' "$_swaddle_build_swaddleName" | tr 'a-z' 'A-Z')($section) FOOTER | HEADER
 % AUTHOR
-% DATE
+% $(swaddle_configure_releaseDate)
 " >"$titleFile"
 	pandoc --standalone --from=markdown_github+pandoc_title_block --output="$outputPath" --to=man "$titleFile" "$readmePath"
 	
