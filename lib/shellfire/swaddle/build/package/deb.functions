@@ -300,7 +300,7 @@ swaddle_build_package_deb_createControlFile()
 		_swaddle_build_package_deb_commaSeparatedControlField Conflicts conflicts
 		_swaddle_build_package_deb_commaSeparatedControlField Enhances enhances
 		_swaddle_build_package_deb_commaSeparatedControlField Task tasks
-		_swaddle_build_package_deb_commaSeparatedControlField Task tags
+		_swaddle_build_package_deb_commaSeparatedControlField Tags tags
 		cat <<-EOF
 			Section: $(configure_getValue swaddle_deb section)
 			Priority: $(configure_getValue swaddle_deb priority)
