@@ -34,3 +34,6 @@
 [submodule "lib/shellfire/compress"]
 	path = lib/shellfire/compress
 	url = https://github.com/shellfire-dev/compress
+[submodule "lib/shellfire/debian"]
+	path = lib/shellfire/debian
+	url = https://github.com/shellfire-dev/debian

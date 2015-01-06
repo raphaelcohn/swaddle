@@ -75,8 +75,8 @@ _swaddle_build_generators_manpage_titleBlock_authors()
 					;;
 					
 					Field)
-						local fieldName="$1"
-						local fieldType="$2"
+						local fieldName="$4"
+						local fieldType="$5"
 						
 						case "$fieldName" in
 							
@@ -115,8 +115,8 @@ _swaddle_build_generators_manpage_titleBlock_authors()
 					;;
 					
 					Field)
-						local fieldName="$1"
-						local fieldType="$2"
+						local fieldName="$4"
+						local fieldType="$5"
 						
 						case "$fieldName" in
 							
