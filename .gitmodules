@@ -31,3 +31,6 @@
 [submodule "lib/shellfire/github"]
 	path = lib/shellfire/github
 	url = https://github.com/shellfire-dev/github
+[submodule "lib/shellfire/compress"]
+	path = lib/shellfire/compress
+	url = https://github.com/shellfire-dev/compress

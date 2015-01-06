@@ -4,3 +4,46 @@
 
 core_usesIn compress
 core_usesIn compress lzop zip gzip bzip2 lzma rzip xz lzip zpaq lrzip
+
+core_dependency_requires '*' rm
+swaddle_compress_variants_clean()
+{
+	local existingFilePath="$1"
+	
+	local compressor
+	for compressor in none lzop zip gzip bzip2 rzip lzma xz lzip zpaq lrzip
+	do
+		rm -f "$existingFilePath"$(compress_extension "$compressor")
+	done
+}
+
+core_dependency_requires '*' rm
+swaddle_compress_variants()
+{
+	local namespace="$1"
+	local valueName="$2"
+	local originalFilePath="$3"
+	local callbackPerCompressedFile="$4"
+	shift 4
+
+	local keepUncompressedFile=no
+	_compress_variants_callback()
+	{
+		local compressor="$core_variable_array_element"
+		if [ "$compressor" = 'none' ]; then
+			keepUncompressedFile=yes
+		else
+			compress_${compressor} "$originalFilePath"
+		fi
+		local compressedFileName="$originalFilePath"$(compress_extension "$compressor")
+		if [ -n "$callbackPerCompressedFile" ]; then
+			$callbackPerCompressedFile "$compressedFileName"
+		fi
+	}
+	
+	configure_iterateOverArrayWithDefaultsIfEmpty "$namespace" "$valueName" _compress_variants_callback "$@"
+	
+	if core_variable_isFalse "$keepUncompressedFile"; then
+		rm "$originalFilePath"
+	fi
+}
