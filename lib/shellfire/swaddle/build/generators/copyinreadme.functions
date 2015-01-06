@@ -23,7 +23,7 @@ swaddle_build_generators_copyinreadme_generate()
 	cp "$(configure_getValue swaddle readme_file)" "$outputFolderPath"
 	
 	if core_variable_isTrue "$preferCompression"; then
-		swaddle_compress_gzip "$outputFilePath"
+		compress_gzip "$outputFilePath"
 		rm "$outputFilePath"
 	fi
 }

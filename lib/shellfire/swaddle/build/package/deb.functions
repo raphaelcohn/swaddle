@@ -358,7 +358,7 @@ swaddle_build_package_deb_tarControl()
 		--directory "$_swaddle_build_package_deb_controlFolderPath" \
 		.
 	
-	swaddle_compress_xz "$tarball"
+	compress_xz "$tarball"
 	rm "$tarball"
 	
 	_swaddle_build_package_deb_controlTarballFileName='control.tar.xz'
@@ -386,8 +386,8 @@ swaddle_build_package_deb_tarData()
 	if [ "$compression" = 'none' ]; then
 		_swaddle_build_package_deb_dataTarballFileName='data.tar'
 	else
-		swaddle_compress_$compression "$tarball"
-		_swaddle_build_package_deb_dataTarballFileName="data.tar$(swaddle_compress_extension "$compression")"
+		compress_$compression "$tarball"
+		_swaddle_build_package_deb_dataTarballFileName="data.tar$(compress_extension "$compression")"
 		swaddle_simulateroot_ownAsExecutingUser "$tarball"
 		rm "$tarball"
 	fi

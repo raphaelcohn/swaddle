@@ -216,7 +216,7 @@ swaddle_repository_apt_createDistsContents()
 			}>>Contents-"$packageArchitecture"
 
 			swaddle_touch_setMtimeAndAtime Contents-"$packageArchitecture"
-			swaddle_compress_gzip Contents-"$packageArchitecture"
+			compress_gzip Contents-"$packageArchitecture"
 			
 			# Yes, really delete it. apt-file only looks for a gz file ordinarily.
 			rm Contents-"$packageArchitecture"

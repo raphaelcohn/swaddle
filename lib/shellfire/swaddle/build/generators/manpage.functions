@@ -26,7 +26,7 @@ swaddle_build_generators_manpage_generate()
 	pandoc --standalone --from=markdown_github+pandoc_title_block --output="$outputFilePath" --to=man "$titleBlockFile" "$(configure_getValue swaddle readme_file)"
 	
 	if core_variable_isTrue "$preferCompression"; then
-		swaddle_compress_gzip "$outputFilePath"
+		compress_gzip "$outputFilePath"
 		rm "$outputFilePath"
 	fi
 }

@@ -88,7 +88,7 @@ swaddle_repository_yum_rpmxml_addToRepodata()
 	local digest="$(swaddle_digest sha256 "$filePath")"
 	local size="$(stat -c '%s' "$filePath")"
 
-	swaddle_compress_gzip "$filePath"
+	compress_gzip "$filePath"
 	rm "$filePath"
 	local compressedFilePath="$filePath".gz
 	local digestGz="$(swaddle_digest sha256 "$compressedFilePath")"
@@ -137,7 +137,7 @@ swaddle_repository_yum_rpmxml_addToRepodataComps()
 	
 		xmlwriter_close data
 	
-		swaddle_compress_gzip "$digestFilePath"
+		compress_gzip "$digestFilePath"
 		local compressedDigestFilePath="$digestFilePath".gz
 		local digestGz="$(swaddle_digest sha256 "$compressedDigestFilePath")"
 		local sizeGz="$(stat -c '%s' "$compressedDigestFilePath")"

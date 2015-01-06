@@ -23,7 +23,7 @@ swaddle_build_generators_copyright_generate()
 	debian_controldata_parser _swaddle_build_generators_copyinreadme_generate_eventHandler debian_controldata_parser_paragraph_copyright no "$(configure_getValue swaddle copyright_file)" >"$outputFilePath"
 	
 	if core_variable_isTrue "$preferCompression"; then
-		swaddle_compress_gzip "$outputFilePath"
+		compress_gzip "$outputFilePath"
 		rm "$outputFilePath"
 	fi
 }

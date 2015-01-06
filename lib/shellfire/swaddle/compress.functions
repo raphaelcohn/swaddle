@@ -6,7 +6,7 @@ core_usesIn compress
 core_usesIn compress lzop zip gzip bzip2 lzma rzip xz lzip zpaq lrzip
 
 core_dependency_requires '*' rm
-swaddle_compress_variants_clean()
+swaddle_xcompress_variants_clean()
 {
 	local existingFilePath="$1"
 	
@@ -18,7 +18,7 @@ swaddle_compress_variants_clean()
 }
 
 core_dependency_requires '*' rm
-swaddle_compress_variants()
+swaddle_xcompress_variants()
 {
 	local namespace="$1"
 	local valueName="$2"
