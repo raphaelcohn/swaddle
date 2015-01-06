@@ -80,9 +80,21 @@ swaddle_build_package_file_compress()
 	else
 		description='file'
 	fi
+
+	if [ "$_swaddle_build_package_architecture" = 'all' ]; then
+		local descriptiveName="${_swaddle_build_swaddleName} archive (RAR)"
+	else
+		local descriptiveName="${_swaddle_build_swaddleName} ${_swaddle_build_package_translatedArchitecture} archive (RAR)"
+	fi
 	
 	_swaddle_build_package_file_compress_callback()
 	{
+		if [ "$_swaddle_build_package_architecture" = 'all' ]; then
+			local name="$_swaddle_build_swaddleName $description"
+		else
+			local name="$_swaddle_build_swaddleName ${_swaddle_build_package_translatedArchitecture} $description"
+		fi
+		
 		case "$compressor" in
 			
 			none)
@@ -91,18 +103,18 @@ swaddle_build_package_file_compress()
 				if core_variable_endsWith "$mimeType" "$unwantedEnding"; then
 					mimeType="$(core_variable_allButLastN "$mimeType" ${#unwantedEnding})"
 				fi
-				local name="$_swaddle_build_swaddleName $description"
+				local descriptiveName="$name"
 			;;
 			
 			*)
 				local mimeType="$(swaddle_compress_mimeType "$compressor")"
 				local uppercaseFileCompression="$(printf '%s' "$compressor" | tr 'a-z' 'A-Z')"
-				local name="$_swaddle_build_swaddleName $description ($uppercaseFileCompression compressed)"
+				local descriptiveName="$name ($uppercaseFileCompression compressed)"
 			;;
 			
 		esac
 		
-		swaddle_publishers_publish "$name" "$compressedFileName" "$mimeType"
+		swaddle_publishers_publish "$descriptiveName" "$compressedFileName" "$mimeType"
 	}
 	
 	swaddle_compress_variants 'swaddle_file' 'compressions' "$_swaddle_build_package_file_filePath" _swaddle_build_package_file_compress_callback 'gzip' 'lrzip'

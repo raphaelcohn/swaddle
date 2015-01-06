@@ -66,7 +66,13 @@ swaddle_build_package_zip_create()
 	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_zip_filePath"
 	
 	local archiveKind="$(printf '%s' "$extension" | tr 'a-z' 'A-Z')"
-	swaddle_publishers_publish "${_swaddle_build_swaddleName} archive ($archiveKind)" "$_swaddle_build_package_zip_filePath" 'application/zip'
+	
+	if [ "$_swaddle_build_package_architecture" = 'all' ]; then
+		local descriptiveName="${_swaddle_build_swaddleName} archive ($archiveKind)"
+	else
+		local descriptiveName="${_swaddle_build_swaddleName} ${_swaddle_build_package_translatedArchitecture} archive ($archiveKind)"
+	fi
+	swaddle_publishers_publish "$descriptiveName" "$_swaddle_build_package_zip_filePath" 'application/zip'
 }
 
 _swaddle_build_package_zip_create()

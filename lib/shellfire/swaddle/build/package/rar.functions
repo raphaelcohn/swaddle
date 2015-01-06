@@ -55,5 +55,10 @@ swaddle_build_package_rar_create()
 	
 	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_rar_filePath"
 	
-	swaddle_publishers_publish "${_swaddle_build_swaddleName} archive (RAR)" "$_swaddle_build_package_rar_filePath" 'application/x-rar-compressed'
+	if [ "$_swaddle_build_package_architecture" = 'all' ]; then
+		local descriptiveName="${_swaddle_build_swaddleName} archive (RAR)"
+	else
+		local descriptiveName="${_swaddle_build_swaddleName} ${_swaddle_build_package_translatedArchitecture} archive (RAR)"
+	fi
+	swaddle_publishers_publish "$descriptiveName" "$_swaddle_build_package_rar_filePath" 'application/x-rar-compressed'
 }
