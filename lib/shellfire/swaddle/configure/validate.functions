@@ -59,7 +59,7 @@ configure_validate_Licence()
 	fi
 	
 	if [ $found -eq 0 ]; then
-		core_message WARN "The configuration setting '$configurationSettingName' ('$configurationSettingValue') is not a known SPDX 'Licence'."
+		core_message WARN "The configuration setting '$configurationSettingName' ('$configurationSettingValue') is not a known SPDX 'Licence' (?is it a composite)."
 	fi
 	
 	rm "$validValuesFilePath"

@@ -1,0 +1,25 @@
+core_usesIn swaddle compress
+core_dependency_requires '*' mkdir cp rm
+swaddle_build_generators_copyinreadme_generate()
+{
+	local preferCompression="$1"
+	# eg /usr or /usr/local
+	local pathPrefix="$2"
+	local fileName="$3"
+	
+	if [ "$pathPrefix" = '/' ]; then
+		local outputFolderPath="${_swaddle_build_package_generatedContentPath}"
+	else
+		local outputFolderPath="${_swaddle_build_package_generatedContentPath}${pathPrefix}"/share/doc/${_swaddle_build_swaddleName}
+	fi
+	mkdir -m 0755 -p "$outputFolderPath"
+	
+	local outputFilePath="$outputFolderPath"/"$fileName"
+	
+	cp "$(configure_getValue swaddle readme_file)" "$outputFolderPath"
+	
+	if core_variable_isTrue "$preferCompression"; then
+		swaddle_compress_gzip "$outputFilePath"
+		rm "$outputFilePath"
+	fi
+}

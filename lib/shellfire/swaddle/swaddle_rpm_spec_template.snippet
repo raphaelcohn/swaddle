@@ -42,8 +42,8 @@ AutoProv: $(_swaddle_build_package_rpm_yesNo auto_prov)
 BuildRoot: %buildroot
 Prefix: /
 Group: $(configure_getValue swaddle_rpm category)
-License: $(configure_getValue swaddle licence)
-Vendor: $(_swaddle_build_package_rpm_licence)
+License: $(_swaddle_build_package_rpm_licence)
+Vendor: $(configure_getValue swaddle vendor)
 URL: $(configure_getValue swaddle url)
 BugURL: $(swaddle_configure_bugsUrl)
 Packager: $(swaddle_configure_maintainer)

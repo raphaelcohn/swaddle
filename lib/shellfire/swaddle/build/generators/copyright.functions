@@ -1,0 +1,105 @@
+core_usesIn swaddle compress
+core_dependency_requires '*' mkdir rm
+swaddle_build_generators_copyright_generate()
+{
+	local preferCompression="$1"
+	# eg /usr or /usr/local
+	local pathPrefix="$2"
+	local fileName="$3"
+	
+	if [ "$pathPrefix" = '/' ]; then
+		local outputFolderPath="${_swaddle_build_package_generatedContentPath}"
+	else
+		local outputFolderPath="${_swaddle_build_package_generatedContentPath}${pathPrefix}"/share/doc/${_swaddle_build_swaddleName}
+	fi
+	mkdir -m 0755 -p "$outputFolderPath"
+	
+	local outputFilePath="$outputFolderPath"/"$fileName"
+	
+	debian_controldata_parser _swaddle_build_generators_copyinreadme_generate_eventHandler debian_controldata_parser_paragraph_copyright no "$(configure_getValue swaddle copyright_file)" >"$outputFilePath"
+	
+	if core_variable_isTrue "$preferCompression"; then
+		swaddle_compress_gzip "$outputFilePath"
+		rm "$outputFilePath"
+	fi
+}
+
+core_usesIn debian_controldata parser paragraph/copyright
+_swaddle_build_generators_copyright_generate_eventHandler()
+{
+	local fileFormat="$1"
+	local paragraphType="$2"
+	local eventType="$3"
+	
+	if [ "$fileFormat" != 'Copyright' ]; then
+		core_exitError $core_commandLine_exitCode_SOFTWARE "Unexpected fileFormat '$fileFormat'"
+	fi
+	
+	case "$paragraphType" in
+		
+		Header)
+			
+			case "$eventType" in
+				
+				ParagraphStart)
+					:
+				;;
+				
+				Field)
+					debian_controldata_parser_outputRawFieldLines
+				;;
+				
+				ParagraphEnd)
+					if ! core_variable_array_contains debian_controldata_parser_fieldsInParagraph Upstream-Name; then
+						printf '%s\n' "Upstream-Name: $_swaddle_build_swaddleName"
+					fi
+					if ! core_variable_array_contains debian_controldata_parser_fieldsInParagraph Upstream-Contact; then
+						printf '%s\n' "Upstream-Contact: $(swaddle_configure_maintainer)"
+					fi
+					if ! core_variable_array_contains debian_controldata_parser_fieldsInParagraph Source; then
+						printf '%s\n' "Source: $(configure_getValue swaddle url)"
+					fi
+					if ! core_variable_array_contains debian_controldata_parser_fieldsInParagraph Disclaimer; then
+						printf '%s\n' "Disclaimer: This package is not part of Debian"
+					fi
+					printf '\n'
+				;;
+				
+				*)
+					core_exitError $core_commandLine_exitCode_SOFTWARE "Unexpected eventType '$eventType'"
+				;;
+				
+			esac
+			
+		;;
+		
+		Files|License)
+			
+			case "$eventType" in
+				
+				ParagraphStart)
+					:
+				;;
+				
+				Field)
+					debian_controldata_parser_outputRawFieldLines
+				;;
+				
+				ParagraphEnd)
+					printf '\n'
+				;;
+				
+				*)
+					core_exitError $core_commandLine_exitCode_SOFTWARE "Unexpected eventType '$eventType'"
+				;;
+				
+			esac
+			
+		;;
+		
+		*)
+			core_exitError $core_commandLine_exitCode_SOFTWARE "Unexpected paragraphType '$paragraphType'"
+		;;
+		
+	esac
+}

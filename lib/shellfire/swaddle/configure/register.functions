@@ -62,61 +62,43 @@ swaddle_configure_register_attemptToDiscoverVersionAndMtime()
 	popd
 }
 
-core_dependency_requires '*' head
-core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverLicence
-swaddle_configure_register_attemptToDiscoverLicence()
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverReadme
+swaddle_configure_register_attemptToDiscoverReadme()
 {
-	_swaddle_configure_register_attemptToDiscoverLicence_failure()
+	_swaddle_configure_register_attemptToDiscoverReadme_failure()
 	{
-		configure_register Value Licence swaddle licence
+		configure_register Value NotEmpty swaddle readme_file
 	}
 	
 	local iterationCount=1
 	local currentPath="$swaddle_swaddlingPath"
-	local licenceFilePath
+	local readmeFilePath
 	while true
 	do
-		licenceFilePath="$currentPath"/LICENSE
-		if core_path_isReadableNonEmptyFilePath "$licenceFilePath"; then
-			break
-		fi
-		
-		licenceFilePath="$currentPath"/LICENCE
-		if core_path_isReadableNonEmptyFilePath "$licenceFilePath"; then
+		readmeFilePath="$currentPath"/README.md
+		if core_path_isReadableNonEmptyFilePath "$readmeFilePath"; then
 			break
 		fi
 		
 		if swaddle_git_swaddlingCanNotUseGit; then
-			# ie look for $swaddle_swaddlingPath/LICEN?E and $swaddle_swaddlingPath/../LICEN?E (latter is common as we have repo/swaddling/xxx)
+			# ie look for $swaddle_swaddlingPath/COPYRIGHT and $swaddle_swaddlingPath/../COPYRIGHT (latter is common as we have repo/swaddling/xxx)
 			if [ $iterationCount -eq 2 ]; then
-				_swaddle_configure_register_attemptToDiscoverLicence_failure
+				_swaddle_configure_register_attemptToDiscoverReadme_failure
 				return 0
 			fi
 		elif [ -e "$currentPath"/.git ]; then
-			_swaddle_configure_register_attemptToDiscoverLicence_failure
+			_swaddle_configure_register_attemptToDiscoverReadme_failure
 			return 0
 		fi
 		
 		currentPath="$currentPath"/..
+		pushd "$currentPath"
+			currentPath="$(pwd)"
+		popd
 		iterationCount=$((iterationCount+1))
 	done
-		
-	local licence
-	case "$(head -n 1 "$licenceFilePath")" in
-		
-		'The MIT License (MIT)')
-			licence='MIT'
-		;;
-		
-		*)
-			core_message NOTICE "Could not determine your licence automatically, please submit a pull request for swaddle"
-			_swaddle_configure_register_attemptToDiscoverLicence_failure
-			return 0
-		;;
-		
-	esac
 
-	configure_register Value Licence swaddle licence "$licence"
+	configure_register Value NotEmpty swaddle readme_file "$readmeFilePath"
 }
 
 core_dependency_requires '*' grep
@@ -152,11 +134,15 @@ swaddle_configure_register_attemptToDiscoverCopyrightAndLicence()
 		fi
 		
 		currentPath="$currentPath"/..
+		pushd "$currentPath"
+			currentPath="$(pwd)"
+		popd
 		iterationCount=$((iterationCount+1))
 	done
 	
 	configure_register Value NotEmpty swaddle copyright_file "$copyrightFilePath"
 	
+	# Whilst this logic could use the debian_controlfile_parser, grep will be sufficient. It'll find the first License line.
 	local garbage1
 	local spdxLicenseName
 	local garbage2

@@ -46,6 +46,14 @@ swaddle_build_package_deb_registerConfiguration()
 	core_TODO "We don't yet support debconf and templates, as, in our view, they're evil."
 }
 
+core_usesIn swaddle/build/generators manpage copyinreadme copyright
+swaddle_build_package_deb_generateContent()
+{
+	swaddle_build_generators_manpage_generate yes '/usr'
+	swaddle_build_generators_copyinreadme_generate yes '/usr' README
+	swaddle_build_generators_copyright_generate no '/usr' copyright
+}
+
 swaddle_build_package_deb()
 {
 	local multiarch="$(configure_getValue swaddle_deb multiarch)"
@@ -351,32 +359,6 @@ swaddle_build_package_deb_tarControl()
 	
 	_swaddle_build_package_deb_controlTarballFileName='control.tar.xz'
 	_swaddle_build_package_deb_permissionsForAr "$_swaddle_build_package_temporaryFolderPath"/"$_swaddle_build_package_deb_controlTarballFileName"
-}
-
-core_snippet_embed raw swaddle_deb_copyright_template
-core_dependency_requires '*' cp chown
-swaddle_build_package_deb_createDataCopyright()
-{
-	local copyrightFile="$_swaddle_build_package_root"/usr/share/doc/"$_swaddle_build_swaddleName"/copyright
-	if [ -e "$copyrightFile" ]; then
-		return 0
-	fi
-	
-	local temporaryCopyrightFile
-	local TMP_FILE
-	core_temporaryFiles_newFileToRemoveOnExit
-	temporaryCopyrightFile="$temporaryCopyrightFile"
-
-	core_snippet_retrieveAndSourceAsHereDoc swaddle_deb_copyright_template >"$temporaryCopyrightFile"
-	swaddle_simulateroot_execute cp -p "$temporaryCopyrightFile" "$copyrightFile"
-	swaddle_touch_setMtimeAndAtime "$temporaryCopyrightFile"
-	swaddle_simulateroot_execute chown 0:0 "$copyrightFile"
-}
-
-core_dependency_requires '*' cat
-_swaddle_build_package_deb_createDataCopyright_copyrightText()
-{
-	cat "$(configure_getValue swaddle copyright_file)"
 }
 
 core_dependency_requires '*' tar rm

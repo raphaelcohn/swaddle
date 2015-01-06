@@ -25,7 +25,7 @@ core_dependency_requires '*' mkdir
 core_functions_register _swaddle_build_package_functions swaddle_build_package_createRootFolder
 swaddle_build_package_createRootFolder()
 {
-	_swaddle_build_package_root="$_swaddle_build_package_temporaryFolderPath"/"$_swaddle_build_package_architecture"/root
+	_swaddle_build_package_root="$_swaddle_build_package_temporaryFolderPath"/root
 	mkdir -m 0755 -p "$_swaddle_build_package_root"
 }
 
@@ -54,6 +54,25 @@ swaddle_build_package_validateConfiguration()
 	configure_validate swaddle_${_swaddle_build_package_kind}
 }
 
+
+core_dependency_requires '*' rm sudo mkdir
+core_functions_register _swaddle_build_package_functions swaddle_build_package_createGeneratedContentFolder
+swaddle_build_package_createGeneratedContentFolder()
+{
+	_swaddle_build_package_generatedContentPath="$_swaddle_build_package_temporaryFolderPath"/generated
+	rm -rf "$_swaddle_build_package_generatedContentPath" 2>/dev/null || true
+	if [ -d "$_swaddle_build_package_generatedContentPath" ]; then
+		sudo -p "Please enter the password for %p to forcibly remove '$_swaddle_build_package_generatedContentPath': " rm -rf "$_swaddle_build_package_generatedContentPath" 2>/dev/null || true
+	fi
+	mkdir -m 0755 -p "$_swaddle_build_package_generatedContentPath"
+}
+
+core_functions_register _swaddle_build_package_functions swaddle_build_package_generateContent
+swaddle_build_package_generateContent()
+{
+	swaddle_build_package_${_swaddle_build_package_kind}_generateContent
+}
+
 core_dependency_requires '*' chown rm mkdir rsync
 core_functions_register _swaddle_build_package_functions swaddle_build_package_synchroniseToPackageRoot
 swaddle_build_package_synchroniseToPackageRoot()
@@ -62,7 +81,7 @@ swaddle_build_package_synchroniseToPackageRoot()
 	
 	local fixPermissions="$(configure_getValue swaddle fix_permissions)"
 	
-	# List of paths to pass as sources to rsync
+	# List of paths to pass as sources to rsync; earlier paths trump later paths if there are conflicts
 	set --
 	local folderStructurePath
 	local permissionsForFolderStructureFilePath
@@ -74,7 +93,8 @@ swaddle_build_package_synchroniseToPackageRoot()
 		"$_swaddle_build_sourcePath"/body/"$_swaddle_build_package_architecture" \
 		"$_swaddle_build_sourcePath"/skeleton/"$_swaddle_build_package_architecture" \
 		"$_swaddle_build_sourcePath"/body/any \
-		"$_swaddle_build_sourcePath"/skeleton/any
+		"$_swaddle_build_sourcePath"/skeleton/any \
+		"$_swaddle_build_package_generatedContentPath"
 	do
 		if ! core_path_isReadableAndSearchableFolderPath "$folderStructurePath"; then
 			continue

@@ -5,6 +5,13 @@ swaddle_build_package_rar_registerConfiguration()
 	configure_register Value Boolean swaddle_rar bomb 'no'
 }
 
+swaddle_build_package_rar_generateContent()
+{
+	# Root of archive
+	swaddle_build_generators_copyinreadme_generate no '/' README
+	swaddle_build_generators_copyright_generate no '/' COPYRIGHT
+}
+
 swaddle_build_package_rar()
 {
 	core_functions_execute _swaddle_build_package_rar_functions "$@"

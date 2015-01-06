@@ -31,6 +31,17 @@ swaddle_build_package_rpm_registerConfiguration()
 	configure_register Value Boolean swaddle_rpm auto_prov 'yes'
 }
 
+core_usesIn swaddle/build/generators manpage copyinreadme copyright
+swaddle_build_package_rpm_generateContent()
+{
+	core_TODO "%doc directive"
+	# http://www.rpm.org/max-rpm/s1-rpm-inside-files-list-directives.html
+
+	swaddle_build_generators_manpage_generate no '/usr'
+	swaddle_build_generators_copyinreadme_generate no '/usr' README
+	swaddle_build_generators_copyright_generate no '/usr' copyright
+}
+
 swaddle_build_package_rpm()
 {
 	local repositoryName="$(configure_getValue swaddle repository_name)"

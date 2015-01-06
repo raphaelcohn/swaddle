@@ -6,6 +6,18 @@ swaddle_build_package_tar_registerConfiguration()
 	configure_register Array Compression swaddle_tar compressions
 }
 
+core_usesIn swaddle/build/generators manpage copyinreadme copyright
+swaddle_build_package_tar_generateContent()
+{
+	swaddle_build_generators_manpage_generate no '/usr'
+	swaddle_build_generators_copyinreadme_generate no '/usr' README
+	swaddle_build_generators_copyright_generate no '/usr' copyright
+	
+	# Root of tar ball
+	swaddle_build_generators_copyinreadme_generate no '/' README
+	swaddle_build_generators_copyright_generate no '/' COPYRIGHT
+}
+
 swaddle_build_package_tar()
 {
 	core_functions_execute _swaddle_build_package_tar_functions "$@"

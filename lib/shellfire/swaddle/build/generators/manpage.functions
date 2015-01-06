@@ -1,0 +1,167 @@
+core_usesIn swaddle compress date
+core_dependency_requires '*' mkdir pandoc rm
+swaddle_build_generators_manpage_generate()
+{
+	local preferCompression="$1"
+	# eg /usr or /usr/local
+	local pathPrefix="$2"
+	
+	local section=7
+	if [ "$pathPrefix" = '/' ]; then
+		local outputFolderPath="${_swaddle_build_package_generatedContentPath}"/share/man/man${section}
+	else
+		local outputFolderPath="${_swaddle_build_package_generatedContentPath}${pathPrefix}"/share/man/man${section}
+	fi
+	mkdir -m 0755 -p "$outputFolderPath"
+	
+	local outputFilePath="$outputFolderPath"/${_swaddle_build_swaddleName}.${section}
+	
+	local titleBlockFile
+	_swaddle_build_generators_manpage_titleblock
+	
+	pandoc --standalone --from=markdown_github+pandoc_title_block --output="$outputFilePath" --to=man "$titleBlockFile" "$(configure_getValue swaddle readme_file)"
+	
+	if core_variable_isTrue "$preferCompression"; then
+		swaddle_compress_gzip "$outputFilePath"
+		rm "$outputFilePath"
+	fi
+}
+
+_swaddle_build_generators_manpage_titleblock()
+{
+	local TMP_FILE
+	core_temporaryFiles_newFileToRemoveOnExit
+	titleBlockFile="$TMP_FILE"
+	{
+		_swaddle_build_generators_manpage_titleblock_title
+		_swaddle_build_generators_manpage_titleBlock_authors
+		_swaddle_build_generators_manpage_titleBlock_date
+	} >"$titleBlockFile"
+}
+
+core_dependency_requires '*' tr
+_swaddle_build_generators_manpage_titleblock_title()
+{
+	local uppercaseName="$(printf '%s' "$_swaddle_build_swaddleName" | tr 'a-z' 'A-Z')"
+	printf '%% (%s) %s %s\n' "$section" "$uppercaseName" "$_swaddle_build_swaddleName User Manual" "Version $(swaddle_configure_epochVersionIteration)"
+}
+
+core_dependency_requires '*' awk sort tr
+core_usesIn debian_controldata parser paragraph/copyright
+_swaddle_build_generators_manpage_titleBlock_authors()
+{
+	_swaddle_build_generators_manpage_authors_eventHandler()
+	{
+		local fileFormat="$1"
+		local paragraphType="$2"
+		local eventType="$3"
+		
+		if [ "$fileFormat" != 'Copyright' ]; then
+			core_exitError $core_commandLine_exitCode_SOFTWARE "Unexpected fileFormat '$fileFormat'"
+		fi
+		
+		case "$paragraphType" in
+			
+			Header)
+				
+				case "$eventType" in
+					
+					ParagraphStart)
+						:
+					;;
+					
+					Field)
+						local fieldName="$1"
+						local fieldType="$2"
+						
+						case "$fieldName" in
+							
+							Copyright)
+								_swaddle_build_generators_manpage_authors_eventHandler_appendCopyrightLines()
+								{
+									printf '%s\n' "$core_variable_array_element"
+								}
+								core_variable_array_iterate debian_controldata_parser_continuationLines
+							;;
+							
+						esac
+						
+					;;
+					
+					ParagraphEnd)
+						:
+					;;
+					
+					*)
+						core_exitError $core_commandLine_exitCode_SOFTWARE "Unexpected eventType '$eventType'"
+					;;
+					
+				esac
+				
+			;;
+			
+			# Last match wins. We need to use GNU find -path to match file paths, urgh.
+			# fnmatch(3) 
+			Files)
+				
+				case "$eventType" in
+					
+					ParagraphStart)
+						:
+					;;
+					
+					Field)
+						local fieldName="$1"
+						local fieldType="$2"
+						
+						case "$fieldName" in
+							
+							Copyright)
+								_swaddle_build_generators_manpage_authors_eventHandler_appendCopyrightLines()
+								{
+									printf '%s\n' "$core_variable_array_element"
+								}
+								core_variable_array_iterate debian_controldata_parser_continuationLines
+							;;
+							
+						esac
+					;;
+					
+					ParagraphEnd)
+						:
+					;;
+					
+					*)
+						core_exitError $core_commandLine_exitCode_SOFTWARE "Unexpected eventType '$eventType'"
+					;;
+					
+				esac
+				
+			;;
+			
+			License)
+				:
+			;;
+			
+			*)
+				core_exitError $core_commandLine_exitCode_SOFTWARE "Unexpected paragraphType '$paragraphType'"
+			;;
+			
+		esac
+	}
+
+	local TMP_FILE
+	core_temporaryFiles_newFileToRemoveOnExit
+	local copyrightLines="$TMP_FILE"
+	{
+		debian_controldata_parser _swaddle_build_generators_manpage_authors_eventHandler debian_controldata_parser_paragraph_copyright no "$(configure_getValue swaddle copyright_file)"
+	} >"$copyrightLines"
+	
+	local withTrailingSemicolon="$(awk -F, '{gsub(/^[ \t]+/, "", $2); gsub(/[ \t]+$/, "", $2); print $2}' "$copyrightLines" | sort -u | tr '\n' ';')"
+	printf '%% %s\n' "${withTrailingSemicolon%?}"
+}
+
+_swaddle_build_generators_manpage_titleBlock_date()
+{
+	printf '%% %s\n' "$(swaddle_configure_releaseDate)"
+}
