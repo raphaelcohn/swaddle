@@ -20,7 +20,7 @@ swaddle_build_generators_copyright_generate()
 	
 	local outputFilePath="$outputFolderPath"/"$fileName"
 	
-	debian_controldata_parser _swaddle_build_generators_copyinreadme_generate_eventHandler debian_controldata_parser_paragraph_copyright no "$(configure_getValue swaddle copyright_file)" >"$outputFilePath"
+	debian_control_parser _swaddle_build_generators_copyinreadme_generate_eventHandler debian_control_parser_paragraph_copyright no "$(configure_getValue swaddle copyright_file)" >"$outputFilePath"
 	
 	if core_variable_isTrue "$preferCompression"; then
 		compress_gzip "$outputFilePath"
@@ -50,20 +50,20 @@ _swaddle_build_generators_copyright_generate_eventHandler()
 				;;
 				
 				Field)
-					debian_controldata_parser_outputRawFieldLines
+					debian_control_parser_outputRawFieldLines
 				;;
 				
 				ParagraphEnd)
-					if ! core_variable_array_contains debian_controldata_parser_fieldsInParagraph Upstream-Name; then
+					if ! core_variable_array_contains debian_control_parser_fieldsInParagraph Upstream-Name; then
 						printf '%s\n' "Upstream-Name: $_swaddle_build_swaddleName"
 					fi
-					if ! core_variable_array_contains debian_controldata_parser_fieldsInParagraph Upstream-Contact; then
+					if ! core_variable_array_contains debian_control_parser_fieldsInParagraph Upstream-Contact; then
 						printf '%s\n' "Upstream-Contact: $(swaddle_configure_maintainer)"
 					fi
-					if ! core_variable_array_contains debian_controldata_parser_fieldsInParagraph Source; then
+					if ! core_variable_array_contains debian_control_parser_fieldsInParagraph Source; then
 						printf '%s\n' "Source: $(configure_getValue swaddle url)"
 					fi
-					if ! core_variable_array_contains debian_controldata_parser_fieldsInParagraph Disclaimer; then
+					if ! core_variable_array_contains debian_control_parser_fieldsInParagraph Disclaimer; then
 						printf '%s\n' "Disclaimer: This package is not part of Debian"
 					fi
 					printf '\n'
@@ -86,7 +86,7 @@ _swaddle_build_generators_copyright_generate_eventHandler()
 				;;
 				
 				Field)
-					debian_controldata_parser_outputRawFieldLines
+					debian_control_parser_outputRawFieldLines
 				;;
 				
 				ParagraphEnd)

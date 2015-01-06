@@ -85,7 +85,7 @@ _swaddle_build_generators_manpage_titleBlock_authors()
 								{
 									printf '%s\n' "$core_variable_array_element"
 								}
-								core_variable_array_iterate debian_controldata_parser_continuationLines
+								core_variable_array_iterate debian_control_parser_continuationLines
 							;;
 							
 						esac
@@ -125,7 +125,7 @@ _swaddle_build_generators_manpage_titleBlock_authors()
 								{
 									printf '%s\n' "$core_variable_array_element"
 								}
-								core_variable_array_iterate debian_controldata_parser_continuationLines
+								core_variable_array_iterate debian_control_parser_continuationLines
 							;;
 							
 						esac
@@ -158,7 +158,7 @@ _swaddle_build_generators_manpage_titleBlock_authors()
 	core_temporaryFiles_newFileToRemoveOnExit
 	local copyrightLines="$TMP_FILE"
 	{
-		debian_controldata_parser _swaddle_build_generators_manpage_authors_eventHandler debian_controldata_parser_paragraph_copyright no "$(configure_getValue swaddle copyright_file)"
+		debian_control_parser _swaddle_build_generators_manpage_authors_eventHandler debian_control_parser_paragraph_copyright no "$(configure_getValue swaddle copyright_file)"
 	} >"$copyrightLines"
 	
 	local withTrailingSemicolon="$(awk -F, '{gsub(/^[ \t]+/, "", $2); gsub(/[ \t]+$/, "", $2); print $2}' "$copyrightLines" | sort -u | tr '\n' ';')"
