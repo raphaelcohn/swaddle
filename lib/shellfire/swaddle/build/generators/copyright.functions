@@ -28,7 +28,7 @@ swaddle_build_generators_copyright_generate()
 	fi
 }
 
-core_usesIn debian_controldata parser paragraph/copyright
+core_usesIn debian/controldata parser paragraph/copyright
 _swaddle_build_generators_copyright_generate_eventHandler()
 {
 	local fileFormat="$1"
