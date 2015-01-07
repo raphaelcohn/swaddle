@@ -105,7 +105,7 @@ swaddle_configure_register_attemptToDiscoverReadme()
 	configure_register Value NotEmpty swaddle readme_file "$readmeFilePath"
 }
 
-core_dependency_requires '*' grep
+core_dependency_requires '*' debian/control parser paragraph/copyright
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverCopyrightAndLicence
 swaddle_configure_register_attemptToDiscoverCopyrightAndLicence()
 {
@@ -146,15 +146,39 @@ swaddle_configure_register_attemptToDiscoverCopyrightAndLicence()
 	
 	configure_register Value NotEmpty swaddle copyright_file "$copyrightFilePath"
 	
-	# Whilst this logic could use the debian_controlfile_parser, grep will be sufficient. It'll find the first License line.
-	local garbage1
+	local spdxLicenseNameUnfound=false
 	local spdxLicenseName
-	local garbage2
-	IFS=' ' read -r garbage1 spdxLicenseName garbage2 <<-EOF
-		$(grep -m 1 '^License:.*$')
-	EOF
+	_swaddle_configure_register_attemptToDiscoverCopyrightAndLicence_eventHandler()
+	{
+		local fileFormat="$1"
+		local paragraphType="$2"
+		local eventType="$3"
+		
+		if [ "$fileFormat" != 'Copyright' ]; then
+			core_exitError $core_commandLine_exitCode_SOFTWARE "Unexpected fileFormat '$fileFormat'"
+		fi
+		
+		# We don't check for paragraphType; we just find the first license line
+		
+		if [ "$eventType" != 'Field' ]; then
+			return 0
+		fi
+
+		local fieldName="$4"
+		local fieldType="$5"
+		
+		if [ "$fieldName" != 'License' ]; then
+			return 0
+		fi
+		
+		if $spdxLicenseNameUnfound; then
+			spdxLicenseName="$debian_control_parser_fieldValueFirstLine"
+			spdxLicenseNameUnfound=false
+		fi
+	}
+	debian_control_parser _swaddle_configure_register_attemptToDiscoverCopyrightAndLicence_eventHandler debian_control_parser_paragraph_copyright no "$copyrightFilePath"
 	
-	if [ -z "$spdxLicenseName" ]; then
+	if $spdxLicenseNameUnfound; then
 		configure_register Value Licence swaddle licence
 		core_message NOTICE "Could not find a valid 'License:' line in the COPYRIGHT file '$copyrightFilePath'"
 		return 0
