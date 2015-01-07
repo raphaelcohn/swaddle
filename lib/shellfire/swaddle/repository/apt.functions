@@ -279,19 +279,16 @@ swaddle_repository_apt_createDistsRelease()
 			digest=md5
 			width=10
 			core_variable_array_iterate _swaddle_repository_apt_components _swaddle_repository_apt_createDistsRelease_callback
-			printf '\n'
 			
 			printf 'SHA1:\n'
 			digest=sha1
 			width=10
 			core_variable_array_iterate _swaddle_repository_apt_components _swaddle_repository_apt_createDistsRelease_callback
-			printf '\n'
 			
 			printf 'SHA256:\n'
 			digest=sha256
 			width=10
 			core_variable_array_iterate _swaddle_repository_apt_components _swaddle_repository_apt_createDistsRelease_callback
-			printf '\n'
 			
 		popd
 		
