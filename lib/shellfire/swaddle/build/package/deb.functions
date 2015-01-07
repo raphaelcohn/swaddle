@@ -532,21 +532,24 @@ _swaddle_build_package_deb_extraControlFields()
 core_dependency_requires '*' sed
 _swaddle_build_package_deb_description()
 {
-	local isFirst=1
-	local line
-	configure_getValue swaddle_package description | sed -e 's/^\w*$/\./g' | while IFS='' read -r line
-	do
-		if [ $isFirst -eq 1 ]; then
-			printf 'Description:'
-			isFirst=0
+	configure_getValue swaddle_package description | sed -e 's/^\w*$/\./g' | \
+	{
+		local isFirst=1
+		local line
+		while IFS='' read -r line
+		do
+			if [ $isFirst -eq 1 ]; then
+				printf 'Description:'
+				isFirst=0
+			fi
+			printf ' %s\n' "$line"
+		done
+		if [ -n "$line" ]; then
+			if [ $isFirst -eq 1 ]; then
+				printf 'Description:'
+				isFirst=0
+			fi
+			printf ' %s\n' "$line"
 		fi
-		printf ' %s\n' "$line"
-	done
-	if [ -n "$line" ]; then
-		if [ $isFirst -eq 1 ]; then
-			printf 'Description:'
-			isFirst=0
-		fi
-		printf ' %s\n' "$line"
-	fi
+	}
 }
