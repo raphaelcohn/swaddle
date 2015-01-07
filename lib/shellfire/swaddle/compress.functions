@@ -11,7 +11,7 @@ swaddle_compress_variants_clean()
 	local existingFilePath="$1"
 	
 	local compressor
-	for compressor in none lzop zip gzip bzip2 rzip lzma xz lzip zpaq lrzip
+	for compressor in none lzop zip gzip zlib bzip2 rzip lzma xz lzip zpaq lrzip
 	do
 		rm -f "$existingFilePath"$(compress_extension "$compressor")
 	done

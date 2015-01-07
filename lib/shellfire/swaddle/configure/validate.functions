@@ -12,12 +12,13 @@ configure_validate_Compression()
 		# Note that we omit 'zip'
 		# - for tar, it makes no real sense
 		# - for file, it works (using pigz) but conflicts with zip archives when uploaded to GitHub releases
-		none|lzop|gzip|bzip2|lzma|xz|lzip|rzip|lrzip)
+		# We also omit 'zpaq' - the format isn't stable, and likewise, it only makes sense for file (although the compression is outstanding)
+		none|lzop|gzip|zlib|bzip2|lzma|xz|lzip|rzip|lrzip)
 			:
 		;;
 
 		*)
-			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'none', 'lzop', 'gzip', 'bzip2', 'lzma', 'xz', 'lzip', 'rzip' or 'lrzip')."
+			core_exitError $core_commandLine_exitCode_CONFIG "The configuration setting '$configurationSettingName' ('$1') is not a valid compression (it must be one of 'none', 'lzop', 'gzip', 'zlib', 'bzip2', 'lzma', 'xz', 'lzip', 'rzip' or 'lrzip')."
 		;;
 		
 	esac
