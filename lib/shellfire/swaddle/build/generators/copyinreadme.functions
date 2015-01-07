@@ -20,7 +20,7 @@ swaddle_build_generators_copyinreadme_generate()
 	
 	local outputFilePath="$outputFolderPath"/"$fileName"
 	
-	cp "$(configure_getValue swaddle readme_file)" "$outputFolderPath"
+	cp "$(configure_getValue swaddle readme_file)" "$outputFolderPath"/README
 	
 	if core_variable_isTrue "$preferCompression"; then
 		compress_gzip "$outputFilePath"
