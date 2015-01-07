@@ -69,7 +69,7 @@ swaddle_build_package_file_create()
 	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_file_filePath"
 }
 
-core_dependency_requires '*' file tr
+core_dependency_requires '*' file
 core_usesIn swaddle compress
 core_functions_register _swaddle_build_package_file_functions swaddle_build_package_file_compress
 swaddle_build_package_file_compress()
@@ -108,8 +108,7 @@ swaddle_build_package_file_compress()
 			
 			*)
 				local mimeType="$(compress_mimeType "$compressor")"
-				local uppercaseFileCompression="$(printf '%s' "$compressor" | tr 'a-z' 'A-Z')"
-				local descriptiveName="$name ($uppercaseFileCompression compressed)"
+				local descriptiveName="$name ($(compress_properName) compressed)"
 			;;
 			
 		esac
