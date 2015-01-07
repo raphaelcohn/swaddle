@@ -105,7 +105,7 @@ swaddle_configure_register_attemptToDiscoverReadme()
 	configure_register Value NotEmpty swaddle readme_file "$readmeFilePath"
 }
 
-core_dependency_requires '*' debian/control parser paragraph/copyright
+core_usesIn '*' debian/control parser paragraph/copyright
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverCopyrightAndLicence
 swaddle_configure_register_attemptToDiscoverCopyrightAndLicence()
 {
