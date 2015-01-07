@@ -55,11 +55,16 @@ swaddle_publishers_githubpages_prepare()
 		fi
 		
 		if ! git branch --list --no-color | grep -q ' gh-pages$'; then
+			git pull --quiet 2>/dev/null
+		fi
+		
+		if ! git branch --list --no-color | grep -q ' gh-pages$'; then
 		
 			if ! git checkout --quiet --orphan gh-pages; then
 				core_message WARN "Can't publish to GitHub pages (can't create 'gh-pages' orphan branch in '$swaddle_outputPath'; create it yourself using either 'git checkout --orphan gh-pages' or, preferrably, GitHub's site generator)"
 				return 0
 			fi
+			
 			
 			core_message NOTICE "Create a CNAME file in '$swaddle_outputPath' (check https://help.github.com/articles/my-custom-domain-isn-t-working/ )"
 		
