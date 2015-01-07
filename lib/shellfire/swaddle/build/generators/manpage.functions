@@ -51,7 +51,7 @@ _swaddle_build_generators_manpage_titleblock_title()
 }
 
 core_dependency_requires '*' awk sort tr
-core_usesIn debian/controldata parser paragraph/copyright
+core_usesIn debian/control parser paragraph/copyright
 _swaddle_build_generators_manpage_titleBlock_authors()
 {
 	_swaddle_build_generators_manpage_authors_eventHandler()
