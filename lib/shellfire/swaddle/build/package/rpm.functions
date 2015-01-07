@@ -390,7 +390,8 @@ _swaddle_build_package_rpm_licence()
 		fi
 	fi
 	
-	core_message WARN "The configuration setting 'swaddle vendor' (SPDX '$configurationSettingValue') has no Fedora licence code equivalent."
+	core_message WARN "The configuration setting 'swaddle licence' (SPDX '$configurationSettingValue') has no Fedora licence code equivalent."
+	printf '%s' "Unknown"
 	rm "$validValuesFilePath"
 }
 
