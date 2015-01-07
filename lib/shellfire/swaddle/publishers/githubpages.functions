@@ -18,7 +18,11 @@ swaddle_publishers_githubpages_prepare()
 	fi
 	
 	if [ ! -e "$swaddle_outputPath"/.git ]; then
-		rsync -a -q "$_swaddle_git_swaddlingPathGitRoot"/.git/ "$swaddle_outputPath"/.git/
+		if [ -d "$_swaddle_git_swaddlingPathGitRoot"/.git ]; then
+			rsync -a -q "$_swaddle_git_swaddlingPathGitRoot"/.git/ "$swaddle_outputPath"/.git/
+		else
+			rsync -q "$_swaddle_git_swaddlingPathGitRoot"/.git "$swaddle_outputPath"/.git
+		fi
 	fi
 
 	pushd "$swaddle_outputPath"
