@@ -92,9 +92,14 @@ swaddle_publishers_githubpages_prepare()
 			fi
 			
 			# Failures: It may be that  git branch --set-upstream-to=origin/gh-pages gh-pages  or  git push --set-upstream origin gh-pages  hasn't happened yet for the gh-pages branch, ie this is still a local branch
-			git pull --quiet --all 2>/dev/null || true
+			if ! git pull --quiet 2>/dev/null; then
+				git branch --quiet --set-upstream-to=origin/gh-pages gh-pages
+				if ! git pull 2>/dev/null; then
+					core_message WARN "Can't publish to GitHub pages (can't pull the 'gh-pages' orphan branch in '$swaddle_outputPath')"
+					return 0
+				fi
+			fi
 		fi
-		
 	popd
 	
 	_swaddle_canPublishToGithubPages=1
