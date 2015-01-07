@@ -3,7 +3,7 @@
 
 
 core_usesIn configure
-core_usesIn swaddle/configure validateApt validateDeb validateFile validateGithub validateRpm validateYum validateWebserverFiles
+core_usesIn swaddle/configure validateApt validateDeb validateGithub validateRpm validateWebserverFiles validateYum
 
 configure_validate_Compression()
 {
