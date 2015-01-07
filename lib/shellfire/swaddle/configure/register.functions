@@ -146,10 +146,14 @@ swaddle_configure_register_attemptToDiscoverCopyrightAndLicence()
 	
 	configure_register Value NotEmpty swaddle copyright_file "$copyrightFilePath"
 	
-	local spdxLicenseNameUnfound=false
+	local spdxLicenseNameFound=false
 	local spdxLicenseName
 	_swaddle_configure_register_attemptToDiscoverCopyrightAndLicence_eventHandler()
 	{
+		if $spdxLicenseNameFound; then
+			return 0
+		fi
+		
 		local fileFormat="$1"
 		local paragraphType="$2"
 		local eventType="$3"
@@ -163,7 +167,7 @@ swaddle_configure_register_attemptToDiscoverCopyrightAndLicence()
 		if [ "$eventType" != 'Field' ]; then
 			return 0
 		fi
-
+		
 		local fieldName="$4"
 		local fieldType="$5"
 		
@@ -171,20 +175,19 @@ swaddle_configure_register_attemptToDiscoverCopyrightAndLicence()
 			return 0
 		fi
 		
-		if $spdxLicenseNameUnfound; then
-			spdxLicenseName="$debian_control_parser_fieldValueFirstLine"
-			spdxLicenseNameUnfound=false
-		fi
+		spdxLicenseName="$debian_control_parser_fieldValueFirstLine"
+		spdxLicenseNameFound=true
 	}
 	debian_control_copyright _swaddle_configure_register_attemptToDiscoverCopyrightAndLicence_eventHandler "$copyrightFilePath"
 	
-	if $spdxLicenseNameUnfound; then
+	if $spdxLicenseNameFound; then
+		configure_register Value Licence swaddle licence "$spdxLicenseName"
+	else
 		configure_register Value Licence swaddle licence
 		core_message NOTICE "Could not find a valid 'License:' line in the COPYRIGHT file '$copyrightFilePath'"
 		return 0
 	fi
 
-	configure_register Value Licence swaddle licence "$spdxLicenseName"
 }
 
 core_dependency_requires '*' git awk sed
