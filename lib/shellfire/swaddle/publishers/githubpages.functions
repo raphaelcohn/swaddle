@@ -48,23 +48,43 @@ swaddle_publishers_githubpages_prepare()
 	popd
 
 	pushd "$swaddle_outputPath"
-	
+		
 		if ! git fetch --all --quiet; then
 			core_message WARN "Can't publish to GitHub pages (can't fetch in '$swaddle_outputPath')"
 			return 0
 		fi
 		
-		if ! git branch --list --no-color | grep -q ' gh-pages$'; then
-			git pull --quiet 2>/dev/null
+		if git ls-remote --exit-code . gh-pages 1>/dev/null; then
+			local branchExists=true
+		elif git ls-remote --exit-code . origin/gh-pages 1>/dev/null; then
+			local branchExists=true
+		else
+			local branchExists=false
 		fi
 		
-		if ! git branch --list --no-color | grep -q ' gh-pages$'; then
-		
+		if $branchExists; then
+			if ! git checkout --quiet gh-pages; then
+				core_message WARN "Can't publish to GitHub pages (can't checkout the 'gh-pages' orphan branch in '$swaddle_outputPath')"
+				return 0
+			fi
+			
+			# Failures: It may be that  git branch --set-upstream-to=origin/gh-pages gh-pages  or  git push --set-upstream origin gh-pages  hasn't happened yet for the gh-pages branch, ie this is still a local branch
+			if ! git pull --quiet 2>/dev/null; then
+				git branch --quiet --set-upstream-to=origin/gh-pages gh-pages
+				if ! git pull 2>/dev/null; then
+					core_message WARN "Can't publish to GitHub pages (can't pull the 'gh-pages' orphan branch in '$swaddle_outputPath')"
+					return 0
+				fi
+				if ! git push 2>/dev/null; then
+					core_message WARN "Can't publish to GitHub pages (can't push the 'gh-pages' orphan branch in '$swaddle_outputPath')"
+					return 0
+				fi
+			fi
+		else
 			if ! git checkout --quiet --orphan gh-pages; then
 				core_message WARN "Can't publish to GitHub pages (can't create 'gh-pages' orphan branch in '$swaddle_outputPath'; create it yourself using either 'git checkout --orphan gh-pages' or, preferrably, GitHub's site generator)"
 				return 0
 			fi
-			
 			
 			core_message NOTICE "Create a CNAME file in '$swaddle_outputPath' (check https://help.github.com/articles/my-custom-domain-isn-t-working/ )"
 		
@@ -88,22 +108,6 @@ swaddle_publishers_githubpages_prepare()
 				rm -rf "$folder"
 			done
 			set +f
-			
-		else
-	
-			if ! git checkout --quiet gh-pages; then
-				core_message WARN "Can't publish to GitHub pages (can't checkout the 'gh-pages' orphan branch in '$swaddle_outputPath')"
-				return 0
-			fi
-			
-			# Failures: It may be that  git branch --set-upstream-to=origin/gh-pages gh-pages  or  git push --set-upstream origin gh-pages  hasn't happened yet for the gh-pages branch, ie this is still a local branch
-			if ! git pull --quiet 2>/dev/null; then
-				git branch --quiet --set-upstream-to=origin/gh-pages gh-pages
-				if ! git pull 2>/dev/null; then
-					core_message WARN "Can't publish to GitHub pages (can't pull the 'gh-pages' orphan branch in '$swaddle_outputPath')"
-					return 0
-				fi
-			fi
 		fi
 	popd
 	
