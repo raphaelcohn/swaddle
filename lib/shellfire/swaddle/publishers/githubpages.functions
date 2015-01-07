@@ -17,20 +17,35 @@ swaddle_publishers_githubpages_prepare()
 		return 0
 	fi
 	
+	# Yes, this is probably wrong. But doing a git rm (see below) on a working tree and switching the branch for the current user is also wrong - it'll screw them over.
 	if [ ! -e "$swaddle_outputPath"/.git ]; then
 		if [ -d "$_swaddle_git_swaddlingPathGitRoot"/.git ]; then
 			rsync -a -q "$_swaddle_git_swaddlingPathGitRoot"/.git/ "$swaddle_outputPath"/.git/
-		else
+		# Might be a submodule
+		elif [ -f "$_swaddle_git_swaddlingPathGitRoot"/.git ]; then
 			# Handle a submodule
+			
+			# git clone --no-hardlinks --shared /path
+			# cd new-repo
+			# git repack -a
 			
 			local absolutePathToGitDir
 			pushd "$_swaddle_git_swaddlingPathGitRoot"/"$(awk -F ': ' '$1 ~ /^gitdir$/ {print $2}' "$_swaddle_git_swaddlingPathGitRoot"/.git)"
 				absolutePathToGitDir="$(pwd)"
 			popd
 			
+			# 	worktree = ../../../../tools/fatten
 			rsync -a -q "$absolutePathToGitDir"/ "$swaddle_outputPath"/.git/
+		else
+			core_message WARN "Can't publish to GitHub pages (we expect a .git GIT_DIR; we don't support out-of-tree folders, bare repos, etc. If you're a git guru please help us out and improve this logic. Thanks)."
+			return 0
 		fi
 	fi
+	
+	# strip out worktree - this is usually a problem when dealing with submodules (-f above)
+	pushd "$swaddle_outputPath"
+		git config --local --unset core.worktree
+	popd
 
 	pushd "$swaddle_outputPath"
 	
