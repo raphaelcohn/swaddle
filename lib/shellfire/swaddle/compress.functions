@@ -3,7 +3,7 @@
 
 
 core_usesIn compress
-core_usesIn compress lzop zip gzip bzip2 lzma rzip xz lzip zpaq lrzip
+core_usesIn compress lzop zip gzip zlib bzip2 lzma rzip xz lzip zpaq lrzip
 
 core_dependency_requires '*' rm
 swaddle_compress_variants_clean()
