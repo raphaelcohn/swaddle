@@ -342,7 +342,7 @@ _swaddle_build_package_rpm_summaryDescription()
 
 _swaddle_build_package_rpm_licence()
 {
-	local configurationSettingValue="$(configure_getValue swaddle vendor)"
+	local configurationSettingValue="$(configure_getValue swaddle licence)"
 	
 	case "$configurationSettingValue" in
 		
