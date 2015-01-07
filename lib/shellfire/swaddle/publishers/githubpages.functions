@@ -24,7 +24,7 @@ swaddle_publishers_githubpages_prepare()
 			# Handle a submodule
 			
 			local absolutePathToGitDir
-			pushd "$swaddle_outputPath"/"$(awk -F ': ' '$1 ~ /^gitdir$/ {print $2}' "$_swaddle_git_swaddlingPathGitRoot"/.git)"
+			pushd "$_swaddle_git_swaddlingPathGitRoot"/"$(awk -F ': ' '$1 ~ /^gitdir$/ {print $2}' "$_swaddle_git_swaddlingPathGitRoot"/.git)"
 				absolutePathToGitDir="$(pwd)"
 			popd
 			
