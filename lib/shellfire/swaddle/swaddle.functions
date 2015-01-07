@@ -38,25 +38,9 @@ core_dependency_requires '*' mkdir
 core_functions_register _swaddle_functions swaddle_createTemporaryFolder
 swaddle_createTemporaryFolder()
 {
-	if core_variable_isUnset swaddle_temporaryPath; then
-		local TMP_FOLDER
-		core_temporaryFiles_newFolderToRemoveOnExit
-		swaddle_temporaryPath="$TMP_FOLDER"
-	else
-		mkdir -m 0700 -p "$swaddle_temporaryPath" 2>/dev/null || true
-		pushd "$swaddle_temporaryPath"
-			swaddle_temporaryPath="$(pwd)"
-		popd
-	fi
-}
-
-core_dependency_requires '*' mkdir
-core_functions_register _swaddle_functions swaddle_createPackagesFolder
-swaddle_createPackagesFolder()
-{
-	_swaddle_temporaryFolderPath="$swaddle_temporaryPath"/swaddling
-	rm -rf "$_swaddle_temporaryFolderPath"|| core_exitError $core_commandLine_exitCode_CANTCREAT "Can not recreate temporary swaddling path '$_swaddle_temporaryFolderPath'."
-	mkdir -m 0700 -p "$_swaddle_temporaryFolderPath"
+	local TMP_FOLDER
+	core_temporaryFiles_newFolderToRemoveOnExit
+	_swaddle_temporaryFolderPath="$TMP_FOLDER"
 }
 
 core_functions_register _swaddle_functions swaddle_registerConfiguration

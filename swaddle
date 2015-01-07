@@ -43,20 +43,15 @@ _program_commandLine_helpMessage()
                               Created if it doesn't exist.
                               Defaults to current working directory:-
                               $(pwd)
-  -t, --temporary-path PATH   Path to use when creating packages.
-                              Override if using very large packages,
-                              as we use rsync to reduce cumulative builds.
-                              Created if it doesn't exist.
-                              Defaults to:-
-                              ${TMPDIR}
   -c, --clean-output [OFF]    Clean output on start. Defaults to OFF
   -p, --publish-github [OFF]  Publish to GitHub pages.
                               Defaults to OFF."
     _program_commandLine_helpMessage_optionsSpacing='     '
 	_program_commandLine_helpMessage_configurationKeys="
   swaddle_swaddlingPath   Equivalent to --swaddling-path
-  swaddle_outputPath     Equivalent to --output-path
-  swaddle_temporaryPath  Equivalent to --temporary-path
+  swaddle_outputPath      Equivalent to --output-path
+  swaddle_cleanOutput     Equivalent to --clean-output
+  swaddle_publishGithub   Equivalent to --publish-github
 "
 	_program_commandLine_helpMessage_examples="
   ${_program_name} -s /some/path -- some-package
@@ -72,10 +67,6 @@ _program_commandLine_optionExists()
 		;;
 		
 		o|output-path)
-			echo 'yes-argumented'
-		;;
-		
-		t|temporary-path)
 			echo 'yes-argumented'
 		;;
 		
@@ -102,11 +93,6 @@ _program_commandLine_processOptionWithArgument()
 		o|output-path)
 			core_validate_folderPathIsReadableAndSearchableAndWritableOrCanBeCreated $core_commandLine_exitCode_USAGE 'option' "$optionNameIncludingHyphens" "$optionValue"
 			swaddle_outputPath="$optionValue"
-		;;
-		
-		t|temporary-path)
-			core_validate_folderPathIsReadableAndSearchableAndWritableOrCanBeCreated $core_commandLine_exitCode_USAGE 'option' "$optionNameIncludingHyphens" "$optionValue"
-			swaddle_temporaryPath="$optionValue"
 		;;
 		
 		c|clean-output)
@@ -162,10 +148,6 @@ _program_commandLine_validate()
 	else
 		core_message INFO "Defaulting --output-path to current working directory"
 		swaddle_outputPath="$(pwd)"
-	fi
-	
-	if core_variable_isSet swaddle_temporaryPath; then
-		core_validate_folderPathIsReadableAndSearchableAndWritableOrCanBeCreated $core_commandLine_exitCode_CONFIG 'configuration setting' 'swaddle_temporaryPath' "$swaddle_temporaryPath"
 	fi
 	
 	if core_variable_isSet swaddle_cleanOutput; then
