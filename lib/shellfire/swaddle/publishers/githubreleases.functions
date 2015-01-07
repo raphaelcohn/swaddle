@@ -46,7 +46,7 @@ swaddle_publishers_githubreleases_publish()
 		return 0
 	fi
 	
-	core_message INFO "Publishing '$descriptiveName' ($contentType) using '$filePath'"
+	core_message INFO "Publishing to GitHub Releases '$descriptiveName' file '$filePath'"
 	github_api_v3_releases_uploadAsset "$github_api_v3_releases_uploadUrlTemplate" "$filePath" "$contentType" "$descriptiveName"
 }
 
