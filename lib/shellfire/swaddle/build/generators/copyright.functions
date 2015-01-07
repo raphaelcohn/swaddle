@@ -3,6 +3,7 @@
 
 
 core_usesIn swaddle compress
+core_usesIn debian/control copyright
 core_dependency_requires '*' mkdir rm
 swaddle_build_generators_copyright_generate()
 {
@@ -20,7 +21,7 @@ swaddle_build_generators_copyright_generate()
 	
 	local outputFilePath="$outputFolderPath"/"$fileName"
 	
-	debian_control_parser _swaddle_build_generators_copyinreadme_generate_eventHandler debian_control_parser_paragraph_copyright no "$(configure_getValue swaddle copyright_file)" >"$outputFilePath"
+	debian_control_copyright _swaddle_build_generators_copyinreadme_generate_eventHandler "$(configure_getValue swaddle copyright_file)" >"$outputFilePath"
 	
 	if core_variable_isTrue "$preferCompression"; then
 		compress_gzip "$outputFilePath"
@@ -28,7 +29,6 @@ swaddle_build_generators_copyright_generate()
 	fi
 }
 
-core_usesIn debian/control parser paragraph/copyright
 _swaddle_build_generators_copyright_generate_eventHandler()
 {
 	local fileFormat="$1"
