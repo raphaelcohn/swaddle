@@ -21,7 +21,7 @@ swaddle_build_generators_copyright_generate()
 	
 	local outputFilePath="$outputFolderPath"/"$fileName"
 	
-	debian_control_copyright _swaddle_build_generators_copyinreadme_generate_eventHandler "$(configure_getValue swaddle copyright_file)" >"$outputFilePath"
+	debian_control_copyright _swaddle_build_generators_copyright_generate_eventHandler "$(configure_getValue swaddle copyright_file)" >"$outputFilePath"
 	
 	if core_variable_isTrue "$preferCompression"; then
 		compress_gzip "$outputFilePath"
