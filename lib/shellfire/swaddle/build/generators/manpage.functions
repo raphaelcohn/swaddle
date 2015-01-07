@@ -85,7 +85,7 @@ _swaddle_build_generators_manpage_titleBlock_authors()
 								{
 									printf '%s\n' "$core_variable_array_element"
 								}
-								core_variable_array_iterate debian_control_parser_continuationLines
+								core_variable_array_iterate debian_control_parser_continuationLines _swaddle_build_generators_manpage_authors_eventHandler_appendCopyrightLines
 							;;
 							
 						esac
@@ -125,7 +125,7 @@ _swaddle_build_generators_manpage_titleBlock_authors()
 								{
 									printf '%s\n' "$core_variable_array_element"
 								}
-								core_variable_array_iterate debian_control_parser_continuationLines
+								core_variable_array_iterate debian_control_parser_continuationLines _swaddle_build_generators_manpage_authors_eventHandler_appendCopyrightLines
 							;;
 							
 						esac
