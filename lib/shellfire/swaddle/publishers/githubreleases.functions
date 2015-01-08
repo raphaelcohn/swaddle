@@ -59,7 +59,9 @@ You can also use a file below:-
 * Debian packages are probably not directly installable without adding them to a repository (so use one of ours)
 
 #### Release Notes
-Lorem Ipsum."
+Lorem Ipsum.
+
+*Created using [swaddle](https://github.com/raphaelcohn/swaddle \"swaddle home page\"), a [shellfire](https://github.com/shellfire-dev/shellfire \"shellfire home page\") application.*"
 	
 	github_api_v3_releases_create "$githubOwner" "$githubRepository" "$actualTagName" 'master' "$(configure_getValue swaddle version)" "$releaseMarkdown" true true
 }
