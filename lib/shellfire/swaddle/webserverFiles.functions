@@ -90,8 +90,15 @@ swaddle_webserverFiles_createIndices()
 		for child in *
 		do
 			set -f
+			if [ ! -e "$child" ]; then
+				continue
+			fi
 			
 			if [ "$child" = "$inputFileName" ]; then
+				continue
+			fi
+			if [ "$child" = "$indexFileName" ]; then
+				rm "$indexFileName"
 				continue
 			fi
 			
