@@ -31,7 +31,7 @@ swaddle_publishers_publish()
 swaddle_publishers_tagAndPush()
 {
 	local gitRepositoryPath="$1"
-	local origin="$2"
+	local branch="$2"
 	local tagBase="$3"
 	
 	local repositoryName="$(configure_getValue swaddle repository_name)"
@@ -42,13 +42,14 @@ swaddle_publishers_tagAndPush()
 	local tagName="${tagBase}_${repositoryName}_${version}"
 	
 	pushd "$gitRepositoryPath"
-	
-		swaddle_publishers_tagRetry 0
 		
-		if ! git push --quiet --all; then
-			if ! git push --quiet --set-upstream origin "$origin"; then
-				core_message WARN "Can't push '$gitRepositoryPath' to '$origin'"
-			fi
+		git checkout "$branch"
+		swaddle_publishers_tagRetry 1
+	
+		if core_variable_isTrue "$(swaddle_configure_sign)"; then
+			git push --quiet --tags --signed 2>/dev/null || git push --quiet --tags
+		else
+			git push --quiet --tags
 		fi
 		
 	popd
