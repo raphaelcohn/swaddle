@@ -81,7 +81,7 @@ swaddle_webserverFiles_createIndices()
 	local inputFilePath="$folderPath"/"$inputFileName"
 	local indexFilePath="$folderPath"/"$indexFileName"
 	
-	_swaddle_webserverFiles_index_createInitialMarkdown "@" >"$inputFilePath"
+	_swaddle_webserverFiles_index_createInitialMarkdown "$@" >"$inputFilePath"
 	
 	pushd "$folderPath"
 		
@@ -136,7 +136,16 @@ swaddle_webserverFiles_index()
 	
 	if [ -d "$filePath" ]; then
 		local statFilePath="$filePath"/"$indexFileName"
-		
+	else
+		local statFilePath="$filePath"
+	fi
+	
+	if core_variable_endsWith "$statFilePath" '.asc'; then
+		return 0
+	fi
+	local signatureFilePath="$statFilePath".asc
+	
+	if [ -d "$filePath" ]; then
 		local linkText="$fileName/"
 		
 		if core_variable_isTrue "$useIndexNameInDirectoryLinks"; then
@@ -146,28 +155,25 @@ swaddle_webserverFiles_index()
 		fi
 		
 		local linkTitle="Index of /"
+		local parentFolderName
+		for parentFolderName in "$@" "$fileName"
+		do
+			linkTitle="$linkTitle $parentFolderName /"
+		done
 	else
-		local statFilePath="$filePath"
-		
 		local linkText="$fileName"
 		
 		local url="$fileName"
 		
 		local linkTitle="Download file /"
+		local parentFolderName
+		for parentFolderName in "$@"
+		do
+			linkTitle="$linkTitle $parentFolderName /"
+		done
+		linkTitle="$linkTitle $fileName"
 	fi
 	
-	if core_variable_endsWith "$statFilePath" '.asc'; then
-		return 0
-	fi
-	
-	local signatureFilePath="$statFilePath".asc
-	
-	local parentFolderName
-	for parentFolderName in "$@" "$fileName"
-	do
-		linkTitle="$linkTitle $parentFolderName /"
-	done
-
 	local date="$(swaddle_date_formatTimestampAsHumanReadable "$(stat -c '%Y' "$filePath")")"
 	local size="$(stat -c '%s' "$statFilePath")"
 	
