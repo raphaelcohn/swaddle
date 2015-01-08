@@ -43,7 +43,7 @@ swaddle_publishers_tagAndPush()
 	
 	pushd "$gitRepositoryPath"
 		
-		git checkout "$branch"
+		git checkout "$branch" 1>/dev/null
 		swaddle_publishers_tagRetry 1
 	
 		if core_variable_isTrue "$(swaddle_configure_sign)"; then
