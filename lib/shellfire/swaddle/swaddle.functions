@@ -73,7 +73,8 @@ swaddle_publishersPrepare()
 core_functions_register _swaddle_functions swaddle_createDownloadFolder
 swaddle_createDownloadFolder()
 {
-	_swaddle_outputDownloadPath=$swaddle_outputPath/download
+	_swaddle_downloadFolderName=download
+	_swaddle_outputDownloadPath="$swaddle_outputPath"/"$_swaddle_downloadFolderName"
 	mkdir -m 0755 -p "$_swaddle_outputDownloadPath"
 }
 
@@ -84,7 +85,7 @@ swaddle_build()
 	swaddle_repository apt deb
 	swaddle_repository yum rpm
 	
-	swaddle_webserverFiles_create "$_swaddle_outputDownloadPath"
+	swaddle_webserverFiles_create
 	
 	swaddle_gpg_publishSigningKey
 }

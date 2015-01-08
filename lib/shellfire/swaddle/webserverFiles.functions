@@ -15,8 +15,6 @@ swaddle_webserverFiles_registerConfiguration()
 core_snippet_embed raw css
 swaddle_webserverFiles_create()
 {
-	local rootFolderPath="$1"
-	
 	local useIndexNameInDirectoryLinks="$(configure_getValue swaddle_web use_index_name_in_directory_links)"
 	local sign="$(swaddle_configure_sign)"
 	local maintainer="$(swaddle_configure_maintainer)"
@@ -39,22 +37,51 @@ swaddle_webserverFiles_create()
 	local cssToEmbedFilePath
 	swaddle_webserverFiles_extractDefaultCss
 	
-	swaddle_webserverFiles_createIndices "$rootFolderPath" ''
+	# If serving up GitHub Pages, and there is no index.{html,markdown,md,textile}, then the user gets an unhelpful 404
+	# However, many GitHub Pages uses will use Jekyll later on (or beforehand), and we need to integrate with them (and so NOT overwrite a Jekyll-derived file)
+	local rootFolderPath
+	if _swaddle_webserverFiles_createRootIndexHtmlIfNoneExists; then
+		rootFolderPath="$swaddle_outputPath"
+		set --
+	else
+		rootFolderPath="$_swaddle_outputDownloadPath"
+		set -- "$_swaddle_downloadFolderName"
+	fi
+	swaddle_webserverFiles_createIndices "$rootFolderPath" "$@"
 	
 	# Top-level index.html is not signed otherwise
 	swaddle_digest_signFile "$rootFolderPath"/"$indexFileName"
+}
+
+# This functions creates a naive index so that GitHub Pages users have a link
+core_dependency_requires '*' grep
+_swaddle_webserverFiles_createRootIndexHtmlIfNoneExists()
+{
+	# Jekyll is present (index.html index.markdown index.md index.textile are reserved)
+	if [ -f "$swaddle_outputPath"/_config.yml ]; then
+		return 1
+	fi
+	
+	local indexFilePath="$swaddle_outputPath"/"$indexFileName"
+	if [ ! -f "$indexFilePath" ]; then
+		return 0
+	fi
+	
+	# index.html exists. Is it ours?
+	grep -q "$(_swaddle_webserverFiles_index_uniqueTextIdentifyingIndexHtmlAsOurs)" "$indexFilePath"
 }
 
 core_dependency_requires '*' rm
 swaddle_webserverFiles_createIndices()
 {
 	local folderPath="$1"
-	local parentFolderPath="$2"
+	shift 1
+	# remaining values are parentFolderName s
 	
 	local inputFilePath="$folderPath"/"$inputFileName"
 	local indexFilePath="$folderPath"/"$indexFileName"
 	
-	_swaddle_webserverFiles_index_createInitialMarkdown >"$inputFilePath"
+	_swaddle_webserverFiles_index_createInitialMarkdown "@" >"$inputFilePath"
 	
 	pushd "$folderPath"
 		
@@ -70,18 +97,14 @@ swaddle_webserverFiles_createIndices()
 			
 			if [ -d "$child" ]; then
 				if [ ! -L "$child" ]; then
-					if [ -n "$parentFolderPath" ]; then
-						swaddle_webserverFiles_createIndices "$folderPath"/"$child" "$parentFolderPath / $child"
-					else
-						swaddle_webserverFiles_createIndices "$folderPath"/"$child" "$child"
-					fi
+					swaddle_webserverFiles_createIndices "$folderPath"/"$child" "$@" "$child"
 				fi
 				
-				swaddle_webserverFiles_index "$child" >>"$inputFilePath"
+				swaddle_webserverFiles_index "$child" "$@" >>"$inputFilePath"
 				
 			elif [ -f "$child" ]; then
 				
-				swaddle_webserverFiles_index "$child" >>"$inputFilePath"
+				swaddle_webserverFiles_index "$child" "$@" >>"$inputFilePath"
 					
 			fi
 			
@@ -91,7 +114,7 @@ swaddle_webserverFiles_createIndices()
 	popd
 	
 	# Only for non-root indices
-	if [ -n "$parentFolderPath" ]; then
+	if [ $# -gt 0 ]; then
 		printf '\n%s\n' "$parentUrlMarkdown" >>"$inputFilePath"
 	fi
 
@@ -106,40 +129,46 @@ core_dependency_requires '*' stat
 swaddle_webserverFiles_index()
 {
 	local filePath="$1"
+	shift 1
+	# remaining values are parentFolderName s
 	
-	local dirname="$(core_compatibility_dirname "$filePath")"
 	local fileName="$(core_compatibility_basename "$filePath")"
-	local date="$(swaddle_date_formatTimestampAsHumanReadable "$(stat -c '%Y' "$filePath")")"
 	
 	if [ -d "$filePath" ]; then
 		local statFilePath="$filePath"/"$indexFileName"
-		local signatureFilePath="$fileName"/"$indexFileName".asc
 		
 		local linkText="$fileName/"
+		
 		if core_variable_isTrue "$useIndexNameInDirectoryLinks"; then
 			local url="$fileName"/"$indexFileName"
 		else
 			local url="$fileName"/
 		fi
-		if [ -z "$parentFolderPath" ]; then
-			local linkTitle="Index of / $fileName /"
-		else
-			local linkTitle="Index of / $parentFolderPath / $fileName /"
-		fi
 		
+		local linkTitle="Index of /"
 	else
 		local statFilePath="$filePath"
-		local signatureFilePath="$filePath".asc
 		
 		local linkText="$fileName"
+		
 		local url="$fileName"
-		if [ -z "$parentFolderPath" ]; then
-			local linkTitle="Download file / $fileName"
-		else
-			local linkTitle="Download file / $parentFolderPath / $fileName"
-		fi
+		
+		local linkTitle="Download file /"
 	fi
 	
+	if core_variable_endsWith "$statFilePath" '.asc'; then
+		return 0
+	fi
+	
+	local signatureFilePath="$statFilePath".asc
+	
+	local parentFolderName
+	for parentFolderName in "$@" "$fileName"
+	do
+		linkTitle="$linkTitle $parentFolderName /"
+	done
+
+	local date="$(swaddle_date_formatTimestampAsHumanReadable "$(stat -c '%Y' "$filePath")")"
 	local size="$(stat -c '%s' "$statFilePath")"
 	
 	
@@ -169,18 +198,57 @@ swaddle_webserverFiles_iterateOverDigests()
 	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_web' 'digests' "$callback" 'sha1' 'sha256'
 }
 
+_swaddle_webserverFiles_index_uniqueTextIdentifyingIndexHtmlAsOurs()
+{
+	printf '%s' "swaddle, the standalone generator, from source control to complete archive"
+}
+
 _swaddle_webserverFiles_index_createInitialMarkdown()
 {
+	# values are parentFolderName s
+	local indexPath='/'
+	local parentFolderName
+	local parentUrl
+	local index=1
+	local count=$#
+	for parentFolderName in "$@"
+	do
+		if [ $index -eq $count ]; then
+			indexPath="$indexPath $parentFolderName /"
+		else
+			local parentUrl=''
+			local difference=$((count-index))
+			while [ $difference -ne 0 ]; then
+			do
+				parentUrl="${parentUrl}../"
+				difference=$((difference-1))
+			done
+			
+			if core_variable_isTrue "$useIndexNameInDirectoryLinks"; then
+				parentUrl="${parentUrl}${indexFileName}"
+			fi
+			
+			indexPath="$indexPath [$parentFolderName]($parentUrl \"Up to $parentFolderName\") /"
+		fi
+		
+		index=$((index+1))
+	done
+	
 	local folderName="$(core_compatibility_basename "$(pwd)")"
 	
-	# Defaults
-	set -- 'sha1' 'sha256'
+	printf '%s' "% Index of ${indexPath}
+% ${maintainer}
+% ${releaseDate}
+Table:This repository was created using [swaddle](https://github.com/raphaelcohn/swaddle \"$(_swaddle_webserverFiles_index_uniqueTextIdentifyingIndexHtmlAsOurs)\"), the one tool you need to create DEBs, RPMs, tarballs, apt and yum repositories from source control on Linux and Mac OS X, using [fatten](https://github.com/shellfire-dev/fatten \"Fattening allows you to develop modular shell scripts then bundle them up into an one multi-platform copy-and-run script\") and [shellfire](https://github.com/shellfire-dev/shellfire \"Shellfire provides modular, re-usable shell script libraries which are battle-tested for platform-gotchas with bash, pdksh, AIX sh, dash, Busybox and others.\").
+
+|Name|Last Modified|Size|Signature^[${signatureMarkdown}]|"
 
 	_swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback()
 	{
 		swaddle_digest_name "$core_variable_array_element"
 		printf '|'
 	}
+	swaddle_webserverFiles_iterateOverDigests _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback
 	
 	_swaddle_webserverFiles_index_createInitialMarkdown_digestColumnAlignmentCallback()
 	{
@@ -195,21 +263,6 @@ _swaddle_webserverFiles_index_createInitialMarkdown()
 		done
 		printf '|'
 	}
-	
-	local indexPath="/ $parentFolderPath /"
-	if [ "$indexPath" = '/  /' ]; then
-		indexPath='/'
-	fi
-	
-	printf '%s' "% Index of ${indexPath}
-% ${maintainer}
-% ${releaseDate}
-Table:This repository was created using [swaddle](https://github.com/raphaelcohn/swaddle \"swaddle, the standalone generator, from source control to complete archive\"), the one tool you need to create DEBs, RPMs, tarballs, apt and yum repositories from source control on Linux and Mac OS X, using [fatten](https://github.com/shellfire-dev/fatten \"Fattening allows you to develop modular shell scripts then bundle them up into an one multi-platform copy-and-run script\") and [shellfire](https://github.com/shellfire-dev \"Shellfire provides modular, re-usable shell script libraries which are battle-tested for platform-gotchas with bash, pdksh, AIX sh, dash, Busybox and others.\").
-
-|Name|Last Modified|Size|Signature^[${signatureMarkdown}]|"
-	
-	swaddle_webserverFiles_iterateOverDigests _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnNamesCallback
-	
 	printf '\n|:---|:------------|---:|:--------|'
 	swaddle_webserverFiles_iterateOverDigests _swaddle_webserverFiles_index_createInitialMarkdown_digestColumnAlignmentCallback
 	printf '\n'
@@ -223,10 +276,11 @@ swaddle_webserverFiles_releaseDate()
 
 swaddle_webserverFiles_parentUrlMarkdown()
 {
+	local parentUrl
 	if core_variable_isTrue "$useIndexNameInDirectoryLinks"; then
-		local parentUrl="../$indexFileName"
+		parentUrl="../$indexFileName"
 	else
-		local parentUrl="../"
+		parentUrl="../"
 	fi
 	parentUrlMarkdown="[\`Parent Directory ↩\`](${parentUrl} \"Move up to the parent directory\")"
 }
