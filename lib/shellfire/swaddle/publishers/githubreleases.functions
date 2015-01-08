@@ -39,7 +39,7 @@ We hope you enjoy it.
 An overview of the project is available [here]($(configure_getValue swaddle url) \"$(configure_getValue swaddle repository_name) project home page\").
 
 #### Bugs et al
-A software contains bugs, and we'd be keen to fix them. Likewise, to include your suggestions. Please raise [bugs, issues and enhancements]($(swaddle_configure_bugsUrl) \"Raises bugs here\") - the more the better.
+All software contains bugs. We're keen to fix them. Likewise, we want your suggestions. Please [raise them as issues]($(swaddle_configure_bugsUrl) \"Raise issues here\") - the more the better.
 
 #### Downloads and Repositories
 
