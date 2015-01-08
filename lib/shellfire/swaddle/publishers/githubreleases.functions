@@ -29,7 +29,39 @@ swaddle_publishers_githubreleases_prepare()
 	
 	github_api_v3_initialise "$githubApiTokenFile"
 	
-	github_api_v3_releases_create "$githubOwner" "$githubRepository" "$actualTagName" 'master' "$(configure_getValue swaddle version)" "Release version \`$(configure_getValue swaddle version)\` of repository \`$(configure_getValue swaddle repository_name)\`." true true
+	local hostBaseUrl
+	swaddle_repository_yum_adjustUrl hostBaseUrl "$(configure_getValue swaddle host_base_url)"
+	local releaseMarkdown="### Welcome to this release of $(configure_getValue swaddle repository_name)
+
+We hope you enjoy it.
+
+#### Overview
+An overview of the project is available [here]($(configure_getValue swaddle url) \"$(configure_getValue swaddle repository_name) project home page\").
+
+#### Bugs et al
+A software contains bugs, and we'd be keen to fix them. Likewise, to include your suggestions. Please raise [bugs, issues and enhancements]($(swaddle_configure_bugsUrl) \"Raises bugs here\") - the more the better.
+
+#### Downloads and Repositories
+
+We maintain a versioned set of repositories (ie each release is a new repository) suitable for different distributions:-
+
+* A friendly list of released files is also at [download]($hostBaseUrl \"Index of all files to download in this release\").
+* There is an [apt repository](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/ \"Apt repository for $(configure_getValue swaddle repository_name)\") repository suitable for Ubuntu, Debian and Linux Mint.
+  * There is a [sources.list](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/sources.list \"Apt sources.list for $(configure_getValue swaddle repository_name)\")
+  * And an install script [install.sh](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh \"Apt repository install script for $(configure_getValue swaddle repository_name)\"): `curl --fail --silent --show-error --location '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh' | sh`
+* There is a [yum repository](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/ \"Yum repository for $(configure_getValue swaddle repository_name)\") repository suitable for Fedora, CentOS and RedHat.
+  * With an install script [install.sh](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/install.sh \"Yum repository install.sh for $(configure_getValue swaddle repository_name)\"): `curl --fail --silent --show-error --location '${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/install.sh' | sh`
+
+You can also use a file below:-
+
+* Any labelled 'executable' are standalone executables;
+* Any labelled 'file' are single files;
+* Debian packages are probably not directly installable without adding them to a repository (so use one of ours)
+
+#### Release Notes
+Lorem Ipsum."
+	
+	github_api_v3_releases_create "$githubOwner" "$githubRepository" "$actualTagName" 'master' "$(configure_getValue swaddle version)" "$releaseMarkdown" true true
 }
 
 swaddle_publishers_githubreleases_publish()
