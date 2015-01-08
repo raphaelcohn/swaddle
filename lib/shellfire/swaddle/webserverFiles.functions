@@ -218,7 +218,7 @@ _swaddle_webserverFiles_index_createInitialMarkdown()
 		else
 			local parentUrl=''
 			local difference=$((count-index))
-			while [ $difference -ne 0 ]; then
+			while [ $difference -ne 0 ]
 			do
 				parentUrl="${parentUrl}../"
 				difference=$((difference-1))
