@@ -49,7 +49,7 @@ swaddle_publishers_githubpages_prepare()
 
 	pushd "$swaddle_outputPath"
 		
-		if ! git fetch --all --quiet; then
+		if ! git fetch --all --prune --tags --quiet; then
 			core_message WARN "Can't publish to GitHub pages (can't fetch in '$swaddle_outputPath')"
 			return 0
 		fi

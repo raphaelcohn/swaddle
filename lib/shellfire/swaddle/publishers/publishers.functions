@@ -42,7 +42,8 @@ swaddle_publishers_tagAndPush()
 	local tagName="${tagBase}_${repositoryName}_${version}"
 	
 	pushd "$gitRepositoryPath"
-		
+	
+		git fetch --all --prune --quiet
 		git checkout --quiet "$branch"
 		git fetch --tags --quiet
 		swaddle_publishers_tagRetry 1
