@@ -105,6 +105,16 @@ swaddle_publishers_githubpages_prepare()
 				rm -rf "$folder"
 			done
 			set +f
+			
+			# This horrible logic is to overcome a git 'bug' which prevents pushing an empty orphan branch
+			printf '' >README
+			git add README
+			git commit --quiet --message='Adding fake content to allow us to push a remote branch'
+			git rm --quiet -- README
+			git commit --quiet --message='Removing fake content to allow us to push a remote branch'
+			
+			# Now this will succeed
+			git push --quiet origin gh-pages 1>/dev/null
 		fi
 	popd
 	
