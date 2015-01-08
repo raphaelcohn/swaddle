@@ -44,14 +44,13 @@ swaddle_publishers_tagAndPush()
 	pushd "$gitRepositoryPath"
 	
 		git fetch --all --prune --quiet
-		git checkout --quiet "$branch"
 		git fetch --tags --quiet
 		swaddle_publishers_tagRetry 1
 
 		if core_variable_isTrue "$(swaddle_configure_sign)"; then
-			git push --quiet --tags --signed 2>/dev/null || git push --quiet --tags
+			git push --quiet --signed origin "$actualTagName" 2>/dev/null || git push --quiet origin "$actualTagName"
 		else
-			git push --quiet --tags
+			git push --quiet origin "$actualTagName"
 		fi
 		
 	popd
