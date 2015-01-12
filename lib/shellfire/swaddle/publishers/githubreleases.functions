@@ -54,14 +54,19 @@ Lorem Ipsum.
 
 We maintain a versioned set of repositories (ie each release is a new repository) suitable for different distributions:-
 
-* A friendly list of released files is also at [download]($hostBaseUrl \"Index of all files to download in this release\").
-* There is an [apt repository](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/ \"Apt repository for $(configure_getValue swaddle repository_name)\") repository suitable for Ubuntu, Debian and Linux Mint.
-  * There is a [sources.list](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/sources.list \"Apt sources.list for $(configure_getValue swaddle repository_name)\")
-  * And an install script [install.sh](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh \"Apt repository install script for $(configure_getValue swaddle repository_name)\"): \`wget --no-verbose --output-document - '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh' | sh\` \*
+* There is an [apt repository](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/ \"Apt repository for $(configure_getValue swaddle repository_name)\") repository suitable for Ubuntu \*, Debian and Linux Mint.
+  * All available ddebian packages are in this [pool](${hostBaseUrl}apt/pool/ \"Apt pool of Debian packages for $(configure_getValue swaddle repository_name)\")
+  * And an install script [install.sh](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh \"Apt repository install script for $(configure_getValue swaddle repository_name)\"): \`wget --no-verbose --output-document - '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh' | sh\` †
+    * Installs our [GPG Key](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/Release.key \"GPG Signing Key\")
+	* Installs a [sources.list](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/sources.list \"Apt sources.list for $(configure_getValue swaddle repository_name)\")
+	* Installs using \`apt-get\` the apt HTTPS transport (\`apt-get install apt-transport-https\`), which is missing in most Debian default installs
+	* Updates package lists using \`apt-get update\`
 * There is a [yum repository](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/ \"Yum repository for $(configure_getValue swaddle repository_name)\") repository suitable for Fedora, CentOS and RedHat.
   * With an install script [install.sh](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/install.sh \"Yum repository install.sh for $(configure_getValue swaddle repository_name)\"): \`curl --fail --silent --show-error --location '${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/install.sh' | sh\`
+* Tarballs and archives are available in [files](${hostBaseUrl}files/$(configure_getValue swaddle repository_name)/ \"Tarballs\").
 
-\* Older versions of \`wget\`, such as those in Debian 6 and Ubuntu 10.04 LTS, require the additional option `--no-check-certificate` to work around a bug in their redirection logic. For these distributions, use \`wget --no-check-certificate --no-verbose --output-document - '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh' | sh\`
+\* Ubuntu 10.04 LTS is not supported (this release has a version of \`dpkg\` which doesn't work with \`data.tar.xz\`)
+† The older versions of \`wget\` in Debian 6 (and Ubuntu 10.04 LTS), requires the additional option `--no-check-certificate` to work around a bug in its redirection logic: \`wget --no-check-certificate --no-verbose --output-document - '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh' | sh\`
 
 ##### Files
 
