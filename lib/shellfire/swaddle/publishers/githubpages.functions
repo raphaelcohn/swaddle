@@ -143,5 +143,6 @@ swaddle_publishers_githubpages_finish()
 
 	
 	local actualTagName=''
+	local acutalIterationCount=''
 	swaddle_publishers_tagAndPush "$swaddle_outputPath" binaries
 }

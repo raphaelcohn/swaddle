@@ -80,5 +80,6 @@ swaddle_publishers_tagRetry()
 	
 	if [ -z "$actualTagName" ]; then
 		actualTagName="$thisAttemptTagName"
+		actualIterationCount="$iterationCount"
 	fi
 }
