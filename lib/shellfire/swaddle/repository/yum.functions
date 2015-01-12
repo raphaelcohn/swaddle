@@ -130,8 +130,8 @@ swaddle_repository_yum_createInstallScript()
 		set -u
 		
 		repoFilePath='/etc/yum.repos.d/$repositoryName.repo'
-		sudo -p "Password to allow root to remove '$repoFilePath' and perform install: " rm -rf "$repoFilePath"
-		curl --fail --location --silent --show-error '${hostBaseUrl}/yum/${repositoryName}/${repositoryName}.repo' | sudo -p "Password to allow root to install '$repoFilePath': " tee "$repoFilePath" >/dev/null
+		sudo -p "Password for %p is required to allow root to remove '$repoFilePath' and perform install: " rm -rf "$repoFilePath"
+		curl --fail --location --silent --show-error '${hostBaseUrl}/yum/${repositoryName}/${repositoryName}.repo' | sudo -p "Password for %p is required to allow root to install '$repoFilePath': " tee "$repoFilePath" >/dev/null
 		echo "Now run 'sudo yum update' and 'sudo yum group info $repositoryName' to see all packages available."
 	EOF
 	chmod 0755 "$installScriptFilePath"

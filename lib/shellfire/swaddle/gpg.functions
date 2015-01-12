@@ -21,7 +21,7 @@ swaddle_gpg_exportSigningKeyFingerprint()
 	swaddle_gpg --with-colons --default-key 'Raphael Cohn (Package Signing Key) <raphael.cohn@stormmq.com>' --fingerprint | awk -v FS=':' '$1 ~ /pub/ {print $5}'
 }
 
-core_dependency_requires '*' rm mv touch
+core_dependency_requires '*' rm touch
 swaddle_gpg_sign()
 {
 	local filePath="$1"
@@ -31,13 +31,9 @@ swaddle_gpg_sign()
 		local extension='asc'
 	fi
 	
-	rm -f "$filePath".asc "$filePath"."$extension"
+	rm -f "$filePath"."$extension"
 	
-	swaddle_gpg --default-key "$(swaddle_configure_signer)" --armor --sign "$filePath"
-	
-	if [ "$extension" != 'asc' ]; then
-		mv "$filePath".asc "$filePath"."$extension"
-	fi
+	swaddle_gpg --default-key "$(swaddle_configure_signer)" --output "$filePath"."$extension" --armor --sign --detach-sig "$filePath"
 	
 	touch -r "$filePath" "$filePath"."$extension"
 }

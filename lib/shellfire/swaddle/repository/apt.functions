@@ -327,7 +327,7 @@ swaddle_repository_apt_createInstallScript()
 	local filePath="$repositoryPath"/install.sh
 	local repositoryName="$(configure_getValue swaddle repository_name)"
 	
-	local mktemp="\$(mktemp $repositoryName.key.XXXXXXXXX)"
+	local mktemp="\$(mktemp --tmpdir $repositoryName.key.XXXXXXXXX)"
 	local temporaryKeyFile='$temporaryKeyFile'
 	cat >"$filePath" <<-EOA
 		#!/usr/bin/env sh
@@ -335,13 +335,14 @@ swaddle_repository_apt_createInstallScript()
 		set -u
 		
 		temporaryKeyFile="${mktemp}"
-		trap 'rm -rf "$temporaryKeyFile"' EXIT
+		trap 'rm -rf "$temporaryKeyFile"' EXIT HUP INT QUIT TERM
 		cat >"$temporaryKeyFile" <<EOF
 			$(cat "$_swaddle_repository_parentPath"/dists/"$repositoryName"/Release.key)
 		EOF
-		sudo -p "Password required to install repository '$repositoryName' public key to apt: " apt-key add "$temporaryKeyFile"
+		sudo -p "Password for %p is required to allow root to install repository '$repositoryName' public key to apt: " apt-key add "$temporaryKeyFile"
 		
-		echo '$(cat "$_swaddle_repository_parentPath"/dists/"$repositoryName"/sources.list)' | sudo -p "Password required to install repository '$repositoryName' apt sources list to '/etc/sources.list.d/00$repositoryName.sources.list': " tee /etc/sources.list.d/00$repositoryName.list >/dev/null
+		echo '$(cat "$_swaddle_repository_parentPath"/dists/"$repositoryName"/sources.list)' | sudo -p "Password for %p is required to allow root to install repository '$repositoryName' apt sources list to '/etc/apt/sources.list.d/00$repositoryName.sources.list': " tee /etc/sources.list.d/00$repositoryName.list >/dev/null
+		sudo -p "Password for %p to allow root to update from new sources: " apt-get update --quiet
 	EOA
 	
 	chmod +x "$filePath"
