@@ -358,10 +358,10 @@ swaddle_build_package_deb_tarControl()
 		--directory "$_swaddle_build_package_deb_controlFolderPath" \
 		.
 	
-	compress_xz "$tarball"
+	compress_gzip "$tarball"
 	rm "$tarball"
 	
-	_swaddle_build_package_deb_controlTarballFileName='control.tar.xz'
+	_swaddle_build_package_deb_controlTarballFileName='control.tar.gz'
 	_swaddle_build_package_deb_permissionsForAr "$_swaddle_build_package_temporaryFolderPath"/"$_swaddle_build_package_deb_controlTarballFileName"
 }
 
