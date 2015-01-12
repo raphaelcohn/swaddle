@@ -416,7 +416,7 @@ _swaddle_build_package_deb_permissionsForAr()
 }
 
 core_usesIn swaddle webserverFiles
-core_dependency_requires '*' mkdir ar
+core_dependency_requires '*' mkdir rm ar
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createDeb
 swaddle_build_package_deb_createDeb()
 {
@@ -425,30 +425,37 @@ swaddle_build_package_deb_createDeb()
 	local poolAZ
 	_swaddle_build_package_deb_poolAZ
 	local poolComponent="$(configure_getValue swaddle_deb component)"
-	
-	local parentPath="$_swaddle_repository_parentPath"/pool/"$poolComponent"/"$poolAZ"/"$poolSource"
-	mkdir -m 0755 -p "$parentPath"
-	
-	local debFilePath="$parentPath"/"$poolDebFile"
-	
+		
+	local TMP_FILE
+	core_temporaryFiles_newFileToRemoveOnExit
+	local temporaryDebFilePath="$TMP_FILE"
+		
 	pushd "$_swaddle_build_package_temporaryFolderPath"
 	
-		swaddle_simulateroot_execute ar -q -c "$debFilePath" \
+		swaddle_simulateroot_execute ar -q -c "$temporaryDebFilePath" \
 			debian-binary \
 			"$_swaddle_build_package_deb_controlTarballFileName" \
 			"$_swaddle_build_package_deb_dataTarballFileName"
-
-		swaddle_simulateroot_ownAsExecutingUser "$debFilePath"
 		
 		rm -rf \
 			debian-binary \
 			"$_swaddle_build_package_deb_controlTarballFileName" \
 			"$_swaddle_build_package_deb_dataTarballFileName"
+
 	popd
 	
-	# Oddly, debian packages can actually be compressed further (this is because they are 'ar' archives)
+	local parentPath="$_swaddle_repository_parentPath"/pool/"$poolComponent"/"$poolAZ"/"$poolSource"
+	mkdir -m 0755 -p "$parentPath"
 	
+	local debFilePath="$parentPath"/"$poolDebFile"
+	if [ -f "$debFilePath" ]; then
+		swaddle_simulateroot_ownAsExecutingUser rm "$debFilePath"
+	fi
 	swaddle_touch_setMtimeAndAtime "$debFilePath"
+	cp "$debFilePath" "$debFilePath"
+	swaddle_simulateroot_ownAsExecutingUser "$debFilePath"
+	
+	# Oddly, debian packages can actually be compressed further (this is because they are 'ar' archives)
 	
 	swaddle_publishers_publish "${_swaddle_build_swaddleName} ${_swaddle_build_package_translatedArchitecture} package (Debian)" "$debFilePath" 'application/vnd.debian.binary-package'
 }
