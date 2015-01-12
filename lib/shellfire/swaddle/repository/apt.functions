@@ -237,9 +237,17 @@ swaddle_repository_apt_createDistsRelease()
 	local parentPath="$repositoryPath"
 	local releaseFilePath="$parentPath"/Release
 	
-	local configurationSettingValue
-	_configure_configurationSettingValue 'swaddle' 'apt_architectures'
-	local architectures="$configurationSettingValue"
+	local architectures=''
+	_swaddle_repository_apt_createDistsRelease_callback()
+	{
+		local architecture="$core_variable_array_element"
+		if [ -z "$architectures" ]; then
+			architectures="$core_variable_array_element"
+		else
+			architectures="$architectures $core_variable_array_element"
+		fi
+	}
+	swaddle_configure_apt_architectures _swaddle_repository_apt_createDistsRelease_callback
 	
 	{
 		cat <<-EOF
@@ -249,23 +257,55 @@ swaddle_repository_apt_createDistsRelease()
 			Version: $(configure_getValue swaddle version)
 			Codename: $(configure_getValue swaddle repository_name)
 			Date: $(swaddle_configure_releaseDate)
-			Architectures: $(core_variable_array_string "$architectures" ' ')
-			Components: $(core_variable_array_string  _swaddle_repository_apt_components ' ')
+			Architectures: ${architectures}
+			Components: $(core_variable_array_string _swaddle_repository_apt_components ' ')
 			Description: $(configure_getValue swaddle vendor) $(configure_getValue swaddle repository_name) $(configure_getValue swaddle version)
 			NotAutomatic: no
 			ButAutomaticUpgrades: no
 		EOF
 		
-		_swaddle_repository_apt_createDistsRelease_callback()
+		_swaddle_repository_apt_createDistsRelease_componentCallback()
 		{
 			local poolComponent="$core_variable_array_element"
-			set +f
-			for filePath in "$poolComponent"/binary-* "$poolComponent"/debian-installer/binary-* "$poolComponent"/i18n/* "$poolComponent"/source/*
-			do
-				set -f
+			local filePath
+			
+			_swaddle_repository_apt_createDistsRelease_componentCallback_printHashValue()
+			{
 				if [ -f "$filePath" ]; then
 					printf " %s%18s %s\n" "$(swaddle_digest ${digest} "$filePath")" "$(stat -c '%s' "$filePath")" "$filePath"
 				fi
+			}
+			
+			_swaddle_repository_apt_createDistsRelease_componentCallback_architectureCallback()
+			{
+				local architecture="$core_variable_array_element"
+				set +f
+				for filePath in \
+					"$poolComponent"/binary-"$architecture"/Packages \
+					"$poolComponent"/binary-"$architecture"/Packages.* \
+					"$poolComponent"/binary-"$architecture"/Release \
+					"$poolComponent"/debian-installer/binary-"$architecture"/Packages \
+					"$poolComponent"/debian-installer/binary-"$architecture"/Packages.*
+				do
+					set -f
+					_swaddle_repository_apt_createDistsRelease_componentCallback_printHashValue
+				done
+				set -f
+			}
+			
+			swaddle_configure_apt_architectures _swaddle_repository_apt_createDistsRelease_componentCallback_architectureCallback
+			
+			# Translation-* will match Translation-en and Translation-en.gz, etc
+			set +f
+			for filePath in \
+				"$poolComponent"/i18n/Index \
+				"$poolComponent"/i18n/Translation-* \
+				"$poolComponent"/source/Sources \
+				"$poolComponent"/source/Sources.* \
+				"$poolComponent"/source/Release
+			do
+				set -f
+				_swaddle_repository_apt_createDistsRelease_componentCallback_printHashValue
 			done
 			set -f
 		}
@@ -278,17 +318,17 @@ swaddle_repository_apt_createDistsRelease()
 			printf 'MD5Sum:\n'
 			digest=md5
 			width=10
-			core_variable_array_iterate _swaddle_repository_apt_components _swaddle_repository_apt_createDistsRelease_callback
+			core_variable_array_iterate _swaddle_repository_apt_components _swaddle_repository_apt_createDistsRelease_componentCallback
 			
 			printf 'SHA1:\n'
 			digest=sha1
 			width=10
-			core_variable_array_iterate _swaddle_repository_apt_components _swaddle_repository_apt_createDistsRelease_callback
+			core_variable_array_iterate _swaddle_repository_apt_components _swaddle_repository_apt_createDistsRelease_componentCallback
 			
 			printf 'SHA256:\n'
 			digest=sha256
 			width=10
-			core_variable_array_iterate _swaddle_repository_apt_components _swaddle_repository_apt_createDistsRelease_callback
+			core_variable_array_iterate _swaddle_repository_apt_components _swaddle_repository_apt_createDistsRelease_componentCallback
 			
 		popd
 		
