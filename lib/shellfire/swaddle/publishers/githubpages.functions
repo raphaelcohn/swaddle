@@ -44,7 +44,7 @@ swaddle_publishers_githubpages_prepare()
 	
 	# strip out worktree - this is usually a problem when dealing with submodules (-f above)
 	pushd "$swaddle_outputPath"
-		git config --local --unset core.worktree
+		git config --local --unset core.worktree || true
 	popd
 
 	pushd "$swaddle_outputPath"
