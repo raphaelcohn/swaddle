@@ -341,7 +341,7 @@ swaddle_repository_apt_createInstallScript()
 		EOF
 		sudo -p "Password for %p is required to allow root to install repository '$repositoryName' public key to apt: " apt-key add "$temporaryKeyFile"
 		
-		echo '$(cat "$_swaddle_repository_parentPath"/dists/"$repositoryName"/sources.list)' | sudo -p "Password for %p is required to allow root to install repository '$repositoryName' apt sources list to '/etc/apt/sources.list.d/00$repositoryName.sources.list': " tee /etc/sources.list.d/00$repositoryName.list >/dev/null
+		echo '$(cat "$_swaddle_repository_parentPath"/dists/"$repositoryName"/sources.list)' | sudo -p "Password for %p is required to allow root to install repository '$repositoryName' apt sources list to '/etc/apt/sources.list.d/00$repositoryName.sources.list': " tee /etc/apt/sources.list.d/00$repositoryName.list >/dev/null
 		sudo -p "Password for %p to allow root to update from new sources: " apt-get update --quiet
 	EOA
 	
