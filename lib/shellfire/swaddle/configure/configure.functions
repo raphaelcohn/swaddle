@@ -36,7 +36,7 @@ swaddle_configure_bugsUrl()
 swaddle_configure_apt_architectures()
 {
 	local callback="$1"
-	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_apt' 'architectures' "$callback" 'amd64'
+	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_apt' 'architectures' "$callback" 'amd64' 'i386'
 }
 
 swaddle_configure_epochVersionIteration()
