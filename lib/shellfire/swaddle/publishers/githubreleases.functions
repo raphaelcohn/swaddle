@@ -25,7 +25,7 @@ swaddle_publishers_githubreleases_prepare()
 	fi
 	
 	local actualTagName=''
-	swaddle_publishers_tagAndPush "$_swaddle_git_swaddlingPathGitRoot" "$_swaddle_git_branch" 'gh-releases'
+	swaddle_publishers_tagAndPush "$_swaddle_git_swaddlingPathGitRoot" 'release'
 	
 	github_api_v3_initialise "$githubApiTokenFile"
 	

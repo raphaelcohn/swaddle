@@ -201,6 +201,7 @@ swaddle_configure_register_attemptToDiscoverUrlAndGitHubParameters()
 	if core_path_isReadableNonEmptyFilePath "$potentialTokenFilePath"; then
 		configure_register Value GithubTokenFile swaddle_github api_token_file "$potentialTokenFilePath"
 	else
+		core_message WARN "There is no Git Hub token file at '$potentialTokenFilePath'"
 		configure_register Value GithubTokenFile swaddle_github api_token_file ''
 	fi
 	

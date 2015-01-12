@@ -31,21 +31,26 @@ swaddle_publishers_publish()
 swaddle_publishers_tagAndPush()
 {
 	local gitRepositoryPath="$1"
-	local branch="$2"
-	local tagBase="$3"
+	local tagBase="$2"
+	local initialIterationCount=1
 	
 	local repositoryName="$(configure_getValue swaddle repository_name)"
 	local version="$(configure_getValue swaddle version)"
 	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"
 	
-	local tagMessage="Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'"
-	local tagName="${tagBase}_${repositoryName}_${version}"
+	if [ -z "$tagBase" ]; then
+		local tagMessage="Packaged repository '$repositoryName' version '$version' at epoch seconds '$timestampInEpochSeconds'"
+		local tagName="${version}"
+	else
+		local tagMessage="Packaged repository '$repositoryName' version '$version' ($tagBase) at epoch seconds '$timestampInEpochSeconds'"
+		local tagName="${tagBase}_${version}"
+	fi
 	
 	pushd "$gitRepositoryPath"
 	
 		git fetch --all --prune --quiet
 		git fetch --tags --quiet
-		swaddle_publishers_tagRetry 1
+		swaddle_publishers_tagRetry "$initialIterationCount"
 
 		if core_variable_isTrue "$(swaddle_configure_sign)"; then
 			git push --quiet --signed origin "$actualTagName" 2>/dev/null || git push --quiet origin "$actualTagName"

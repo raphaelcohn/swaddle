@@ -143,5 +143,5 @@ swaddle_publishers_githubpages_finish()
 
 	
 	local actualTagName=''
-	swaddle_publishers_tagAndPush "$swaddle_outputPath" gh-pages gh-pages
+	swaddle_publishers_tagAndPush "$swaddle_outputPath" binaries
 }
