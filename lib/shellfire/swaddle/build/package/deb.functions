@@ -425,11 +425,12 @@ swaddle_build_package_deb_createDeb()
 	local poolAZ
 	_swaddle_build_package_deb_poolAZ
 	local poolComponent="$(configure_getValue swaddle_deb component)"
-		
-	local TMP_FILE
-	core_temporaryFiles_newFileToRemoveOnExit
-	local temporaryDebFilePath="$TMP_FILE"
-		
+	
+	# Done this way because 'ar' doesn't like an empty file to already exist
+	local TMP_FOLDER
+	core_temporaryFiles_newFolderToRemoveOnExit
+	local temporaryDebFilePath="$TMP_FOLDER"/"$poolDebFile"
+	
 	pushd "$_swaddle_build_package_temporaryFolderPath"
 	
 		swaddle_simulateroot_execute ar -q -c "$temporaryDebFilePath" \
@@ -451,8 +452,8 @@ swaddle_build_package_deb_createDeb()
 	if [ -f "$debFilePath" ]; then
 		swaddle_simulateroot_ownAsExecutingUser rm "$debFilePath"
 	fi
+	cp "$temporaryDebFilePath" "$debFilePath"
 	swaddle_touch_setMtimeAndAtime "$debFilePath"
-	cp "$debFilePath" "$debFilePath"
 	swaddle_simulateroot_ownAsExecutingUser "$debFilePath"
 	
 	# Oddly, debian packages can actually be compressed further (this is because they are 'ar' archives)
