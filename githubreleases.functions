@@ -1,0 +1,103 @@
+# This file is part of swaddle. It is subject to the licence terms in the COPYRIGHT file found in the top-level directory of this distribution and at https://raw.githubusercontent.com/raphaelcohn/swaddle/master/COPYRIGHT. No part of swaddle, including this file, may be copied, modified, propagated, or distributed except according to the terms contained in the COPYRIGHT file.
+# Copyright © 2014-2015 The developers of swaddle. See the COPYRIGHT file in the top-level directory of this distribution and at https://raw.githubusercontent.com/raphaelcohn/swaddle/master/COPYRIGHT.
+
+
+# We also have configuration that isn't being handled yet
+
+core_usesIn swaddle publishers
+core_usesIn github/api/v3 releases
+core_usesIn jsonreader
+swaddle_publishers_githubreleases_prepare()
+{
+	local githubOwner="$(configure_getValue swaddle_github owner)"
+	if [ -z "$githubOwner" ]; then
+		return 0
+	fi
+	
+	local githubRepository="$(configure_getValue swaddle_github repository)"
+	if [ -z "$githubRepository" ]; then
+		return 0
+	fi
+	
+	local githubApiTokenFile="$(configure_getValue swaddle_github api_token_file)"
+	if [ -z "$githubApiTokenFile" ]; then
+		return 0
+	fi
+	
+	local actualTagName=''
+	swaddle_publishers_tagAndPush "$_swaddle_git_swaddlingPathGitRoot" 'release'
+	
+	github_api_v3_initialise "$githubApiTokenFile"
+	
+	local zipSourceUrl="https://github.com/$(urlencode_pathPiece "$githubOwner")/$(urlencode_pathPiece "$githubRepository")/archive/$(urlencode_pathPiece "${actualTagName}.zip")"
+	local tarGzSourceUrl="https://github.com/$(urlencode_pathPiece "$githubOwner")/$(urlencode_pathPiece "$githubRepository")/archive/$(urlencode_pathPiece "${actualTagName}.tar.gz")"
+	
+	local hostBaseUrl
+	swaddle_repository_yum_adjustUrl hostBaseUrl "$(configure_getValue swaddle host_base_url)"
+	local releaseMarkdown="### Welcome to this release of $(configure_getValue swaddle repository_name)
+
+We hope you enjoy it.
+
+#### Overview
+An overview of the project is available [here]($(configure_getValue swaddle url) \"$(configure_getValue swaddle repository_name) project home page\").
+
+#### Bugs et al
+All software contains bugs. We're keen to fix them. Likewise, we want your suggestions. Please [raise them as issues]($(swaddle_configure_bugsUrl) \"Raise issues here\") - the more the better.
+
+#### Release Notes
+Lorem Ipsum.
+
+#### Downloads
+
+##### Source Code
+
+* Source code [ZIP archive]($zipSourceUrl \"Source code ZIP archive\")
+* Source code [tarball (Gzip compressed)]($tarGzSourceUrl \"Source code tarball (Gzip compressed)\")
+
+##### Repositories
+
+We maintain a versioned set of repositories (ie each release is a new repository) suitable for different distributions:-
+
+* A friendly list of released files is also at [download]($hostBaseUrl \"Index of all files to download in this release\").
+* There is an [apt repository](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/ \"Apt repository for $(configure_getValue swaddle repository_name)\") repository suitable for Ubuntu, Debian and Linux Mint.
+  * There is a [sources.list](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/sources.list \"Apt sources.list for $(configure_getValue swaddle repository_name)\")
+  * And an install script [install.sh](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh \"Apt repository install script for $(configure_getValue swaddle repository_name)\"): \`curl --fail --silent --show-error --location '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh' | sh\`
+* There is a [yum repository](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/ \"Yum repository for $(configure_getValue swaddle repository_name)\") repository suitable for Fedora, CentOS and RedHat.
+  * With an install script [install.sh](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/install.sh \"Yum repository install.sh for $(configure_getValue swaddle repository_name)\"): \`curl --fail --silent --show-error --location '${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/install.sh' | sh\`
+
+##### Files
+
+You can also use a file below:-
+
+* Any labelled 'executable' are standalone executables;
+* Any labelled 'file' are single files;
+* Debian packages are probably not directly installable without adding them to a repository (so use one of ours)
+
+
+*Created using [swaddle](https://github.com/raphaelcohn/swaddle \"swaddle home page\"), a [shellfire](https://github.com/shellfire-dev/shellfire \"shellfire home page\") application.*"
+	
+	github_api_v3_releases_create "$githubOwner" "$githubRepository" "$actualTagName" 'master' "$(configure_getValue swaddle version)" "$releaseMarkdown" true true
+}
+
+swaddle_publishers_githubreleases_publish()
+{
+	local descriptiveName="$1"
+	local filePath="$2"
+	local contentType="$3"
+	
+	if core_variable_isUnset github_api_v3_releases_uploadUrlTemplate; then
+		return 0
+	fi
+	
+	if [ -z "$github_api_v3_releases_uploadUrlTemplate" ]; then
+		return 0
+	fi
+	
+	core_message NOTICE "Publishing to GitHub Releases '$descriptiveName' file '$filePath'"
+	github_api_v3_releases_uploadAsset "$github_api_v3_releases_uploadUrlTemplate" "$filePath" "$contentType" "$descriptiveName"
+}
+
+swaddle_publishers_githubreleases_finish()
+{
+	:
+}

@@ -1,0 +1,315 @@
+# This file is part of swaddle. It is subject to the licence terms in the COPYRIGHT file found in the top-level directory of this distribution and at https://raw.githubusercontent.com/raphaelcohn/swaddle/master/COPYRIGHT. No part of swaddle, including this file, may be copied, modified, propagated, or distributed except according to the terms contained in the COPYRIGHT file.
+# Copyright © 2014-2015 The developers of swaddle. See the COPYRIGHT file in the top-level directory of this distribution and at https://raw.githubusercontent.com/raphaelcohn/swaddle/master/COPYRIGHT.
+
+
+core_usesIn swaddle git
+
+core_functions_register _swaddle_configure_register_functions swaddle_git_findSwaddlesPathGitRoot
+
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_configuration
+swaddle_configure_register_configuration()
+{
+	if core_variable_isSet HOME; then
+		if core_path_isReadableAndSearchableFolderPath "$HOME/.gnupg"; then
+			configure_register Value ReadableSearchableFolderPath swaddle keyring "$HOME/.gnupg"
+			configure_register Value Boolean swaddle sign yes
+		else
+			configure_register Value ReadableSearchableFolderPath swaddle keyring
+			configure_register Value Boolean swaddle sign no
+		fi
+	else
+		configure_register Value ReadableSearchableFolderPath swaddle keyring
+		configure_register Value Boolean swaddle sign no
+	fi
+
+	configure_register Value NotEmpty swaddle maintainer_name
+	configure_register Value NotEmpty swaddle maintainer_comment
+	configure_register Value NotEmpty swaddle maintainer_email
+
+	_swaddle_default_keyserver='hkps://hkps.pool.sks-keyservers.net'
+	#https://sks-keyservers.net/overview-of-pools.php
+	# Disable by using ''
+	configure_register Value Any swaddle keyserver "$_swaddle_default_keyserver"
+	# comma-separated list
+	configure_register Array NotEmpty swaddle keyserver_options
+}
+
+core_dependency_requires '*' git date awk
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverVersionAndMtime
+swaddle_configure_register_attemptToDiscoverVersionAndMtime()
+{
+	if swaddle_git_swaddlingCanNotUseGit; then
+		configure_register Value NotEmpty swaddle timestamp 0
+		configure_register Value NotEmpty swaddle version '0'
+		configure_register Value NotEmpty swaddle iteration '1'
+		return 0
+	fi
+	
+	pushd "$swaddle_swaddlingPath"
+		
+		local iso8601Date="$(git log -n 1 --format='%ci')"
+		
+		local timestamp="$(date -d "$iso8601Date" +'%s')"
+		configure_register Value NotEmpty swaddle timestamp "$timestamp"
+		
+		local version="$(date -d "$iso8601Date" '+%Y.%m%d.%H%M')"
+		configure_register Value NotEmpty swaddle version "$version"
+		
+		local pendingChanges="$(git diff --minimal --no-color --name-status)"
+		if [ -n "$pendingChanges" ]; then
+			# We bump iteration; not a perfect solution, but at least we differentiate
+			configure_register Value NotEmpty swaddle iteration '2'
+		else
+			configure_register Value NotEmpty swaddle iteration '1'
+		fi
+		
+	popd
+}
+
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverReadme
+swaddle_configure_register_attemptToDiscoverReadme()
+{
+	_swaddle_configure_register_attemptToDiscoverReadme_failure()
+	{
+		configure_register Value NotEmpty swaddle readme_file
+	}
+	
+	local iterationCount=1
+	local currentPath="$swaddle_swaddlingPath"
+	local readmeFilePath
+	while true
+	do
+		readmeFilePath="$currentPath"/README.md
+		if core_path_isReadableNonEmptyFilePath "$readmeFilePath"; then
+			break
+		fi
+		
+		if swaddle_git_swaddlingCanNotUseGit; then
+			# ie look for $swaddle_swaddlingPath/COPYRIGHT and $swaddle_swaddlingPath/../COPYRIGHT (latter is common as we have repo/swaddling/xxx)
+			if [ $iterationCount -eq 2 ]; then
+				_swaddle_configure_register_attemptToDiscoverReadme_failure
+				return 0
+			fi
+		elif [ -e "$currentPath"/.git ]; then
+			_swaddle_configure_register_attemptToDiscoverReadme_failure
+			return 0
+		fi
+		
+		currentPath="$currentPath"/..
+		pushd "$currentPath"
+			currentPath="$(pwd)"
+		popd
+		iterationCount=$((iterationCount+1))
+	done
+
+	configure_register Value NotEmpty swaddle readme_file "$readmeFilePath"
+}
+
+core_usesIn debian/control copyright
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverCopyrightAndLicence
+swaddle_configure_register_attemptToDiscoverCopyrightAndLicence()
+{
+	_swaddle_configure_register_attemptToDiscoverCopyright_failure()
+	{
+		configure_register Value NotEmpty swaddle copyright_file
+		configure_register Value Licence swaddle licence
+		core_message NOTICE "Could not find a COPYRIGHT file"
+	}
+	
+	local iterationCount=1
+	local currentPath="$swaddle_swaddlingPath"
+	local copyrightFilePath
+	while true
+	do
+		copyrightFilePath="$currentPath"/COPYRIGHT
+		if core_path_isReadableNonEmptyFilePath "$copyrightFilePath"; then
+			break
+		fi
+		
+		if swaddle_git_swaddlingCanNotUseGit; then
+			# ie look for $swaddle_swaddlingPath/COPYRIGHT and $swaddle_swaddlingPath/../COPYRIGHT (latter is common as we have repo/swaddling/xxx)
+			if [ $iterationCount -eq 2 ]; then
+				_swaddle_configure_register_attemptToDiscoverCopyright_failure
+				return 0
+			fi
+		elif [ -e "$currentPath"/.git ]; then
+			_swaddle_configure_register_attemptToDiscoverCopyright_failure
+			return 0
+		fi
+		
+		currentPath="$currentPath"/..
+		pushd "$currentPath"
+			currentPath="$(pwd)"
+		popd
+		iterationCount=$((iterationCount+1))
+	done
+	
+	configure_register Value NotEmpty swaddle copyright_file "$copyrightFilePath"
+	
+	local spdxLicenseNameFound=false
+	local spdxLicenseName
+	_swaddle_configure_register_attemptToDiscoverCopyrightAndLicence_eventHandler()
+	{
+		if $spdxLicenseNameFound; then
+			return 0
+		fi
+		
+		local fileFormat="$1"
+		local paragraphType="$2"
+		local eventType="$3"
+		
+		if [ "$fileFormat" != 'Copyright' ]; then
+			core_exitError $core_commandLine_exitCode_SOFTWARE "Unexpected fileFormat '$fileFormat'"
+		fi
+		
+		# We don't check for paragraphType; we just find the first license line
+		
+		if [ "$eventType" != 'Field' ]; then
+			return 0
+		fi
+		
+		local fieldName="$4"
+		local fieldType="$5"
+		
+		if [ "$fieldName" != 'License' ]; then
+			return 0
+		fi
+		
+		spdxLicenseName="$debian_control_parser_fieldValueFirstLine"
+		spdxLicenseNameFound=true
+	}
+	debian_control_copyright _swaddle_configure_register_attemptToDiscoverCopyrightAndLicence_eventHandler "$copyrightFilePath"
+	
+	if $spdxLicenseNameFound; then
+		configure_register Value Licence swaddle licence "$spdxLicenseName"
+	else
+		configure_register Value Licence swaddle licence
+		core_message NOTICE "Could not find a valid 'License:' line in the COPYRIGHT file '$copyrightFilePath'"
+		return 0
+	fi
+
+}
+
+core_dependency_requires '*' git awk sed
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverUrlAndGitHubParameters
+swaddle_configure_register_attemptToDiscoverUrlAndGitHubParameters()
+{
+	configure_register Value NotEmpty swaddle host_base_url
+	configure_register Value Any swaddle bugs_url ''
+	
+	local potentialTokenFilePath=~/."${_program_namespace}"/github-personal-access-token
+	if core_path_isReadableNonEmptyFilePath "$potentialTokenFilePath"; then
+		configure_register Value GithubTokenFile swaddle_github api_token_file "$potentialTokenFilePath"
+	else
+		core_message WARN "There is no Git Hub token file at '$potentialTokenFilePath'"
+		configure_register Value GithubTokenFile swaddle_github api_token_file ''
+	fi
+	
+	if swaddle_git_swaddlingCanNotUseGit; then
+		configure_register Value NotEmpty swaddle url
+		configure_register Value Any swaddle_github owner ''
+		configure_register Value Any swaddle_github repository ''
+		configure_register Value NotEmpty swaddle repository_name
+		return 0
+	fi
+	
+	local pushUrl
+	pushd "$swaddle_swaddlingPath"
+	
+		pushUrl="$(git remote show -n origin | awk '$1 ~ /Push/ {print $3}')"
+		if [ "$pushUrl" = 'origin' ]; then
+			return 0
+		fi
+		
+	popd
+		
+	local ownerSlashRepository
+	# eg git@github.com:shellfire-dev/jsonreader.git
+	if core_variable_matches "$pushUrl" git@github.com:*/*.git; then
+		ownerSlashRepository="$(printf '%s' "$pushUrl" | sed -e 's;git\@github.com:;;g' -e 's;\.git;;g')"
+	# eg https://github.com/shellfire-dev/core.git
+	elif core_variable_matches "$pushUrl" https://github.com/*/*.git; then
+		ownerSlashRepository="$(printf '%s' "$pushUrl" | sed -e 's;https://github.com/;;g' -e 's;\.git;;g')"
+	else
+		configure_register Value NotEmpty swaddle url "$pushUrl"
+		configure_register Value Any swaddle_github owner ''
+		configure_register Value Any swaddle_github repository ''
+		configure_register Value NotEmpty swaddle repository_name
+		return 0
+	fi
+	
+	local owner
+	local repository
+	IFS='/' read -r owner repository <<-EOF
+		${ownerSlashRepository}
+	EOF
+
+	configure_register Value NotEmpty swaddle url "https://github.com/$owner/$repository"
+	configure_register Value Any swaddle_github owner "$owner"
+	configure_register Value Any swaddle_github repository "$repository"
+	configure_register Value NotEmpty swaddle repository_name "$repository"
+}
+
+core_dependency_requires '*' date
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_attemptToDiscoverRpmChangelog
+swaddle_configure_register_attemptToDiscoverRpmChangelog()
+{
+	if swaddle_git_swaddlingCanNotUseGit; then
+		return 0
+	fi
+	
+	local epochSeconds
+	local author
+	local authorEmail
+	local commitHash
+	local subject
+	local changelogDate
+	pushd "$swaddle_swaddlingPath"
+		
+		_swaddle_configure_register_attemptToDiscoverRpmChangelog_internal()
+		{
+			git log --format='%at%x09%aN%x09%aE%x09%H%x09%s' | while IFS="$(printf '\t')" read -r epochSeconds author authorEmail commitHash subject
+			do
+				changelogDate="$(date -u -d @${epochSeconds} '+%a %b %d %Y')"
+				printf '* %s %s <%s> - %s\n' "$changelogDate" "$author" "$authorEmail" "$commitHash"
+				printf '%s %s\n' '-' "$subject"
+				printf '\n'
+			done
+		}
+		
+		configure_register Value NotEmpty swaddle_rpm changelog "$(_swaddle_configure_register_attemptToDiscoverRpmChangelog_internal)"
+		
+	popd
+}
+
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_miscellany
+swaddle_configure_register_miscellany()
+{
+	configure_register Value NotEmpty swaddle epoch '0'
+	configure_register Value NotEmpty swaddle vendor
+	configure_register Value NotEmpty swaddle_package description
+	configure_register Value Boolean swaddle fix_permissions yes
+}
+
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_byPackageKind
+swaddle_configure_register_byPackageKind()
+{
+	local packageKind
+	for packageKind in tar zip 7z rar file deb rpm
+	do
+		swaddle_build_package_${packageKind}_registerConfiguration	
+	done
+}
+
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_byRepositoryKind
+swaddle_configure_register_byRepositoryKind()
+{
+	swaddle_repository_apt_registerConfiguration
+	swaddle_repository_yum_registerConfiguration
+}
+
+core_functions_register _swaddle_configure_register_functions swaddle_configure_register_webserverFiles
+swaddle_configure_register_webserverFiles()
+{
+	swaddle_webserverFiles_registerConfiguration
+}
