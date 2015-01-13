@@ -302,7 +302,7 @@ core_usesIn swaddle gpg
 core_dependency_requires '*' sed
 swaddle_webserverFiles_signatureMarkdown()
 {
-	signatureMarkdown="$(swaddle_gpg_signatureMarkdown 'Signed' 'Signatures are unavailable')"
+	signatureMarkdown="$(swaddle_gpg_signatureMarkdown 'Signed using the' 'Signatures are unavailable')"
 }
 
 core_dependency_requires '*' mv

@@ -18,9 +18,9 @@ swaddle_repository_apt()
 	swaddle_repository_apt_createDistsRelease
 	
 	# Not strictly required
-	swaddle_repository_apt_exportSigningKey
-	swaddle_repository_apt_createAptSourcesList
 	swaddle_repository_apt_createInstallScript
+	
+	swaddle_repository_apt_releaseNotes
 }
 
 swaddle_repository_apt_registerConfiguration()
@@ -30,6 +30,74 @@ swaddle_repository_apt_registerConfiguration()
 	configure_register Value AptLanguage swaddle_apt language 'en'
 	configure_register Array AptLanguage swaddle_apt translations
 	configure_register Array AptCompression swaddle_apt compressions
+}
+
+core_useIns swaddle/publishers githubreleases
+swaddle_repository_apt_releaseNotes()
+{
+	local count=0
+	swaddle_repository_apt_releaseNotes_callbackToFindCount()
+	{
+		count=$((count+1))
+	}
+	swaddle_configure_apt_architectures swaddle_repository_apt_releaseNotes_callbackToFindCount
+	
+	local index=1
+	local architectures=''
+	swaddle_repository_apt_releaseNotes_callbackToCreateCommaString()
+	{
+		local packageArchitecture="$core_variable_array_element"
+		
+		if [ -z "$architectures" ]; then
+			architectures="$core_variable_array_element"
+		else
+			if [ $index -eq $count ]; then
+				architectures="${architectures} and `$core_variable_array_element`"
+			else
+				architectures="${architectures}, `$core_variable_array_element`"
+			fi
+		fi
+		index=$((index+1))
+	}
+	
+	swaddle_configure_apt_architectures swaddle_repository_apt_releaseNotes_callbackToCreateCommaString
+	
+	swaddle_publishers_githubreleases_augmentReleaseMarkdownBody "
+##### Apt Repository
+
+There is an [Apt repository](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/ \"Apt repository for $(configure_getValue swaddle repository_name) for the architectures $architectures\") for the architectures ${architectures}. It is $(swaddle_gpg_signatureMarkdown 'signed using the' 'unfortunately unsigned') It is suitable for:-
+
+* Debian
+  * Squeeze LTS (Debian 6)
+  * Wheezy (Debian 7)
+* Ubuntu Server
+  * Lucid Lynx (Ubuntu Server 10.04 LTS)
+  * Precise Pangolin (Ubuntu Server 12.04 LTS)
+  * Trusty Tahr (Ubuntu Server 14.04 LTS)
+
+These releases should also work on Ubuntu Desktop, Ubuntu non-LTS releases, remixes (eg Xubuntu) and Linux Mint, but this is not tested for.
+
+To make it easy to use our repository, you can use our [install.sh](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh \"Apt repository install script for $(configure_getValue swaddle repository_name)\"):- \*
+
+\`\`\`bash
+wget --no-verbose --output-document - '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh' | sh
+\`\`\`
+
+This script asks for permission with sudo for every step. The older versions of \`wget\` in Debian 6 and Ubuntu 10.04 LTS, require the additional option `--no-check-certificate` to work around a bug in their certificate validation logic \*:-
+
+\`\`\`bash
+wget --no-check-certificate --no-verbose --output-document - '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh' | sh
+\`\`\`
+
+If you don't want to use our install script, then you can repeat the steps it takes below:-
+
+* $(swaddle_gpg_signatureMarkdown 'Import our' 'Trust the unsigned repository is OK') You can do this using `apt-key add`.
+* Create the file \`/etc/apt/sources.list.d/00$(configure_getValue swaddle repository_name).sources.list\` and add \`$(_swaddle_repository_apt_createAptSourcesListContent)\` to it.
+* Install the `apt-transport-https` package using \`sudo apt-get install apt-transport-https\` (typically needed on Debian installs).
+* Update the Apt sources using \`sudo apt-get update\`
+
+\* They do not correctly apply the \`subjectAltName\` field.
+"
 }
 
 core_dependency_requires '*' rm mkdir
@@ -335,18 +403,14 @@ swaddle_repository_apt_createDistsRelease()
 	} >"$releaseFilePath"
 
 	swaddle_touch_setMtimeAndAtime "$releaseFilePath"
-	
+
+	if core_variable_isFalse "$(swaddle_configure_sign)"; then
+		core_message WARN "Signing is disabled. Unsigned apt repositories are a very bad idea."
+	fi
 	swaddle_digest_signFile "$releaseFilePath" gpg
 }
 
-swaddle_repository_apt_exportSigningKey()
-{
-	local keyPath="$repositoryPath"/Release.key
-	swaddle_gpg_exportSigningKey >"$keyPath"
-	swaddle_touch_setMtimeAndAtime "$keyPath"
-}
-
-swaddle_repository_apt_createAptSourcesList()
+_swaddle_repository_apt_createAptSourcesListContent()
 {
 	local hostBaseUrl="$(configure_getValue swaddle host_base_url)"
 	if core_variable_endsWith "$hostBaseUrl" '/'; then
@@ -356,10 +420,7 @@ swaddle_repository_apt_createAptSourcesList()
 	
 	local repositoryName="$(configure_getValue swaddle repository_name)"
 	
-	local filePath="$repositoryPath"/sources.list
-	printf '%s\n' "deb $hostBaseUrl/apt $repositoryName $(core_variable_array_string  _swaddle_repository_apt_components ' ')" >"$filePath"
-	
-	swaddle_touch_setMtimeAndAtime "$filePath"
+	printf '%s\n' "deb $hostBaseUrl/apt $repositoryName $(core_variable_array_string  _swaddle_repository_apt_components ' ')"
 }
 
 swaddle_repository_apt_createInstallScript()
@@ -381,7 +442,7 @@ swaddle_repository_apt_createInstallScript()
 		EOF
 		sudo -p "Password for %p is required to allow root to install repository '$repositoryName' public key to apt: " apt-key add "$temporaryKeyFile"
 		
-		echo '$(cat "$_swaddle_repository_parentPath"/dists/"$repositoryName"/sources.list)' | sudo -p "Password for %p is required to allow root to install repository '$repositoryName' apt sources list to '/etc/apt/sources.list.d/00$repositoryName.sources.list': " tee /etc/apt/sources.list.d/00$repositoryName.list >/dev/null
+		echo '$(_swaddle_repository_apt_createAptSourcesListContent)' | sudo -p "Password for %p is required to allow root to install repository '$repositoryName' apt sources list to '/etc/apt/sources.list.d/00$repositoryName.sources.list': " tee /etc/apt/sources.list.d/00$repositoryName.list >/dev/null
 		sudo -p "Password for %p to allow root to  apt-get install apt-transport-https (missing in Debian default installs)" apt-get install apt-transport-https
 		sudo -p "Password for %p to allow root to update from new sources: " apt-get update --quiet
 	EOA

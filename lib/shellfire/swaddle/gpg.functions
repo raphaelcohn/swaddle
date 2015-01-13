@@ -12,7 +12,14 @@ swaddle_gpg()
 
 swaddle_gpg_exportSigningKey()
 {
-	swaddle_gpg --armor --export "$(swaddle_configure_signer)"
+	local toFilePath="$1"
+
+	if core_variable_isFalse "$(swaddle_configure_sign)"; then
+		return 0
+	fi
+	
+	swaddle_gpg --armor --export "$(swaddle_configure_signer)" >"$toFilePath"
+	swaddle_touch_setMtimeAndAtime "$toFilePath"
 }
 
 core_dependency_requires '*' awk
@@ -103,10 +110,10 @@ swaddle_gpg_signatureMarkdown()
 	
 		local keyserver="$(configure_getValue swaddle keyserver)"
 		if [ -z "$keyserver" ]; then
-			printf '%s' "$preamble using the key \`$(swaddle_configure_signer)\` with fingerprint \`$(swaddle_gpg_exportSigningKeyFingerprint)\`."
+			printf '%s' "$preamble key \`$(swaddle_configure_signer)\` with fingerprint \`$(swaddle_gpg_exportSigningKeyFingerprint)\`."
 		else
 			local keyserverWithHttpProtocol="$(printf '%s' "$keyserver" | sed -e s/^hkp/http/g)"
-			printf '%s' "$preamble using the key \`$(swaddle_configure_signer)\` with fingerprint [\`$(swaddle_gpg_exportSigningKeyFingerprint)\`]($keyserverWithHttpProtocol/pks/lookup?op=get&search=0x$(swaddle_gpg_exportSigningKeyFingerprint) \"Retrieve key '$(swaddle_gpg_exportSigningKeyFingerprint)' from keyserver\")."
+			printf '%s' "$preamble key \`$(swaddle_configure_signer)\` with fingerprint [\`$(swaddle_gpg_exportSigningKeyFingerprint)\`]($keyserverWithHttpProtocol/pks/lookup?op=get&search=0x$(swaddle_gpg_exportSigningKeyFingerprint) \"Retrieve key '$(swaddle_gpg_exportSigningKeyFingerprint)' from keyserver\")."
 		fi
 	else
 		printf '%s' "${unavailable}."

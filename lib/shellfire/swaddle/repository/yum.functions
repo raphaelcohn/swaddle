@@ -16,17 +16,62 @@ swaddle_repository_yum()
 	local _swaddle_repository_yum_repositoryPath="$_swaddle_repository_parentPath"/"$repositoryName"
 	local _swaddle_repository_yum_repodataPath="$_swaddle_repository_yum_repositoryPath"/repodata
 	
-	swaddle_repository_yum_createRepodata
 	swaddle_repository_yum_createRepoFile
 	swaddle_repository_yum_createMirrorlist
 	swaddle_repository_yum_exportSigningKey
+	
 	swaddle_repository_yum_signRepomdForSuse
+	
 	swaddle_repository_yum_createInstallScript
+	swaddle_repository_yum_releaseNotes
 }
 
 swaddle_repository_yum_registerConfiguration()
 {
 	configure_register Array NotEmpty swaddle_yum mirrors
+}
+
+swaddle_repository_yum_releaseNotes()
+{
+	local downloadKeyAdditionalMarkdown=''
+	if core_variable_isTrue "$(swaddle_configure_sign)"; then
+		downloadKeyAdditionalMarkdown=" (The key can also be downloaded from [RPM-GPG-KEY-$repositoryName](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/RPM-GPG-KEY-$repositoryName \"RPM-GPG-KEY-$repositoryName\") or [repodata/repomd.xml.key](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/repodata/repomd.xml.key \"SuSE repomd.xml.key\") for SuSE)."
+	fi
+	
+	swaddle_publishers_githubreleases_augmentReleaseMarkdownBody "
+##### Yum Repository
+
+There is a [Yum repository]((${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/ \"Yum repository for $(configure_getValue swaddle repository_name)\"). It is multi-architecture. Packages and the [repomd.xml](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/repodata/repomd.xml) file are $(swaddle_gpg_signatureMarkdown 'signed using the' 'unfortunately unsigned')\* It:-
+
+* is suitable for CentOS 5, 6 and 7.
+* should also work on RedHat Enterprise Linux (RHEL) 5, 6 and 7
+* and Fedora
+* it may work on SuSE with zypper.
+
+To make it easy to use our repository, you can use our [install.sh](${hostBaseUrl}yum//$(configure_getValue swaddle repository_name)/install.sh \"Yum install script for $(configure_getValue swaddle repository_name)\"):- \*
+
+\`\`\`bash
+curl --fail --silent --show-error --location '${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/install.sh' | sh
+\`\`\`
+
+This script asks for permission with sudo for every step. If you don't want to use our install script, then you can repeat the steps it takes below:-
+
+* $(swaddle_gpg_signatureMarkdown 'Download and import using `sudo rpm --import /path/to/downloaded/key` our' 'Trust the unsigned repository is OK') ${downloadKeyAdditionalMarkdown}
+* Create the file `/etc/yum.repos.d/$(configure_getValue swaddle repository_name).repo` and populate it with:-
+
+\`\`\`bash
+$(_swaddle_repository_yum_createRepoFileContent)
+\`\`\`
+
+Optionally, then:-
+
+* Update the list of packages using \`sudo yum update\`
+* See the packages available in this repository using \`sudo yum group info $repositoryName\`
+
+At this time, we do not provide a \`$(configure_getValue swaddle repository_name)-release\` RPM as one doesn't offer any advantages over these steps.
+
+\* The signature of this file is only checked by SuSE; all RedHat-derived distros are theoretically vulnerable to package-substitution MITM attacks.
+"
 }
 
 swaddle_repository_yum_adjustUrl()
@@ -54,12 +99,10 @@ swaddle_repository_yum_createRepodata()
 	swaddle_repository_yum_rpmxml_endRepodata
 }
 
-swaddle_repository_yum_createRepoFile()
+_swaddle_repository_yum_createRepoFileContent()
 {
-	local repoFilePath="$_swaddle_repository_yum_repositoryPath"/"$repositoryName".repo
-	
 	if core_variable_isFalse "$(swaddle_configure_sign)"; then
-		local gpgKey="#"
+		local gpgKey="#gpgkey not set as repository is unsigned"
 		local gpgCheck='gpgcheck=0'
 	else
 		# If installed using a REPO-release.rpm, then file:///etc/pki/rpm-gpg/RPM-GPG-KEY-${repositoryName}
@@ -67,7 +110,7 @@ swaddle_repository_yum_createRepoFile()
 		local gpgCheck='gpgcheck=1'
 	fi
 	
-	cat >"$repoFilePath" <<-EOF
+	cat <<-EOF
 		[${repositoryName}]
 		name=${repositoryName}
 		baseurl=${hostBaseUrl}yum/${repositoryName}
@@ -77,7 +120,6 @@ swaddle_repository_yum_createRepoFile()
 		enabled=1
 		protect=0
 	EOF
-	swaddle_touch_setMtimeAndAtime "$repoFilePath"
 }
 
 swaddle_repository_yum_createMirrorlist()
@@ -98,13 +140,7 @@ swaddle_repository_yum_createMirrorlist()
 core_usesIn swaddle gpg
 swaddle_repository_yum_exportSigningKey()
 {
-	if core_variable_isFalse "$(swaddle_configure_sign)"; then
-		return 0
-	fi
-	
-	local gpgKeyFilePath="$_swaddle_repository_yum_repositoryPath"/RPM-GPG-KEY-"$repositoryName"
-	swaddle_gpg_exportSigningKey >"$gpgKeyFilePath"
-	swaddle_touch_setMtimeAndAtime "$gpgKeyFilePath"
+	swaddle_gpg_exportSigningKey "$_swaddle_repository_yum_repositoryPath"/RPM-GPG-KEY-"$repositoryName"
 }
 
 swaddle_repository_yum_signRepomdForSuse()
@@ -130,9 +166,12 @@ swaddle_repository_yum_createInstallScript()
 		set -u
 		
 		repoFilePath='/etc/yum.repos.d/$repositoryName.repo'
+		repoFileContent='$(_swaddle_repository_yum_createRepoFileContent)'
+		
 		sudo -p "Password for %p is required to allow root to remove '$repoFilePath' and perform install: " rm -rf "$repoFilePath"
-		curl --fail --location --silent --show-error '${hostBaseUrl}/yum/${repositoryName}/${repositoryName}.repo' | sudo -p "Password for %p is required to allow root to install '$repoFilePath': " tee "$repoFilePath" >/dev/null
-		echo "Now run 'sudo yum update' and 'sudo yum group info $repositoryName' to see all packages available."
+		printf '%s' "$repoFileContent" | sudo -p "Password for %p is required to allow root to install '$repoFilePath': " tee "$repoFilePath" >/dev/null
+		sudo -p "Password for %p is required to allow root to update yum: " yum update
+		sudo -p "Password for %p is required to allow root to see all packages in $repositoryName: " yum group info $repositoryName
 	EOF
 	chmod 0755 "$installScriptFilePath"
 	swaddle_touch_setMtimeAndAtime "$installScriptFilePath"
