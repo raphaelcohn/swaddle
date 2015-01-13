@@ -66,6 +66,8 @@ _swaddle_publishers_githubreleases_guard()
 	if [ -z "$_swaddle_publishers_githubreleases_releaseId" ]; then
 		return 0
 	fi
+	
+	return 1
 }
 
 swaddle_publishers_githubreleases_publish()
@@ -84,10 +86,6 @@ swaddle_publishers_githubreleases_publish()
 
 swaddle_publishers_githubreleases_augmentReleaseMarkdownBody()
 {
-	if core_variable_isUnset _swaddle_publishers_githubreleases_releaseMarkdownBody; then
-		return 0
-	fi
-	
 	_swaddle_publishers_githubreleases_releaseMarkdownBody="${_swaddle_publishers_githubreleases_releaseMarkdownBody}${1}"
 }
 
