@@ -259,14 +259,13 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 	# However, in Debian 6 / Ubuntu 10.04, the underlying language is NOT created
 	local allLanguagesToGenerateFor
 	local allLanguagesToGenerateFor_initialised
+	core_variable_array_initialise allLanguagesToGenerateFor
 	_swaddle_repository_apt_createDistsComponentsTranslations_findAllLanguagesToGenerateFor()
 	{
 		local languageCode="$core_variable_array_element"
 		core_variable_array_appendUniquely allLanguagesToGenerateFor "$languageCode"
 	
-		set -x
 		_swaddle_repository_apt_additionalLanguageCodes "$languageCode" core_variable_array_appendUniquely allLanguagesToGenerateFor
-		set +x
 	}
 	configure_iterateOverArrayWithDefaultsIfEmpty swaddle_apt translations _swaddle_repository_apt_createDistsComponentsTranslations_findAllLanguagesToGenerateFor "$(configure_getValue swaddle_apt language)"
 	
