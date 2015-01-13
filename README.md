@@ -2,10 +2,6 @@
 
 swaddle creates RPM, Deb and tarball packages using shell script
 
-## Todo
-* Add DMG support, eg <https://stackoverflow.com/questions/286419/how-to-build-a-dmg-mac-os-x-file-on-a-non-mac-platform>
-* Add ISO support (especially hybrid / bootable)
-* Add CPIO support
 
 ## Configuration
 
@@ -15,6 +11,9 @@ swaddle creates RPM, Deb and tarball packages using shell script
 |---|----|----------|-------|-----------|
 
 
+eg swaddle_apt translations _swaddle_repository_apt_createDistsComponentsTranslations_callback "$(configure_getValue swaddle_apt language)"
+	- ordering is important, eg en before en_GB, to overcome a bug in Debiam 6 / Ubuntu 10.04
+	- This logic creates these extra files, but will fail if they are explicitly called out (ie do not specify en_GB in the list)
 
 
 

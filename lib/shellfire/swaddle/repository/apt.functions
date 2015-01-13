@@ -250,9 +250,48 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 								printf ' %s %7s %s\n' "$(swaddle_digest sha1 "$compressedFileName")" "$(stat -c '%s' "$compressedFileName")" "$compressedFileName"
 							}
 							
-							_swaddle_repository_apt_sortAndConcatenateFragments "Translation-$languageCode" _swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex_callback
+							_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex()
+							{
+								local languageCodeOveride
+								for languageCodeOveride in "$@"
+								do
+									_swaddle_repository_apt_sortAndConcatenateFragments "Translation-$languageCodeOveride" _swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex_callback
+								done
+								
+							}
+							_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex "$languageCode"
+							
+						
+							# In Debian 6 and Ubuntu 10.04, there is a bug in apt-get which tries to retrieve, say, Translation-en AND THEN Translation-en_GB, and ignores a 404 for Translation-en_GB
+							# This logic creates these extra files, but will fail if they are explicitly called out
+							case "$languageCode" in
+								
+								en)
+									_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex en_AU en_CA en_GB
+								;;
+								
+								fr)
+									_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex fr_FR
+								;;
+								
+								no)
+									_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex no_NB
+								;;
+								
+								pt)
+									_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex pt_BR
+								;;
+								
+								zh)
+									_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex zh_CN zh_HK zh_TW
+								;;
+								
+							esac
+							
 						}
-						configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_apt' 'translations' _swaddle_repository_apt_createDistsComponentsTranslations_callback "$(configure_getValue swaddle_apt language)"
+						
+						
+						configure_iterateOverArrayWithDefaultsIfEmpty swaddle_apt translations _swaddle_repository_apt_createDistsComponentsTranslations_callback "$(configure_getValue swaddle_apt language)"
 					} >Index
 
 					swaddle_touch_setMtimeAndAtime Index
