@@ -439,27 +439,27 @@ swaddle_repository_apt_createInstallScript()
 	
 	local mktemp="\$(mktemp --tmpdir $repositoryName.key.XXXXXXXXX)"
 	local temporaryKeyFile='$temporaryKeyFile'
-	cat >"$filePath" <<-EOA
-		#!/usr/bin/env sh
-		set -e
-		set -u
-		
-		if [ -t 1 ]; then
-			printf '%s\n' 'This script will install the apt repository $repositoryName' 'It will change your apt keys, create or replace /etc/apt/sources.list.d/00$repositoryName.sources.list, install apt-transport-https and update apt. $repositoryName.' 'Press the [Enter] key to continue.'
-			read -r
-		fi
-		
-		temporaryKeyFile="${mktemp}"
-		trap 'rm -rf "$temporaryKeyFile"' EXIT HUP INT QUIT TERM
-		cat >"$temporaryKeyFile" <<EOF
-			$(cat "$exportedSigningKey")
-		EOF
-		sudo -p "Password for %p is required to allow root to install repository '$repositoryName' public key to apt: " apt-key add "$temporaryKeyFile"
-		
-		echo '$(_swaddle_repository_apt_createAptSourcesListContent)' | sudo -p "Password for %p is required to allow root to install repository '$repositoryName' apt sources list to '/etc/apt/sources.list.d/00$repositoryName.sources.list': " tee /etc/apt/sources.list.d/00$repositoryName.list >/dev/null
-		sudo -p "Password for %p to allow root to  apt-get install apt-transport-https (missing in Debian default installs)" apt-get install apt-transport-https
-		sudo -p "Password for %p to allow root to update from new sources: " apt-get update --quiet
-	EOA
+	cat >"$filePath" <<EOA
+#!/usr/bin/env sh
+set -e
+set -u
+
+if [ -t 1 ]; then
+	printf '%s\n' 'This script will install the apt repository $repositoryName' 'It will change your apt keys, create or replace /etc/apt/sources.list.d/00$repositoryName.sources.list, install apt-transport-https and update apt. $repositoryName.' 'Press the [Enter] key to continue.'
+	read -r
+fi
+
+temporaryKeyFile="${mktemp}"
+trap 'rm -rf "$temporaryKeyFile"' EXIT HUP INT QUIT TERM
+cat >"$temporaryKeyFile" <<EOF
+$(cat "$exportedSigningKey")
+EOF
+sudo -p "Password for %p is required to allow root to install repository '$repositoryName' public key to apt: " apt-key add "$temporaryKeyFile"
+
+echo '$(_swaddle_repository_apt_createAptSourcesListContent)' | sudo -p "Password for %p is required to allow root to install repository '$repositoryName' apt sources list to '/etc/apt/sources.list.d/00$repositoryName.sources.list': " tee /etc/apt/sources.list.d/00$repositoryName.list >/dev/null
+sudo -p "Password for %p to allow root to  apt-get install apt-transport-https (missing in Debian default installs)" apt-get install apt-transport-https
+sudo -p "Password for %p to allow root to update from new sources: " apt-get --quiet update
+EOA
 	
 	chmod +x "$filePath"
 	swaddle_touch_setMtimeAndAtime "$filePath"
