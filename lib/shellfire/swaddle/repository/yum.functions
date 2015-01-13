@@ -16,7 +16,7 @@ swaddle_repository_yum()
 	local _swaddle_repository_yum_repositoryPath="$_swaddle_repository_parentPath"/"$repositoryName"
 	local _swaddle_repository_yum_repodataPath="$_swaddle_repository_yum_repositoryPath"/repodata
 	
-	swaddle_repository_yum_createRepoFile
+	swaddle_repository_yum_createRepodata
 	swaddle_repository_yum_createMirrorlist
 	swaddle_repository_yum_exportSigningKey
 	
@@ -37,10 +37,7 @@ swaddle_repository_yum_releaseNotes()
 	if core_variable_isTrue "$(swaddle_configure_sign)"; then
 		downloadKeyAdditionalMarkdown=" (The key can also be downloaded from [RPM-GPG-KEY-$repositoryName](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/RPM-GPG-KEY-$repositoryName \"RPM-GPG-KEY-$repositoryName\") or [repodata/repomd.xml.key](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/repodata/repomd.xml.key \"SuSE repomd.xml.key\") for SuSE)."
 	fi
-	
-	local hostBaseUrl
-	swaddle_repository_yum_adjustUrl hostBaseUrl "$(configure_getValue swaddle host_base_url)"
-	
+		
 	swaddle_publishers_githubreleases_augmentReleaseMarkdownBody "
 ##### Yum Repository
 

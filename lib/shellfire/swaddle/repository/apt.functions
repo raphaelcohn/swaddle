@@ -86,7 +86,7 @@ To make it easy to use our repository, you can use our [install.sh](${hostBaseUr
 wget --no-verbose --output-document - '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh' | sh
 \`\`\`
 
-This script asks for permission with sudo for every step. The older versions of \`wget\` in Debian 6 and Ubuntu 10.04 LTS, require the additional option `--no-check-certificate` to work around a bug in their certificate validation logic \*:-
+This script asks for permission with sudo for every step. The older versions of \`wget\` in Debian 6 and Ubuntu 10.04 LTS, require the additional option \`--no-check-certificate\` to work around a bug in their certificate validation logic \*:-
 
 \`\`\`bash
 wget --no-check-certificate --no-verbose --output-document - '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh' | sh
@@ -94,9 +94,9 @@ wget --no-check-certificate --no-verbose --output-document - '${hostBaseUrl}apt/
 
 If you don't want to use our install script, then you can repeat the steps it takes below:-
 
-* $(swaddle_gpg_signatureMarkdown 'Import our' 'Trust the unsigned repository is OK') You can do this using `apt-key add`.
+* $(swaddle_gpg_signatureMarkdown 'Import our' 'Trust the unsigned repository is OK') You can do this using \`apt-key add\`.
 * Create the file \`/etc/apt/sources.list.d/00$(configure_getValue swaddle repository_name).sources.list\` and add \`$(_swaddle_repository_apt_createAptSourcesListContent)\` to it.
-* Install the `apt-transport-https` package using \`sudo apt-get install apt-transport-https\` (typically needed on Debian installs).
+* Install the \`apt-transport-https\` package using \`sudo apt-get install apt-transport-https\` (typically needed on Debian installs).
 * Update the Apt sources using \`sudo apt-get update\`
 
 \* They do not correctly apply the \`subjectAltName\` field.
