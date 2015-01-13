@@ -20,6 +20,6 @@ swaddle_repository_files_releaseNotes()
 	swaddle_publishers_githubreleases_augmentReleaseMarkdownBody "
 ##### Files Archive
 
-In additiona to the links to files below, we maintain a separate [archive of files](${hostBaseUrl}files/$(configure_getValue swaddle repository_name)/) of all released, built content.
+In addition to the links to files below, we maintain a separate [archive of files](${hostBaseUrl}files/$(configure_getValue swaddle repository_name)/) of all released, built content.
 "
 }
