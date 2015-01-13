@@ -446,7 +446,7 @@ set -u
 
 if [ -t 1 ]; then
 	printf '%s\n' 'This script will install the apt repository $repositoryName' 'It will change your apt keys, create or replace /etc/apt/sources.list.d/00$repositoryName.sources.list, install apt-transport-https and update apt.' 'Press the [Enter] key to continue.'
-	read -r
+	read -r garbage
 fi
 
 temporaryKeyFile="${mktemp}"
