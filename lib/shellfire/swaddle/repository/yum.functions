@@ -51,7 +51,7 @@ There is a [Yum repository]((${hostBaseUrl}yum/$(configure_getValue swaddle repo
 To make it easy to use our repository, you can use our [install.sh](${hostBaseUrl}yum//$(configure_getValue swaddle repository_name)/install.sh \"Yum install script for $(configure_getValue swaddle repository_name)\"):-
 
 \`\`\`bash
-sh -c \"$(curl --fail --silent --show-error --location '${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/install.sh')\"
+sh -c \"\$(curl --fail --silent --show-error --location '${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/install.sh')\"
 \`\`\`
 
 This script pauses if run interactively. It then asks for permission with sudo for every step. If you don't want to use our install script, then you can repeat the steps it takes below:-
