@@ -53,10 +53,22 @@ Lorem Ipsum.
 #### Downloads
 
 "
+
+	_swaddle_publishers_githubreleases_tagName="$actualTagName"
+	_swaddle_publishers_githubreleases_commitish='master'
+	_swaddle_publishers_githubreleases_name="Version $(configure_getValue swaddle version) Revision ${actualIterationCount}"
+	_swaddle_publishers_githubreleases_draft=true
+	_swaddle_publishers_githubreleases_prerelease=true
 	
 	local github_api_v3_releases_id
 	local github_api_v3_releases_uploadUrlTemplate
-	github_api_v3_releases_create "$githubOwner" "$githubRepository" "$actualTagName" 'master' "Version $(configure_getValue swaddle version) Revision ${actualIterationCount}" "$_swaddle_publishers_githubreleases_releaseMarkdownBody" true true
+	github_api_v3_releases_create "$githubOwner" "$githubRepository" \
+		"$_swaddle_publishers_githubreleases_tagName" \
+		"$_swaddle_publishers_githubreleases_commitish" \
+		"$_swaddle_publishers_githubreleases_name" \
+		"$_swaddle_publishers_githubreleases_releaseMarkdownBody" \
+		"$_swaddle_publishers_githubreleases_draft" \
+		"$_swaddle_publishers_githubreleases_prerelease"
 	
 	_swaddle_publishers_githubreleases_releaseId="$github_api_v3_releases_id"
 	_swaddle_publishers_githubreleases_uploadUrlTemplate="$github_api_v3_releases_uploadUrlTemplate"
@@ -117,5 +129,11 @@ You can also use a file below:-
 
 	local githubOwner="$(configure_getValue swaddle_github owner)"
 	local githubRepository="$(configure_getValue swaddle_github repository)"
-	github_api_v3_releases_editBody "$githubOwner" "$githubRepository" "$_swaddle_publishers_githubreleases_releaseId" "$_swaddle_publishers_githubreleases_releaseMarkdownBody"
+	github_api_v3_releases_editBody "$githubOwner" "$githubRepository" "$_swaddle_publishers_githubreleases_releaseId" \
+		"$_swaddle_publishers_githubreleases_tagName" \
+		"$_swaddle_publishers_githubreleases_commitish" \
+		"$_swaddle_publishers_githubreleases_name" \
+		"$_swaddle_publishers_githubreleases_releaseMarkdownBody" \
+		"$_swaddle_publishers_githubreleases_draft" \
+		"$_swaddle_publishers_githubreleases_prerelease"
 }
