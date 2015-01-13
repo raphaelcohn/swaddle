@@ -54,7 +54,7 @@ To make it easy to use our repository, you can use our [install.sh](${hostBaseUr
 curl --fail --silent --show-error --location '${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/install.sh' | sh
 \`\`\`
 
-This script asks for permission with sudo for every step. If you don't want to use our install script, then you can repeat the steps it takes below:-
+This script pauses if run interactively. It then asks for permission with sudo for every step. If you don't want to use our install script, then you can repeat the steps it takes below:-
 
 * $(swaddle_gpg_signatureMarkdown 'Download and import using `sudo rpm --import /path/to/downloaded/key` our' 'Trust the unsigned repository is OK') ${downloadKeyAdditionalMarkdown}
 * Create the file \`/etc/yum.repos.d/$(configure_getValue swaddle repository_name).repo\` and populate it with:-
@@ -65,8 +65,7 @@ $(_swaddle_repository_yum_createRepoFileContent)
 
 Optionally, then:-
 
-* Update the list of packages using \`sudo yum update\`
-* See the packages available in this repository using \`sudo yum group info $repositoryName\`
+* See the packages available in this repository using \`yum group info $repositoryName\`
 
 At this time, we do not provide a \`$(configure_getValue swaddle repository_name)-release\` RPM as one doesn't offer any advantages over these steps.
 
@@ -169,10 +168,13 @@ swaddle_repository_yum_createInstallScript()
 		repoFilePath='/etc/yum.repos.d/$repositoryName.repo'
 		repoFileContent='$(_swaddle_repository_yum_createRepoFileContent)'
 		
-		sudo -p "Password for %p is required to allow root to remove '$repoFilePath' and perform install: " rm -rf "$repoFilePath"
+		if [ -t 1 ]; then
+			printf '%s\n' 'This script will install the apt repository $repositoryName' 'It will create or replace $repoFilePath, update yum and display all packages in $repositoryName.' 'Press the [Enter] key to continue.'
+			read -r
+		fi
+		
 		printf '%s' "$repoFileContent" | sudo -p "Password for %p is required to allow root to install '$repoFilePath': " tee "$repoFilePath" >/dev/null
-		sudo -p "Password for %p is required to allow root to update yum: " yum update
-		sudo -p "Password for %p is required to allow root to see all packages in $repositoryName: " yum group info $repositoryName
+		yum --quiet group info $repositoryName 2>/dev/null
 	EOF
 	chmod 0755 "$installScriptFilePath"
 	swaddle_touch_setMtimeAndAtime "$installScriptFilePath"

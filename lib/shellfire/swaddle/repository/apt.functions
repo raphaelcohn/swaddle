@@ -86,7 +86,7 @@ To make it easy to use our repository, you can use our [install.sh](${hostBaseUr
 wget --no-verbose --output-document - '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh' | sh
 \`\`\`
 
-This script asks for permission with sudo for every step. The older versions of \`wget\` in Debian 6 and Ubuntu 10.04 LTS, require the additional option \`--no-check-certificate\` to work around a bug in their certificate validation logic:-\*
+This script pauses if run interactively. It then asks for permission with sudo for every step. The older versions of \`wget\` in Debian 6 and Ubuntu 10.04 LTS, require the additional option \`--no-check-certificate\` to work around a bug in their certificate validation logic:-\*
 
 \`\`\`bash
 wget --no-check-certificate --no-verbose --output-document - '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh' | sh
@@ -443,6 +443,11 @@ swaddle_repository_apt_createInstallScript()
 		#!/usr/bin/env sh
 		set -e
 		set -u
+		
+		if [ -t 1 ]; then
+			printf '%s\n' 'This script will install the apt repository $repositoryName' 'It will change your apt keys, create or replace /etc/apt/sources.list.d/00$repositoryName.sources.list, install apt-transport-https and update apt. $repositoryName.' 'Press the [Enter] key to continue.'
+			read -r
+		fi
 		
 		temporaryKeyFile="${mktemp}"
 		trap 'rm -rf "$temporaryKeyFile"' EXIT HUP INT QUIT TERM
