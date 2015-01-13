@@ -54,7 +54,7 @@ Lorem Ipsum.
 	github_api_v3_releases_create "$githubOwner" "$githubRepository" "$actualTagName" 'master' "Version $(configure_getValue swaddle version) Revision ${actualIterationCount}" "$_swaddle_publishers_githubreleases_releaseMarkdownBody" true true
 	
 	_swaddle_publishers_githubreleases_releaseId="$github_api_v3_releases_id"
-	_swaddle_publishers_githubreleases_uploadUrlTemplate="$github_api_v3_uploadUrlTemplate"
+	_swaddle_publishers_githubreleases_uploadUrlTemplate="$github_api_v3_releases_uploadUrlTemplate"
 }
 
 _swaddle_publishers_githubreleases_guard()
