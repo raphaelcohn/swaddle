@@ -456,8 +456,14 @@ swaddle_repository_apt_createDistsRelease()
 
 	if core_variable_isFalse "$(swaddle_configure_sign)"; then
 		core_message WARN "Signing is disabled. Unsigned apt repositories are a very bad idea."
+		return 0
 	fi
-	swaddle_digest_signFile "$releaseFilePath" gpg
+	
+	# Create Release.gpg
+	swaddle_gpg_sign "$releaseFilePath" gpg
+	
+	# Create InRelease
+	swaddle_gpg_clearsign "$releaseFilePath" "$parentPath"/InRelease
 }
 
 _swaddle_repository_apt_createAptSourcesListContent()

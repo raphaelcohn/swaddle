@@ -45,6 +45,18 @@ swaddle_gpg_sign()
 	touch -r "$filePath" "$filePath"."$extension"
 }
 
+swaddle_gpg_clearsign()
+{
+	local filePath="$1"
+	local outputFilePath="$2"
+	
+	rm -f "$outputFilePath"
+	
+	swaddle_gpg --default-key "$(swaddle_configure_signer)" --output "$outputFilePath" --armor --sign --clearsign "$filePath"
+	
+	touch -r "$filePath" "$$outputFilePath"
+}
+
 core_snippet_embed raw sks_keyservers_netCA
 swaddle_gpg_publishSigningKey()
 {
