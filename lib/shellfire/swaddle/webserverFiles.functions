@@ -298,21 +298,11 @@ swaddle_webserverFiles_parentUrlMarkdown()
 	parentUrlMarkdown="[\`Parent Directory ↩\`](${parentUrl} \"Move up to the parent directory\")"
 }
 
+core_usesIn swaddle gpg
 core_dependency_requires '*' sed
 swaddle_webserverFiles_signatureMarkdown()
 {
-	if core_variable_isTrue "$sign"; then
-	
-		local keyserver="$(configure_getValue swaddle keyserver)"
-		if [ -z "$keyserver" ]; then
-			signatureMarkdown="Signed using the key \`$(swaddle_configure_signer)\` with fingerprint \`$(swaddle_gpg_exportSigningKeyFingerprint)\`."
-		else
-			local keyserverWithHttpProtocol="$(printf '%s' "$keyserver" | sed -e s/^hkp/http/g)"
-			signatureMarkdown="Signed using the key \`$(swaddle_configure_signer)\` with fingerprint [\`$(swaddle_gpg_exportSigningKeyFingerprint)\`]($keyserverWithHttpProtocol/pks/lookup?op=get&search=0x$(swaddle_gpg_exportSigningKeyFingerprint) \"Retrieve key '$(swaddle_gpg_exportSigningKeyFingerprint)' from keyserver\")."
-		fi
-	else
-		signatureMarkdown="Signatures are unavailable."
-	fi
+	signatureMarkdown="$(swaddle_gpg_signatureMarkdown 'Signed' 'Signatures are unavailable')"
 }
 
 core_dependency_requires '*' mv

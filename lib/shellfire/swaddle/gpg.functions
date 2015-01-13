@@ -18,7 +18,7 @@ swaddle_gpg_exportSigningKey()
 core_dependency_requires '*' awk
 swaddle_gpg_exportSigningKeyFingerprint()
 {
-	swaddle_gpg --with-colons --default-key 'Raphael Cohn (Package Signing Key) <raphael.cohn@stormmq.com>' --fingerprint | awk -v FS=':' '$1 ~ /pub/ {print $5}'
+	swaddle_gpg --with-colons --fingerprint "$(swaddle_configure_signer)" --fingerprint | awk -v FS=':' '$1 ~ /pub/ {print $5}'
 }
 
 core_dependency_requires '*' rm touch
@@ -90,5 +90,25 @@ swaddle_gpg_publishSigningKey()
 		core_variable_array_passToFunctionAsArguments options swaddle_gpg || core_message WARN "Could not publish signing key to keyserver"
 	else
 		core_variable_array_passToFunctionAsArguments options swaddle_gpg 2>/dev/null || core_message WARN "Could not publish signing key to keyserver"
+	fi
+}
+
+core_dependency_requires '*' sed
+swaddle_gpg_signatureMarkdown()
+{
+	local preamble="$1"
+	local unavailable="$2"
+	
+	if core_variable_isTrue "$(swaddle_configure_sign)"; then
+	
+		local keyserver="$(configure_getValue swaddle keyserver)"
+		if [ -z "$keyserver" ]; then
+			printf '%s' "$preamble using the key \`$(swaddle_configure_signer)\` with fingerprint \`$(swaddle_gpg_exportSigningKeyFingerprint)\`."
+		else
+			local keyserverWithHttpProtocol="$(printf '%s' "$keyserver" | sed -e s/^hkp/http/g)"
+			printf '%s' "$preamble using the key \`$(swaddle_configure_signer)\` with fingerprint [\`$(swaddle_gpg_exportSigningKeyFingerprint)\`]($keyserverWithHttpProtocol/pks/lookup?op=get&search=0x$(swaddle_gpg_exportSigningKeyFingerprint) \"Retrieve key '$(swaddle_gpg_exportSigningKeyFingerprint)' from keyserver\")."
+		fi
+	else
+		printf '%s' "${unavailable}."
 	fi
 }

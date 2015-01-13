@@ -54,14 +54,17 @@ Lorem Ipsum.
 
 We maintain a versioned set of repositories (ie each release is a new repository) suitable for different distributions:-
 
+* All files are $(swaddle_gpg_signatureMarkdown 'signed' 'unfortunately unsigned')
 * There is an [apt repository](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/ \"Apt repository for $(configure_getValue swaddle repository_name)\") repository suitable for Ubuntu \*, Debian and Linux Mint.
   * All available ddebian packages are in this [pool](${hostBaseUrl}apt/pool/ \"Apt pool of Debian packages for $(configure_getValue swaddle repository_name)\")
   * And an install script [install.sh](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh \"Apt repository install script for $(configure_getValue swaddle repository_name)\"): \`wget --no-verbose --output-document - '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh' | sh\` †
-    * Installs our [GPG Key](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/Release.key \"GPG Signing Key\")
+    * Installs our [package signing GPG Key](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/Release.key \"GPG Signing Key\")
 	* Installs a [sources.list](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/sources.list \"Apt sources.list for $(configure_getValue swaddle repository_name)\")
 	* Installs using \`apt-get\` the apt HTTPS transport (\`apt-get install apt-transport-https\`), which is missing in most Debian default installs
 	* Updates package lists using \`apt-get update\`
 * There is a [yum repository](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/ \"Yum repository for $(configure_getValue swaddle repository_name)\") repository suitable for Fedora, CentOS and RedHat.
+  * Our repository key is [RPM-GPG-KEY-fatten](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/RPM-GPG-KEY-$(configure_getValue swaddle repository_name) \"Our repository public key\")
+    * You can download it and then install it with `sudo rpm --import`, or, use our install script
   * With an install script [install.sh](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/install.sh \"Yum repository install.sh for $(configure_getValue swaddle repository_name)\"): \`curl --fail --silent --show-error --location '${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/install.sh' | sh\`
 * Tarballs and archives are available in [files](${hostBaseUrl}files/$(configure_getValue swaddle repository_name)/ \"Tarballs\").
 
