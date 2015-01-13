@@ -105,7 +105,7 @@ _swaddle_repository_yum_createRepoFileContent()
 		local gpgCheck='gpgcheck=0'
 	else
 		# If installed using a REPO-release.rpm, then file:///etc/pki/rpm-gpg/RPM-GPG-KEY-${repositoryName}
-		local gpgKey="gpgkey={hostBaseUrl}yum/${repositoryName}/RPM-GPG-KEY-${repositoryName}"
+		local gpgKey="gpgkey=${hostBaseUrl}yum/${repositoryName}/RPM-GPG-KEY-${repositoryName}"
 		local gpgCheck='gpgcheck=1'
 	fi
 	
