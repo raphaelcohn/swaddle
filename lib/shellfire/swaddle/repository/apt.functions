@@ -539,7 +539,7 @@ _swaddle_repository_apt_sortAndConcatenateFragments()
 	} >>"$concatenatedFileName"
 	swaddle_touch_setMtimeAndAtime "$concatenatedFileName"
 	
-	swaddle_compress_variants 'swaddle_apt' 'compressions' "$concatenatedFileName" "$callbackPerCompressedFile" 'none' 'gzip' 'bzip2' 'xz'
+	swaddle_compress_variants 'swaddle_apt' 'compressions' "$concatenatedFileName" "$callbackPerCompressedFile" 'none' 'gzip' 'bzip2' 'lzma' 'xz'
 }
 
 core_dependency_requires '*' cat
