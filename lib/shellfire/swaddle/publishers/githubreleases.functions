@@ -29,10 +29,7 @@ swaddle_publishers_githubreleases_prepare()
 	swaddle_publishers_tagAndPush "$_swaddle_git_swaddlingPathGitRoot" 'release'
 	
 	github_api_v3_initialise "$githubApiTokenFile"
-	
-	local zipSourceUrl="https://github.com/$(urlencode_pathPiece "$githubOwner")/$(urlencode_pathPiece "$githubRepository")/archive/$(urlencode_pathPiece "${actualTagName}.zip")"
-	local tarGzSourceUrl="https://github.com/$(urlencode_pathPiece "$githubOwner")/$(urlencode_pathPiece "$githubRepository")/archive/$(urlencode_pathPiece "${actualTagName}.tar.gz")"
-	
+		
 	local hostBaseUrl
 	swaddle_repository_yum_adjustUrl hostBaseUrl "$(configure_getValue swaddle host_base_url)"
 	local releaseMarkdown="### Welcome to this release of $(configure_getValue swaddle repository_name)
