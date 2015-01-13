@@ -70,7 +70,7 @@ swaddle_repository_apt_releaseNotes()
 	swaddle_publishers_githubreleases_augmentReleaseMarkdownBody "
 ##### Apt Repository
 
-There is an [Apt repository](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/ \"Apt repository for $(configure_getValue swaddle repository_name) for the architectures $architectures\") for the architectures ${architectures}. It is $(swaddle_gpg_signatureMarkdown 'signed using the' 'unfortunately unsigned') It is suitable for:-
+There is an [Apt repository](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/ \"Apt repository for $(configure_getValue swaddle repository_name) for the architectures $architectures\") for the architectures ${architectures}. It is $(swaddle_gpg_signatureMarkdown 'signed using the' 'unfortunately unsigned') It contains \`Contents-\` files suitable for \`apt-file\`. It is suitable for:-
 
 * Debian
   * Squeeze LTS (Debian 6)
