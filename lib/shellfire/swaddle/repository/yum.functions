@@ -112,7 +112,7 @@ _swaddle_repository_yum_createRepoFileContent()
 	cat <<-EOF
 		[${repositoryName}]
 		name=${repositoryName}
-		baseurl=${hostBaseUrl}yum/${repositoryName}
+		#baseurl=${hostBaseUrl}yum/${repositoryName}
 		mirrorlist=${hostBaseUrl}yum/${repositoryName}/mirrorlist
 		${gpgKey}
 		${gpgCheck}
