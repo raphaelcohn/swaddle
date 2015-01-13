@@ -158,6 +158,9 @@ swaddle_repository_yum_createInstallScript()
 {
 	local installScriptFilePath="$_swaddle_repository_yum_repositoryPath"/install.sh
 	
+	# Force expansions to match names
+	local repoFilePath='$repoFilePath'
+	local repoFileContent='$repoFileContent'
 	cat >"$installScriptFilePath" <<-EOF
 		#!/usr/bin/env sh
 		set -e
