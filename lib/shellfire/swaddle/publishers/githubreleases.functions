@@ -129,7 +129,7 @@ You can also use a file below:-
 
 	local githubOwner="$(configure_getValue swaddle_github owner)"
 	local githubRepository="$(configure_getValue swaddle_github repository)"
-	github_api_v3_releases_editBody "$githubOwner" "$githubRepository" "$_swaddle_publishers_githubreleases_releaseId" \
+	github_api_v3_releases_edit "$githubOwner" "$githubRepository" "$_swaddle_publishers_githubreleases_releaseId" \
 		"$_swaddle_publishers_githubreleases_tagName" \
 		"$_swaddle_publishers_githubreleases_commitish" \
 		"$_swaddle_publishers_githubreleases_name" \
