@@ -158,8 +158,6 @@ swaddle_repository_yum_createInstallScript()
 {
 	local installScriptFilePath="$_swaddle_repository_yum_repositoryPath"/install.sh
 	
-	# This ought to go into a $repositoryName-release.VERSION.rpm, but that's just painful
-	local repoFilePath='$repoFilePath'
 	cat >"$installScriptFilePath" <<-EOF
 		#!/usr/bin/env sh
 		set -e
