@@ -52,9 +52,9 @@ swaddle_repository_apt_releaseNotes()
 			architectures="$core_variable_array_element"
 		else
 			if [ $index -eq $count ]; then
-				architectures="${architectures} and `$core_variable_array_element`"
+				architectures="${architectures} and \`$core_variable_array_element\`"
 			else
-				architectures="${architectures}, `$core_variable_array_element`"
+				architectures="${architectures}, \`$core_variable_array_element\`"
 			fi
 		fi
 		index=$((index+1))
