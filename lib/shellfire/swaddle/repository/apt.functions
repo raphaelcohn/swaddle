@@ -86,7 +86,7 @@ To make it easy to use our repository, you can use our [install.sh](${hostBaseUr
 sh -c \"\$(wget --no-verbose --output-document - '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh')\"
 \`\`\`
 
-This script pauses if run interactively. It then asks for permission with sudo for every step. The older versions of \`wget\` in Debian 6 and Ubuntu 10.04 LTS, require the additional option \`--no-check-certificate\` to work around a bug in their certificate validation logic:-\*
+This script pauses if run interactively. It then asks for permission with sudo for every step. The older versions of \`wget\` in Debian 6 and Ubuntu 10.04 LTS require the additional option \`--no-check-certificate\` to work around a bug in their certificate validation logic:-\*
 
 \`\`\`bash
 sh -c \"\$(wget --no-check-certificate --no-verbose --output-document - '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh')\"
