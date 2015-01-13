@@ -428,6 +428,12 @@ _swaddle_repository_apt_createAptSourcesListContent()
 
 swaddle_repository_apt_createInstallScript()
 {
+	local TMP_FILE
+	core_temporaryFiles_newFileToRemoveOnExit
+	local exportedSigningKey="$TMP_FILE"
+	swaddle_gpg_exportSigningKey "$exportedSigningKey"
+	
+	
 	local filePath="$repositoryPath"/install.sh
 	local repositoryName="$(configure_getValue swaddle repository_name)"
 	
@@ -441,7 +447,7 @@ swaddle_repository_apt_createInstallScript()
 		temporaryKeyFile="${mktemp}"
 		trap 'rm -rf "$temporaryKeyFile"' EXIT HUP INT QUIT TERM
 		cat >"$temporaryKeyFile" <<EOF
-			$(cat "$_swaddle_repository_parentPath"/dists/"$repositoryName"/Release.key)
+			$(cat "$exportedSigningKey")
 		EOF
 		sudo -p "Password for %p is required to allow root to install repository '$repositoryName' public key to apt: " apt-key add "$temporaryKeyFile"
 		
