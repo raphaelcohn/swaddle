@@ -219,10 +219,57 @@ swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile()
 	swaddle_configure_apt_architectures _swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile_callback
 }
 
+_swaddle_repository_apt_additionalLanguageCodes()
+{
+	local languageCode="$1"
+	local callback="$"
+	shift 2
+	
+	case "$languageCode" in
+		
+		en)
+			$callback "$@" en_AU en_CA en_GB en_US en_ZA
+		;;
+		
+		fr)
+			$callback "$@" fr_FR
+		;;
+		
+		no)
+			$callback "$@" no_NB
+		;;
+		
+		pt)
+			$callback "$@" pt_BR
+		;;
+		
+		zh)
+			$callback "$@" zh_CN zh_HK zh_TW
+		;;
+		
+	esac
+}
+
 core_usesIn swaddle digest
 core_dependency_requires '*' mkdir cat sort rm
 swaddle_repository_apt_createDistsComponentsTranslations()
 {
+	# In Debian 6 and Ubuntu 10.04, there is a bug in apt-get which tries to retrieve, say, Translation-en AND THEN Translation-en_GB, and ignores a 404 for Translation-en_GB
+	# This logic creates these extra files, but will fail if they are explicitly called out
+	# However, in Debian 6 / Ubuntu 10.04, the underlying language is NOT created
+	local allLanguagesToGenerateFor
+	local allLanguagesToGenerateFor_initialised
+	_swaddle_repository_apt_createDistsComponentsTranslations_findAllLanguagesToGenerateFor()
+	{
+		local languageCode="$core_variable_array_element"
+		core_variable_array_appendUniquely allLanguagesToGenerateFor "$languageCode"
+				
+		_swaddle_repository_apt_additionalLanguageCodes "$languageCode" core_variable_array_appendUniquely allLanguagesToGenerateFor
+	}
+	configure_iterateOverArrayWithDefaultsIfEmpty swaddle_apt translations _swaddle_repository_apt_createDistsComponentsTranslations_findAllLanguagesToGenerateFor "$(configure_getValue swaddle_apt language)"
+	
+	
+	
 	local configurationSettingValue
 	_configure_configurationSettingValue 'swaddle_apt' 'translations'
 	local translationsArrayName="$configurationSettingValue"
@@ -249,49 +296,11 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 								local compressedFileName="$1"
 								printf ' %s %7s %s\n' "$(swaddle_digest sha1 "$compressedFileName")" "$(stat -c '%s' "$compressedFileName")" "$compressedFileName"
 							}
-							
-							_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex()
-							{
-								local languageCodeOveride
-								for languageCodeOveride in "$@"
-								do
-									_swaddle_repository_apt_sortAndConcatenateFragments "Translation-$languageCodeOveride" _swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex_callback
-								done
-								
-							}
-							_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex "$languageCode"
-							
-						
-							# In Debian 6 and Ubuntu 10.04, there is a bug in apt-get which tries to retrieve, say, Translation-en AND THEN Translation-en_GB, and ignores a 404 for Translation-en_GB
-							# This logic creates these extra files, but will fail if they are explicitly called out
-							case "$languageCode" in
-								
-								en)
-									_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex en_AU en_CA en_GB en_US en_ZA
-								;;
-								
-								fr)
-									_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex fr_FR
-								;;
-								
-								no)
-									_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex no_NB
-								;;
-								
-								pt)
-									_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex pt_BR
-								;;
-								
-								zh)
-									_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex zh_CN zh_HK zh_TW
-								;;
-								
-							esac
-							
+							_swaddle_repository_apt_sortAndConcatenateFragments "Translation-$languageCodeOveride" _swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex_callback
 						}
 						
+						core_variable_array_iterate allLanguagesToGenerateFor _swaddle_repository_apt_createDistsComponentsTranslations_callback
 						
-						configure_iterateOverArrayWithDefaultsIfEmpty swaddle_apt translations _swaddle_repository_apt_createDistsComponentsTranslations_callback "$(configure_getValue swaddle_apt language)"
 					} >Index
 
 					swaddle_touch_setMtimeAndAtime Index
@@ -806,4 +815,15 @@ swaddle_repository_apt_parseDeb_createTranslationFragment()
 		printf "%s: %s\n" "Description-$languageCode" "$description"
 		printf '\n'
 	} >"$translationPath"/"$package".Translation-"$languageCode"
+	
+	# This logic exists to support Debian 6 and Ubuntu 10.04 which have bugs in downloading Translation-en
+	swaddle_repository_apt_parseDeb_createTranslationFragment_callback()
+	{
+		local additionalLanguageCode
+		for additionalLanguageCode in "$@"
+		do
+			cp "$translationPath"/"$package".Translation-"$languageCode" "$translationPath"/"$package".Translation-"$additionalLanguageCode"
+		done
+	}
+	_swaddle_repository_apt_additionalLanguageCodes "$languageCode" swaddle_repository_apt_parseDeb_createTranslationFragment_callback
 }
