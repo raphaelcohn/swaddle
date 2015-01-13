@@ -38,6 +38,9 @@ swaddle_repository_yum_releaseNotes()
 		downloadKeyAdditionalMarkdown=" (The key can also be downloaded from [RPM-GPG-KEY-$repositoryName](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/RPM-GPG-KEY-$repositoryName \"RPM-GPG-KEY-$repositoryName\") or [repodata/repomd.xml.key](${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/repodata/repomd.xml.key \"SuSE repomd.xml.key\") for SuSE)."
 	fi
 	
+	local hostBaseUrl
+	swaddle_repository_yum_adjustUrl hostBaseUrl "$(configure_getValue swaddle host_base_url)"
+	
 	swaddle_publishers_githubreleases_augmentReleaseMarkdownBody "
 ##### Yum Repository
 

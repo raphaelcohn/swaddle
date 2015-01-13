@@ -29,7 +29,7 @@ swaddle_publishers_githubreleases_prepare()
 	swaddle_publishers_tagAndPush "$_swaddle_git_swaddlingPathGitRoot" 'release'
 	
 	github_api_v3_initialise "$githubApiTokenFile"
-		
+	
 	local hostBaseUrl
 	swaddle_repository_yum_adjustUrl hostBaseUrl "$(configure_getValue swaddle host_base_url)"
 	_swaddle_publishers_githubreleases_releaseMarkdownBody="### Welcome to this release of $(configure_getValue swaddle repository_name)

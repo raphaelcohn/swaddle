@@ -62,6 +62,9 @@ swaddle_repository_apt_releaseNotes()
 	
 	swaddle_configure_apt_architectures swaddle_repository_apt_releaseNotes_callbackToCreateCommaString
 	
+	local hostBaseUrl
+	swaddle_repository_yum_adjustUrl hostBaseUrl "$(configure_getValue swaddle host_base_url)"
+	
 	swaddle_publishers_githubreleases_augmentReleaseMarkdownBody "
 ##### Apt Repository
 

@@ -16,6 +16,9 @@ swaddle_repository_files_registerConfiguration()
 
 swaddle_repository_files_releaseNotes()
 {
+	local hostBaseUrl
+	swaddle_repository_yum_adjustUrl hostBaseUrl "$(configure_getValue swaddle host_base_url)"
+	
 	swaddle_publishers_githubreleases_augmentReleaseMarkdownBody "
 ##### Files Archive
 
