@@ -96,7 +96,7 @@ If you don't want to use our install script, then you can repeat the steps it ta
 
 * $(swaddle_gpg_signatureMarkdown 'Import our' 'Trust the unsigned repository is OK') You can do this using \`apt-key add\`.
 * Create the file \`/etc/apt/sources.list.d/00$(configure_getValue swaddle repository_name).sources.list\` and add \`$(_swaddle_repository_apt_createAptSourcesListContent)\` to it.
-* Install the \`apt-transport-https\` package using \`sudo apt-get install apt-transport-https\` (typically needed on Debian installs).
+* Install the \`apt-transport-https\` package using \`sudo apt-get install apt-transport-https\` (typically needed on Debian installs; \`sudo apt-get update\` may be needed first).
 * Update the Apt sources using \`sudo apt-get update\`
 
 \* These versions do not seem to use the \`subjectAltName\` field.
@@ -267,7 +267,7 @@ swaddle_repository_apt_createDistsComponentsTranslations()
 							case "$languageCode" in
 								
 								en)
-									_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex en_AU en_CA en_GB
+									_swaddle_repository_apt_createDistsComponentsTranslations_writeToIndex en_AU en_CA en_GB en_US en_ZA
 								;;
 								
 								fr)
@@ -496,6 +496,7 @@ EOF
 sudo -p "Password for %p is required to allow root to install repository '$repositoryName' public key to apt: " apt-key add "$temporaryKeyFile"
 
 echo '$(_swaddle_repository_apt_createAptSourcesListContent)' | sudo -p "Password for %p is required to allow root to install repository '$repositoryName' apt sources list to '/etc/apt/sources.list.d/00$repositoryName.sources.list': " tee /etc/apt/sources.list.d/00$repositoryName.list >/dev/null
+sudo -p "Password for %p to allow root to update from new sources before installing apt-transport-https: " apt-get --quiet update
 sudo -p "Password for %p to allow root to  apt-get install apt-transport-https (missing in Debian default installs)" apt-get install apt-transport-https
 sudo -p "Password for %p to allow root to update from new sources: " apt-get --quiet update
 EOA
