@@ -32,7 +32,7 @@ swaddle_repository_apt_registerConfiguration()
 	configure_register Array AptCompression swaddle_apt compressions
 }
 
-core_useIns swaddle/publishers githubreleases
+core_usesIn swaddle/publishers githubreleases
 swaddle_repository_apt_releaseNotes()
 {
 	local count=0
