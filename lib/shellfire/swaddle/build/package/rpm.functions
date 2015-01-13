@@ -171,7 +171,7 @@ swaddle_package_rpm_rpmbuild()
 	fi
 	
 	core_variable_array_append options \
-		--target "$_swaddle_build_package_translatedArchitecture" \
+		--target "${_swaddle_build_package_translatedArchitecture}-redhat-linux" \
 		--define "buildroot $_swaddle_build_package_root" \
 		--define "_topdir $_swaddle_build_package_temporaryFolderPath" \
 		--define "_sourcedir $_swaddle_build_package_temporaryFolderPath" \
