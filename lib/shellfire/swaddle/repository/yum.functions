@@ -57,7 +57,7 @@ curl --fail --silent --show-error --location '${hostBaseUrl}yum/$(configure_getV
 This script asks for permission with sudo for every step. If you don't want to use our install script, then you can repeat the steps it takes below:-
 
 * $(swaddle_gpg_signatureMarkdown 'Download and import using `sudo rpm --import /path/to/downloaded/key` our' 'Trust the unsigned repository is OK') ${downloadKeyAdditionalMarkdown}
-* Create the file `/etc/yum.repos.d/$(configure_getValue swaddle repository_name).repo` and populate it with:-
+* Create the file \`/etc/yum.repos.d/$(configure_getValue swaddle repository_name).repo\` and populate it with:-
 
 \`\`\`bash
 $(_swaddle_repository_yum_createRepoFileContent)
