@@ -66,7 +66,7 @@ swaddle_publishers_tagRetry()
 	local iterationCount=$1
 	if [ $iterationCount -ne 0 ]; then
 		local thisAttemptTagMessage="$tagMessage (revision $iterationCount)"
-		local thisAttemptTagName="${tagName}_${iterationCount}"
+		local thisAttemptTagName="${tagName}-${iterationCount}"
 	else
 		local thisAttemptTagMessage="$tagMessage"
 		local thisAttemptTagName="$tagName"
