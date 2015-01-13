@@ -49,7 +49,7 @@ swaddle_repository_apt_releaseNotes()
 		local packageArchitecture="$core_variable_array_element"
 		
 		if [ -z "$architectures" ]; then
-			architectures="$core_variable_array_element"
+			architectures="\`$core_variable_array_element\`"
 		else
 			if [ $index -eq $count ]; then
 				architectures="${architectures} and \`$core_variable_array_element\`"
@@ -80,13 +80,13 @@ There is an [Apt repository](${hostBaseUrl}apt/dists/$(configure_getValue swaddl
 
 These releases should also work on Ubuntu Desktop, Ubuntu non-LTS releases, remixes (eg Xubuntu) and Linux Mint, but this is not tested for.
 
-To make it easy to use our repository, you can use our [install.sh](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh \"Apt repository install script for $(configure_getValue swaddle repository_name)\"):- \*
+To make it easy to use our repository, you can use our [install.sh](${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh \"Apt repository install script for $(configure_getValue swaddle repository_name)\"):-
 
 \`\`\`bash
 wget --no-verbose --output-document - '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh' | sh
 \`\`\`
 
-This script asks for permission with sudo for every step. The older versions of \`wget\` in Debian 6 and Ubuntu 10.04 LTS, require the additional option \`--no-check-certificate\` to work around a bug in their certificate validation logic \*:-
+This script asks for permission with sudo for every step. The older versions of \`wget\` in Debian 6 and Ubuntu 10.04 LTS, require the additional option \`--no-check-certificate\` to work around a bug in their certificate validation logic:-\*
 
 \`\`\`bash
 wget --no-check-certificate --no-verbose --output-document - '${hostBaseUrl}apt/dists/$(configure_getValue swaddle repository_name)/install.sh' | sh
@@ -99,7 +99,7 @@ If you don't want to use our install script, then you can repeat the steps it ta
 * Install the \`apt-transport-https\` package using \`sudo apt-get install apt-transport-https\` (typically needed on Debian installs).
 * Update the Apt sources using \`sudo apt-get update\`
 
-\* They do not correctly apply the \`subjectAltName\` field.
+\* These versions do not seem to use the \`subjectAltName\` field.
 "
 }
 

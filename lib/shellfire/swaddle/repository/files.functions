@@ -4,8 +4,6 @@
 
 swaddle_repository_files()
 {
-	local repositoryPath="$_swaddle_repository_parentPath"/dists/"$(configure_getValue swaddle repository_name)"
-	
 	swaddle_repository_files_releaseNotes
 }
 
@@ -22,6 +20,6 @@ swaddle_repository_files_releaseNotes()
 	swaddle_publishers_githubreleases_augmentReleaseMarkdownBody "
 ##### Files Archive
 
-In additiona to the links to files below, we maintain a separate [archive of files](${hostBaseUrl}files/) of all released, built content.
+In additiona to the links to files below, we maintain a separate [archive of files](${hostBaseUrl}files/$(configure_getValue swaddle repository_name)/) of all released, built content.
 "
 }

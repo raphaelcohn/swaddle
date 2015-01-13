@@ -48,7 +48,7 @@ There is a [Yum repository]((${hostBaseUrl}yum/$(configure_getValue swaddle repo
 * and Fedora
 * it may work on SuSE with zypper.
 
-To make it easy to use our repository, you can use our [install.sh](${hostBaseUrl}yum//$(configure_getValue swaddle repository_name)/install.sh \"Yum install script for $(configure_getValue swaddle repository_name)\"):- \*
+To make it easy to use our repository, you can use our [install.sh](${hostBaseUrl}yum//$(configure_getValue swaddle repository_name)/install.sh \"Yum install script for $(configure_getValue swaddle repository_name)\"):-
 
 \`\`\`bash
 curl --fail --silent --show-error --location '${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/install.sh' | sh

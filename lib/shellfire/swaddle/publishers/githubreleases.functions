@@ -42,6 +42,11 @@ An overview of the project is available [here]($(configure_getValue swaddle url)
 #### Bugs et al
 All software contains bugs. We're keen to fix them. Likewise, we want your suggestions. Please [raise them as issues]($(swaddle_configure_bugsUrl) \"Raise issues here\") - the more the better.
 
+#### Notes on Versioning
+
+* Version numbers resolve to timestamps; they are *not* semantic but they *are* monotonically increasing
+* Revision numbers start at 1 and are explicit even for the first revision of a release
+
 #### Release Notes
 Lorem Ipsum.
 
@@ -105,12 +110,9 @@ You can also use a file below:-
 * Debian packages are probably not directly installable without adding them to a repository (so use one of ours);
 * Source Code as a ZIP or tarball (Gzip compressed)
 
-#### Notes on Versioning
-
-* Version numbers resolve to timestamps; they are *not* semantic but they *are* monotonically increasing
-* Revision numbers start at 1 and are explicit even for the first revision of a release
-
+***
 *Created using [swaddle](https://github.com/raphaelcohn/swaddle \"swaddle home page\"), a [shellfire](https://github.com/shellfire-dev/shellfire \"shellfire home page\") application.*
+***
 "
 
 	local githubOwner="$(configure_getValue swaddle_github owner)"
