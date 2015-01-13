@@ -112,6 +112,8 @@ You can also use a file below:-
 
 *Created using [swaddle](https://github.com/raphaelcohn/swaddle \"swaddle home page\"), a [shellfire](https://github.com/shellfire-dev/shellfire \"shellfire home page\") application.*
 "
-	
+
+	local githubOwner="$(configure_getValue swaddle_github owner)"
+	local githubRepository="$(configure_getValue swaddle_github repository)"
 	github_api_v3_releases_editBody "$githubOwner" "$githubRepository" "$_swaddle_publishers_githubreleases_releaseId" "$_swaddle_publishers_githubreleases_releaseMarkdownBody"
 }
