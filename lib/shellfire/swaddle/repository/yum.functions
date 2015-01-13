@@ -65,7 +65,7 @@ $(_swaddle_repository_yum_createRepoFileContent)
 
 Optionally, then:-
 
-* See the packages available in this repository using \`yum group info $repositoryName\`
+* See the packages available in this repository using \`yum info $repositoryName\`
 
 At this time, we do not provide a \`$(configure_getValue swaddle repository_name)-release\` RPM as one doesn't offer any advantages over these steps.
 
@@ -105,7 +105,7 @@ _swaddle_repository_yum_createRepoFileContent()
 		local gpgCheck='gpgcheck=0'
 	else
 		# If installed using a REPO-release.rpm, then file:///etc/pki/rpm-gpg/RPM-GPG-KEY-${repositoryName}
-		local gpgKey="gpgkey=${hostBaseUrl}${repositoryName}/rpm/RPM-GPG-KEY-${repositoryName}"
+		local gpgKey="gpgkey={hostBaseUrl}yum/${repositoryName}/RPM-GPG-KEY-${repositoryName}"
 		local gpgCheck='gpgcheck=1'
 	fi
 	
@@ -174,7 +174,7 @@ if [ -t 1 ]; then
 fi
 
 printf '%s' "$repoFileContent" | sudo -p "Password for %p is required to allow root to install '$repoFilePath': " tee "$repoFilePath" >/dev/null
-yum --quiet group info $repositoryName 2>/dev/null
+yum --quiet info $repositoryName 2>/dev/null
 EOF
 	chmod 0755 "$installScriptFilePath"
 	swaddle_touch_setMtimeAndAtime "$installScriptFilePath"
