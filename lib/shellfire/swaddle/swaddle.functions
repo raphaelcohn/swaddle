@@ -84,7 +84,6 @@ swaddle_build()
 	core_variable_array_iterate swaddle_swaddling swaddle_build_all
 	swaddle_repository apt deb
 	swaddle_repository yum rpm
-	set -x
 	swaddle_repository files tar
 	
 	swaddle_webserverFiles_create
