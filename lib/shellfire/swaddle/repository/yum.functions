@@ -129,9 +129,9 @@ swaddle_repository_yum_createMirrorlist()
 	{
 		local mirrorBaseUrl
 		swaddle_repository_yum_adjustUrl mirrorBaseUrl "$core_variable_array_element"
-		printf '%s%s\n' "$mirrorBaseUrl" "$repositoryName"/rpm
+		printf '%s%s\n' "$mirrorBaseUrl" "$repositoryName"
 	}
-	configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle_yum' mirrors _swaddle_repository_yum_createMirrorlist_callback "$hostBaseUrl" >"$mirrorListFilePath"
+	configure_iterateOverArrayWithDefaultsIfEmpty swaddle_yum mirrors _swaddle_repository_yum_createMirrorlist_callback "${hostBaseUrl}yum/" >"$mirrorListFilePath"
 	
 	swaddle_touch_setMtimeAndAtime "$mirrorListFilePath"
 }
