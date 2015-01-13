@@ -222,7 +222,7 @@ swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile()
 _swaddle_repository_apt_additionalLanguageCodes()
 {
 	local languageCode="$1"
-	local callback="$"
+	local callback="$2"
 	shift 2
 	
 	case "$languageCode" in
