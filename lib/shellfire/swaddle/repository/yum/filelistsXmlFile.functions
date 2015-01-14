@@ -52,7 +52,7 @@ _swaddle_repository_yum_filelistsXmlFile_onlyFilesFilterCallback()
 		return 1
 	fi
 	return 0
-
+}
 
 _swaddle_repository_yum_filelistsXmlFile_onlyFoldersFilterCallback()
 {
