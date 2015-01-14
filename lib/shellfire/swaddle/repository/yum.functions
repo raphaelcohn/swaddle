@@ -54,7 +54,7 @@ To make it easy to use our repository, you can use our [install.sh](${hostBaseUr
 sh -c \"\$(curl --fail --silent --show-error --location '${hostBaseUrl}yum/$(configure_getValue swaddle repository_name)/install.sh')\"
 \`\`\`
 
-This script pauses if run interactively. It then asks for permission with sudo for every step. If you are using CentOS 5 or RHEL 5, then you'll need to install \`python-hashlib\` _before_ running this install script (this is because we use SHA-256 hashes). You can download it from [skyvidal](https://skvidal.fedorapeople.org/hashlib/ \"Folder for python-hashlib\").
+This script pauses if run interactively. It then asks for permission with sudo for every step. If you are using CentOS 5 or RHEL 5, then you'll need to install \`python-hashlib\` _before_ running this install script (this is because we use SHA-256 hashes). You can download it from [Seth Vidal's Fedora People Folder](https://skvidal.fedorapeople.org/hashlib/ \"Folder for python-hashlib\").
 
 If you don't want to use our install script, then you can repeat the steps it takes below:-
 
