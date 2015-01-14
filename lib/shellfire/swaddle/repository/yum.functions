@@ -67,6 +67,7 @@ $(_swaddle_repository_yum_createRepoFileContent)
 
 Optionally, then:-
 
+* Update the yum cache using \`sudo yum makecache\`
 * See the packages available in this repository using \`yum info $repositoryName\`
 * Check your rpm db has all necessary keys with \`rpm --query gpg-pubkey --queryformat '%{name}-%{version}-%{release} --> %{summary}\n'\`
 
@@ -177,6 +178,7 @@ if [ -t 1 ]; then
 fi
 
 printf '%s' "$repoFileContent" | sudo -p "Password for %p is required to allow root to install '$repoFilePath': " tee "$repoFilePath" >/dev/null
+sudo -p "Password for %p is required to allow root to update yum cache: " yum --quiet makecache
 yum --quiet info $repositoryName 2>/dev/null
 EOF
 	chmod 0755 "$installScriptFilePath"
