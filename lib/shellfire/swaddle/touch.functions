@@ -37,6 +37,6 @@ _swaddle_touch_setMtimeAndAtimeAllRecursivelyUnderSimulatedRoot()
 			_swaddle_touch_setMtimeAndAtimeAllRecursivelyUnderSimulatedRoot "$@"
 		fi
 		
-		swaddle_simulateroot_execute touch -m -a -c -h -t "$mtime" "$filePath"
+		swaddle_simulateroot_execute touch -m -a -c -t "$mtime" "$filePath"
 	done	
 }
