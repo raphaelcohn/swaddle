@@ -14,6 +14,12 @@ swaddle_configure_signer()
 	printf '%s (%s) <%s>' "$(configure_getValue swaddle maintainer_name)" "$(configure_getValue swaddle maintainer_comment)" "$(configure_getValue swaddle maintainer_email)"
 }
 
+swaddle_configure_signerForced()
+{
+	# ! is supposed to force that particular key
+	printf '%s!' "$(swaddle_configure_signer)"
+}
+
 swaddle_configure_sign()
 {
 	configure_getValue swaddle sign
