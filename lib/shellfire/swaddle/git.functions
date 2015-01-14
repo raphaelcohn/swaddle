@@ -13,7 +13,7 @@ swaddle_git_pathIsInGitRepository()
 	fi
 }
 
-core_dependency_requires '*' awk
+core_dependency_requires '*' grep cut
 swaddle_git_findSwaddlesPathGitRoot()
 {
 	if swaddle_git_pathIsInGitRepository "$swaddle_swaddlingPath"; then
@@ -30,7 +30,7 @@ swaddle_git_findSwaddlesPathGitRoot()
 	done
 	_swaddle_git_swaddlingPathGitRoot="$currentFolderPath"
 	
-	_swaddle_git_branch="$(git branch --list --no-color | awk '$1 ~ /\*/ {print $2}')"
+	_swaddle_git_branch="$(git branch | grep '^\* ' | cut -b3-)"
 }
 
 swaddle_git_swaddlingCanNotUseGit()
