@@ -68,6 +68,7 @@ $(_swaddle_repository_yum_createRepoFileContent)
 Optionally, then:-
 
 * See the packages available in this repository using \`yum info $repositoryName\`
+* Check your rpm db has all necessary keys with \`rpm --query gpg-pubkey --queryformat '%{name}-%{version}-%{release} --> %{summary}\n'\`
 
 At this time, we do not provide a \`$(configure_getValue swaddle repository_name)-release\` RPM as one doesn't offer any advantages over these steps.
 
