@@ -13,6 +13,10 @@
 %define _gpg_path $(configure_getValue swaddle keyring)
 %define _gpg_name $(swaddle_configure_signer)
 %define _gpgbin $(core_compatibility_which gpg)
+# Potential support for gpg-agent (stills asks for passphrase, but can press return)
+# rpmsign doesn't work with GPG 2.1: https://www.marshut.net/kssqsi/gnupg-2-1-vs-rpmsign.html
+#%define __gpg_check_password_cmd $(core_compatibility_which true)
+#%define __gpg_sign_cmd %{__gpg} gpg --batch --no-verbose --no-armor --use-agent --no-secmem-warning -u "%{_gpg_name}" -sbo %{__signature_filename} %{__plaintext_filename}
 
 # Disable checking for unpackaged files
 # %undefine __check_files
