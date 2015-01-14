@@ -10,7 +10,7 @@ swaddle_simulateroot_fakeroot_test()
 core_dependency_requires '*' fakeroot
 swaddle_simulateroot_fakeroot_execute()
 {
-	fakeroot -u -i "$_swaddle_simulateroot_settingsFilePath" -s "$fakerootEnvironmentOutputPath" -- "$@"
+	fakeroot -u -i "$_swaddle_simulateroot_settingsFilePath" -s "$_swaddle_simulateroot_settingsFilePath" -- "$@"
 }
 
 swaddle_simulateroot_fakeroot_ownAsExecutingUser()
