@@ -168,6 +168,7 @@ swaddle_package_rpm_rpmbuild()
 	
 	if core_variable_isTrue "$(swaddle_configure_sign)"; then
 		core_variable_array_append options --sign
+		printf '%s\n' "About to build RPM - you might be asked for the passphrase for your GPG key '$(swaddle_configure_signer)'"
 	fi
 	
 	core_variable_array_append options \
