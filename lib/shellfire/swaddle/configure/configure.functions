@@ -11,7 +11,12 @@ swaddle_configure_maintainer()
 
 swaddle_configure_signer()
 {
-	printf '%s (%s) <%s>' "$(configure_getValue swaddle maintainer_name)" "$(configure_getValue swaddle maintainer_comment)" "$(configure_getValue swaddle maintainer_email)"
+	local comment="$(configure_getValue swaddle maintainer_comment)"
+	if [ -n "$comment" ]; then
+		printf '%s (%s) <%s>' "$(configure_getValue swaddle maintainer_name)" "$comment" "$(configure_getValue swaddle maintainer_email)"
+	else
+		printf '%s <%s>' "$(configure_getValue swaddle maintainer_name)" "$(configure_getValue swaddle maintainer_email)"
+	fi
 }
 
 swaddle_configure_signerForced()
