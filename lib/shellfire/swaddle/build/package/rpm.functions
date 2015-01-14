@@ -166,6 +166,16 @@ swaddle_package_rpm_rpmbuild()
 		
 	esac
 	
+	# RPM Signing is very, very broken
+	# See, for instance, http://serverfault.com/questions/624888/bad-signatures-or-nokey-errors-on-rpms-i-just-signed or the 'schitzoid' comment in https://bugzilla.redhat.com/show_bug.cgi?id=86012
+	# This is useful https://technosorcery.net/blog/2010/10/10/pitfalls-with-rpm-and-gpg/
+	# - gpg-agent doesn't work, whatsoever
+	# - empty passphrases are still requested (as rpm doesn't work with gpg properly)
+	# - some RPM versions default to gpg2 but fail with it
+	# - gpg 2.1 doesn't work at all because of security improvements to passphrases
+	# - RPM only works with GPG v3 signatures (not the v4+ that are now common)
+	# - RPM only works with a 2048-bit RSA key
+	# - etc
 	if core_variable_isTrue "$(swaddle_configure_sign)"; then
 		core_variable_array_append options --sign
 		printf '%s\n' "About to build RPM - you will be asked for the passphrase for your GPG key '$(swaddle_configure_signer)', even if using gpg-agent!"
