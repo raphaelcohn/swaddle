@@ -18,14 +18,14 @@ swaddle_gpg_exportSigningKey()
 		return 0
 	fi
 	
-	swaddle_gpg --armor --export "$(swaddle_configure_signerForced)" >"$toFilePath"
+	swaddle_gpg --armor --export "$(swaddle_configure_signer)" >"$toFilePath"
 	swaddle_touch_setMtimeAndAtime "$toFilePath"
 }
 
 core_dependency_requires '*' awk
 swaddle_gpg_exportSigningKeyFingerprint()
 {
-	swaddle_gpg --with-colons --fingerprint "$(swaddle_configure_signerForced)" --fingerprint | awk -v FS=':' '$1 ~ /pub/ {print $5}'
+	swaddle_gpg --with-colons --fingerprint "$(swaddle_configure_signer)" --fingerprint | awk -v FS=':' '$1 ~ /pub/ {print $5}'
 }
 
 core_dependency_requires '*' rm touch
@@ -40,7 +40,7 @@ swaddle_gpg_sign()
 	
 	rm -f "$filePath"."$extension"
 	
-	swaddle_gpg --default-key "$(swaddle_configure_signerForced)" --output "$filePath"."$extension" --armor --sign --detach-sig "$filePath"
+	swaddle_gpg --default-key "$(swaddle_configure_signer)" --output "$filePath"."$extension" --armor --sign --detach-sig "$filePath"
 	
 	touch -r "$filePath" "$filePath"."$extension"
 }
@@ -52,7 +52,7 @@ swaddle_gpg_clearsign()
 	
 	rm -f "$outputFilePath"
 	
-	swaddle_gpg --default-key "$(swaddle_configure_signerForced)" --output "$outputFilePath" --armor --sign --clearsign "$filePath"
+	swaddle_gpg --default-key "$(swaddle_configure_signer)" --output "$outputFilePath" --armor --sign --clearsign "$filePath"
 	
 	touch -r "$filePath" "$$outputFilePath"
 }
