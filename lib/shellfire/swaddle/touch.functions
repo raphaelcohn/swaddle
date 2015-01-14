@@ -8,7 +8,7 @@ swaddle_touch_setMtimeAndAtime()
 {
 	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"
 	local mtime="$(date -d @$timestampInEpochSeconds +'%Y%m%d%H%M.%S')"
-	touch -m -a -c -h -t "$mtime" "$@"
+	touch -m -a -c -t "$mtime" "$@"
 }
 
 swaddle_touch_setMtimeAndAtimeAllRecursivelyUnderSimulatedRoot()
