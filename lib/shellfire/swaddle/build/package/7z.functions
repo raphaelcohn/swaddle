@@ -22,7 +22,7 @@ swaddle_build_package_7z()
 }
 
 core_usesIn swaddle publishers
-core_dependency_requires '*' 7z mkdir rm mv
+core_dependency_requires '*' 7za mkdir rm mv
 core_functions_register _swaddle_build_package_7z_functions swaddle_build_package_7z_create
 swaddle_build_package_7z_create()
 {
@@ -49,7 +49,7 @@ swaddle_build_package_7z_create()
 	
 	pushd "$directory"
 	
-		7z a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "$_swaddle_build_package_7z_filePath" "$contents" 1>/dev/null 2>/dev/null
+		7za a -t7z -m0=lzma -mx=9 -mfb=64 -md=32m -ms=on "$_swaddle_build_package_7z_filePath" "$contents" 1>/dev/null 2>/dev/null
 	
 	popd
 	
