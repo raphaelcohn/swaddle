@@ -196,8 +196,13 @@ swaddle_package_rpm_rpmbuild()
 		core_variable_array_passToFunctionAsArguments options rpmbuild 1>/dev/null 2>/dev/null || core_exitError $core_commandLine_exitCode_SOFTWARE "rpmbuild failed (run again with  --verbose 2  to find out why)"
 	fi
 	
+	# Compute file name; weirdly Epoch is omitted
+	local rpmVersion="$(configure_getValue swaddle version)"
+	local rpmRelease="$(_swaddle_build_package_rpm_release)"
+	local rpmFileName="$_swaddle_build_swaddleName"-"$rpmVersion"-"$rpmRelease"."$_swaddle_build_package_translatedArchitecture"
+	
 	set +f
-	set -- "$_swaddle_repository_yum_repositoryPath"/"$_swaddle_build_package_translatedArchitecture"/"$_swaddle_build_swaddleName"-*."$_swaddle_build_package_translatedArchitecture".rpm
+	set -- "$_swaddle_repository_yum_repositoryPath"/"$_swaddle_build_package_translatedArchitecture"/"$rpmFileName".rpm
 	set -f
 	local rpmFilePath="$1"
 	swaddle_touch_setMtimeAndAtime "$rpmFilePath"
