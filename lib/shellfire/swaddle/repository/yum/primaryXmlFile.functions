@@ -47,7 +47,7 @@ swaddle_repository_yum_primaryXmlFile()
 				
 				rpmSha56Sum="$(swaddle_digest sha256 "$rpmFilePath")"
 				rpmTimestamp="$(stat -c '%Y' "$rpmFilePath")"
-				rpmDescription="$(rpm --query --package "$rpmFilePath" --queryformat '%{DESCRIPTON}')"
+				rpmDescription="$(rpm --query --package "$rpmFilePath" --queryformat '%{DESCRIPTION}')"
 				rpmFileName="$(core_compatibility_basename "$rpmFilePath")"
 				
 				xmlwriter_open package type 'rpm'
@@ -61,7 +61,7 @@ swaddle_repository_yum_primaryXmlFile()
 					xmlwriter_leaf url "$rpmUrl"
 					xmlwriter_leaf time file "$rpmTimestamp" build "$rpmBuildTime"
 					xmlwriter_leaf size package "$rpmPackageSize" installed "$rpmInstalledSize" archive "$rpmArchiveSize"
-					xmlwriter_leaf location "$rpmArchitecture/$rpmFileName"
+					xmlwriter_leaf location href "$rpmArchitecture/$rpmFileName"
 					xmlwriter_open format
 						xmlwriter_leaf rpm:license "$rpmLicense"
 						xmlwriter_leaf rpm:vendor "$rpmVendor"
@@ -69,27 +69,11 @@ swaddle_repository_yum_primaryXmlFile()
 						xmlwriter_leaf rpm:buildhost "$rpmBuildHost"
 						xmlwriter_leaf rpm:sourcerpm "$rpmSourceRpm"
 						xmlwriter_leaf rpm:header-range start "$rpmHeaderRangeStart" end "$rpmHeaderRangeEnd"
-						
-						# Section provides/requires/etc should only be present if there is at least 1 entry
-						xmlwriter_open rpm:provides
-							swaddle_repository_yum_primaryXmlFile_entries '[%{PROVIDES}\t%{PROVIDEVERSION}\t%{PROVIDEFLAGS:depflags}\n]'
-						xmlwriter_close rpm:provides
-						
-						xmlwriter_open rpm:requires
-							swaddle_repository_yum_primaryXmlFile_entries '[%{REQUIRENAME}\t%{REQUIREVERSION}\t%{REQUIREFLAGS:depflags}\n]'
-						xmlwriter_close rpm:requires
-						
-						xmlwriter_open rpm:conflicts
-							swaddle_repository_yum_primaryXmlFile_entries '[%{CONFLICTS}\t%{CONFLICTVERSION}\t%{CONFLICTFLAGS:depflags}\n]'
-						xmlwriter_close rpm:conflicts
-						
-						xmlwriter_open rpm:obsoletes
-							swaddle_repository_yum_primaryXmlFile_entries '[%{OBSOLETES}\t%{OBSOLETEVERSION}\t%{OBSOLETEFLAGS:depflags}\n]'
-						xmlwriter_close rpm:obsoletes
-						
-						# Not all files are included in this listing, why?
-						swaddle_repository_yum_rpmxml_files
-						
+						swaddle_repository_yum_primaryXmlFile_entries rpm:provides '[%{PROVIDES}\t%{PROVIDEVERSION}\t%{PROVIDEFLAGS:depflags}\n]'
+						swaddle_repository_yum_primaryXmlFile_entries rpm:requires '[%{REQUIRENAME}\t%{REQUIREVERSION}\t%{REQUIREFLAGS:depflags}\n]'
+						swaddle_repository_yum_primaryXmlFile_entries rpm:conflicts '[%{CONFLICTS}\t%{CONFLICTVERSION}\t%{CONFLICTFLAGS:depflags}\n]'
+						swaddle_repository_yum_primaryXmlFile_entries rpm:obsoletes '[%{OBSOLETES}\t%{OBSOLETEVERSION}\t%{OBSOLETEFLAGS:depflags}\n]'
+						swaddle_repository_yum_rpmxml_files _swaddle_repository_yum_filelistsXmlFile_onlyBinaryFilesFilterCallback
 					xmlwriter_close format
 				xmlwriter_close package
 			}
@@ -101,121 +85,178 @@ swaddle_repository_yum_primaryXmlFile()
 	swaddle_repository_yum_rpmxml_addToRepodata primary
 }
 
-core_dependency_requires '*' rpm
+# It is possible other things should be included
+_swaddle_repository_yum_filelistsXmlFile_onlyBinaryFilesFilterCallback()
+{
+	if [ "$fileClass" = 'directory' ]; then
+		return 1
+	fi
+	
+	case "$filePath" in
+		
+		/bin/*)
+			return 0
+		;;
+		
+		/sbin/*)
+			return 0
+		;;
+		
+		/usr/bin/*)
+			return 0
+		;;
+		
+		/usr/sbin/*)
+			return 0
+		;;
+		
+		/usr/local/bin/*)
+			return 0
+		;;
+		
+		/usr/local/sbin/*)
+			return 0
+		;;
+		
+		*)
+			return 1
+		;;
+		
+	esac
+}
+
+core_dependency_requires '*' rpm cat
 swaddle_repository_yum_primaryXmlFile_entries()
 {
-	local querystring="$1"
+	local section="$1"
+	local querystring="$2"
 	
-	local entryName
-	local entryEpochVersionRelease
-	local entryFlags
-	local entryFlagsConverted
+	# This revolting logic exists because some yum repodata parsers don't like having empty entries sections, eg <rpm:conflicts></rpm:conflicts>, instead preferring they are omitted.
+	local hasAtLeastOneEntry=false
+	local TMP_FILE
+	local core_temporaryFiles_newFileToRemoveOnExit
+	local temporaryRpmEntriesXmlFragmentToOnlyUseIfNonZeroNumberOfEntriesFilePath="$TMP_FILE"
+	{
+		xmlwriter_open "$section"
 	
-	local lastEntryName
-	local lastEntryEpochVersionRelease
-	local lastEntryFlags
-	local lastEntryCount
-	lastEntryName=''
-	lastEntryEpochVersionRelease=''
-	lastEntryFlags=''
-	lastEntryCount=0
+			local entryName
+			local entryEpochVersionRelease
+			local entryFlags
+			local entryFlagsConverted
 	
-	local entryEpoch
-	local entryRemainder
-	local entryVersion
-	local entryRelease
-	rpm --query --package "$rpmFilePath" --queryformat "$querystring" 2>/dev/null | while IFS="$(printf '\t')" read -r entryName entryEpochVersionRelease entryFlags
-	do
-		set -- rpm:entry name "$entryName"
+			local lastEntryName
+			local lastEntryEpochVersionRelease
+			local lastEntryFlags
+			local lastEntryCount
+			lastEntryName=''
+			lastEntryEpochVersionRelease=''
+			lastEntryFlags=''
+			lastEntryCount=0
+	
+			local entryEpoch
+			local entryRemainder
+			local entryVersion
+			local entryRelease
+			rpm --query --package "$rpmFilePath" --queryformat "$querystring" 2>/dev/null | while IFS="$(printf '\t')" read -r entryName entryEpochVersionRelease entryFlags
+			do
+				set -- rpm:entry name "$entryName"
 		
-		# This revolting mess is to handle that things like /bin/sh can appear up to 4 times, but are recorded as a duplicate in the XML only on the second occurrence. Weird.
-		if [ "$lastEntryName" = "$entryName" ]; then
-			if [ $lastEntryCount -eq 1 ]; then
-				continue
-			fi
-			if [ "$lastEntryEpochVersionRelease" = "$entryEpochVersionRelease" ]; then
-				if [ "$lastEntryFlags" = "$entryFlags" ]; then
-					if [ $lastEntryCount -eq 0 ]; then
-						set -- "$@" pre 1
-						xmlwriter_leaf "$@"
+				# This revolting mess is to handle that things like /bin/sh can appear up to 4 times, but are recorded as a duplicate in the XML only on the second occurrence. Weird.
+				if [ "$lastEntryName" = "$entryName" ]; then
+					if [ $lastEntryCount -eq 1 ]; then
 						continue
+					fi
+					if [ "$lastEntryEpochVersionRelease" = "$entryEpochVersionRelease" ]; then
+						if [ "$lastEntryFlags" = "$entryFlags" ]; then
+							if [ $lastEntryCount -eq 0 ]; then
+								set -- "$@" pre 1
+								xmlwriter_leaf "$@"
+								continue
+							else
+								lastEntryCount=1
+							fi
+						else
+							lastEntryCount=0
+						fi
 					else
-						lastEntryCount=1
+						lastEntryCount=0
 					fi
 				else
 					lastEntryCount=0
 				fi
-			else
-				lastEntryCount=0
-			fi
-		else
-			lastEntryCount=0
-		fi
 		
 		
-		if [ -n "$entryFlags" ]; then
-			case "$entryFlags" in
+				if [ -n "$entryFlags" ]; then
+					case "$entryFlags" in
 				
-				' < ')
-					entryFlagsConverted=LT
-				;;
+						' < ')
+							entryFlagsConverted=LT
+						;;
 				
-				' > ')
-					entryFlagsConverted=GT
-				;;
+						' > ')
+							entryFlagsConverted=GT
+						;;
 				
-				' >= ')
-					entryFlagsConverted=GE
-				;;
+						' >= ')
+							entryFlagsConverted=GE
+						;;
 				
-				' <= ')
-					entryFlagsConverted=LE
-				;;
+						' <= ')
+							entryFlagsConverted=LE
+						;;
 				
-				' = ')
-					entryFlagsConverted=EQ
-				;;
+						' = ')
+							entryFlagsConverted=EQ
+						;;
 				
-				' != ')
-					entryFlagsConverted=NE
-				;;
+						' != ')
+							entryFlagsConverted=NE
+						;;
 				
-				*)
-					core_exitError $core_commandLine_exitCode_SOFTWARE "Unknown entry constraint '$entryFlags'"
-				;;
+						*)
+							core_exitError $core_commandLine_exitCode_SOFTWARE "Unknown entry constraint '$entryFlags'"
+						;;
 				
-			esac
+					esac
 			
-			# Parse the entryEpochVersionRelease
+					# Parse the entryEpochVersionRelease
 			
-			IFS=':' read -r entryEpoch entryRemainder <<-EOF
-				$entryEpochVersionRelease
-			EOF
+					IFS=':' read -r entryEpoch entryRemainder <<-EOF
+						$entryEpochVersionRelease
+					EOF
 			
-			# Problems due to leading ':' and bash / sh's bizarre splitting rules
-			if [ -z "$entryRemainder" ]; then
-				entryRemainder="$entryEpoch"
-				entryEpoch='0'
-			# prefixed by ':' not '0:'
-			elif [ -z "$entryEpoch" ]; then
-				entryEpoch='0'
-			fi
+					# Problems due to leading ':' and bash / sh's bizarre splitting rules
+					if [ -z "$entryRemainder" ]; then
+						entryRemainder="$entryEpoch"
+						entryEpoch='0'
+					# prefixed by ':' not '0:'
+					elif [ -z "$entryEpoch" ]; then
+						entryEpoch='0'
+					fi
 			
-			IFS='-' read -r entryVersion entryRelease <<-EOF
-				$entryRemainder
-			EOF
+					IFS='-' read -r entryVersion entryRelease <<-EOF
+						$entryRemainder
+					EOF
 			
-			set -- "$@" flags "$entryFlagsConverted" epoch "$entryEpoch" ver "$entryVersion"
+					set -- "$@" flags "$entryFlagsConverted" epoch "$entryEpoch" ver "$entryVersion"
 			
-			if [ -n "$entryRelease" ]; then
-				set -- "$@" rel "$entryRelease"
-			fi
-		fi
+					if [ -n "$entryRelease" ]; then
+						set -- "$@" rel "$entryRelease"
+					fi
+				fi
 		
-		xmlwriter_leaf "$@"
+				xmlwriter_leaf "$@"
+				hasAtLeastOneEntry=true
 		
-		lastEntryName="$entryName"
-		lastEntryEpochVersionRelease="$entryEpochVersionRelease"
-		lastEntryFlags="$entryFlags"
-	done
+				lastEntryName="$entryName"
+				lastEntryEpochVersionRelease="$entryEpochVersionRelease"
+				lastEntryFlags="$entryFlags"
+			done
+	
+		xmlwriter_close "$section"
+	} >"$temporaryRpmEntriesXmlFragmentToOnlyUseIfNonZeroNumberOfEntriesFilePath"
+	
+	if $hasAtLeastOneEntry; then
+		cat "$temporaryRpmEntriesXmlFragmentToOnlyUseIfNonZeroNumberOfEntriesFilePath"
+	fi
 }

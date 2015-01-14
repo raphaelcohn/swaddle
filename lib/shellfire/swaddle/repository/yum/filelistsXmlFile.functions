@@ -33,7 +33,8 @@ swaddle_repository_yum_filelistsXmlFile()
 				xmlwriter_open package pkgid "$rpmSha56Sum" name "$rpmName" arch "$rpmArchitecture"
 					xmlwriter_leaf version epoch "$rpmEpoch" ver "$rpmVersion" rel "$rpmRelease"
 
-					swaddle_repository_yum_rpmxml_files
+					swaddle_repository_yum_rpmxml_files _swaddle_repository_yum_filelistsXmlFile_onlyFilesFilterCallback
+					swaddle_repository_yum_rpmxml_files _swaddle_repository_yum_filelistsXmlFile_onlyFoldersFilterCallback
 				
 				xmlwriter_close package
 			}
@@ -43,4 +44,20 @@ swaddle_repository_yum_filelistsXmlFile()
 	} >"$_swaddle_repository_yum_repodataPath"/filelists.xml
 	
 	swaddle_repository_yum_rpmxml_addToRepodata filelists
+}
+
+_swaddle_repository_yum_filelistsXmlFile_onlyFilesFilterCallback()
+{
+	if [ "$fileClass" = 'directory' ]; then
+		return 1
+	fi
+	return 0
+
+
+_swaddle_repository_yum_filelistsXmlFile_onlyFoldersFilterCallback()
+{
+	if [ "$fileClass" = 'directory' ]; then
+		return 0
+	fi
+	return 1
 }
