@@ -134,7 +134,7 @@ swaddle_repository_yum_primaryXmlFile_entries()
 	# This revolting logic exists because some yum repodata parsers don't like having empty entries sections, eg <rpm:conflicts></rpm:conflicts>, instead preferring they are omitted.
 	local hasAtLeastOneEntry=false
 	local TMP_FILE
-	local core_temporaryFiles_newFileToRemoveOnExit
+	core_temporaryFiles_newFileToRemoveOnExit
 	local temporaryRpmEntriesXmlFragmentToOnlyUseIfNonZeroNumberOfEntriesFilePath="$TMP_FILE"
 	{
 		xmlwriter_open "$section"
