@@ -73,9 +73,15 @@ swaddle_publishers_tagRetry()
 	fi
 	
 	if core_variable_isTrue "$(swaddle_configure_sign)"; then
-		git tag --sign --local-user="$(swaddle_configure_signer)" --message="$thisAttemptTagMessage" "$thisAttemptTagName" 2>/dev/null || swaddle_publishers_tagRetry $((iterationCount+1))
+		set -- tag --sign --local-user="$(swaddle_configure_signer)" --message="$thisAttemptTagMessage" "$thisAttemptTagName"
 	else
-		git tag --annotate --message="$thisAttemptTagMessage" "$thisAttemptTagName" 2>/dev/null || swaddle_publishers_tagRetry $((iterationCount+1))
+		set -- tag --annotate --message="$thisAttemptTagMessage" "$thisAttemptTagName" 2>/dev/null || swaddle_publishers_tagRetry $((iterationCount+1))
+	fi
+	
+	if ! git "$@" 2>/dev/null; then
+		git "$@" || true
+		core_message NOTICE "Could not tag, trying next iteration"
+		swaddle_publishers_tagRetry $((iterationCount+1))
 	fi
 	
 	if [ -z "$actualTagName" ]; then
