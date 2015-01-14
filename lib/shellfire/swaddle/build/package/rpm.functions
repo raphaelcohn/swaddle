@@ -177,8 +177,10 @@ swaddle_package_rpm_rpmbuild()
 	# - RPM only works with a 2048-bit RSA key
 	# - etc
 	if core_variable_isTrue "$(swaddle_configure_sign)"; then
-		core_variable_array_append options --sign
+	
 		printf '%s\n' "About to build RPM - you will be asked for the passphrase for your GPG key '$(swaddle_configure_signer)', even if using gpg-agent!"
+		
+		core_variable_array_append options --sign
 	fi
 	
 	core_variable_array_append options \
@@ -190,13 +192,21 @@ swaddle_package_rpm_rpmbuild()
 		--define "_tmppath $rpmbuildTemporaryScriptsPath"
 	core_variable_array_append options "$_swaddle_build_package_rpm_specFile"
 	
-	if [ "$(core_init_verbosity)" -gt 1 ]; then
-		core_variable_array_passToFunctionAsArguments options rpmbuild || core_exitError $core_commandLine_exitCode_SOFTWARE "rpmbuild failed"
-	else
-		core_variable_array_passToFunctionAsArguments options rpmbuild 1>/dev/null 2>/dev/null || core_exitError $core_commandLine_exitCode_SOFTWARE "rpmbuild failed (run again with  --verbose 2  to find out why)"
-	fi
+	# It also seems GNUPGHOME is not often correctly used (and the macro ignored)
+	# Executed in a sub-shell so we can force GNUPGHOME
+	(
+		if core_variable_isTrue "$(swaddle_configure_sign)"; then
+			export GNUPGHOME="$(configure_getValue swaddle keyring)"
+		fi
+		
+		if [ "$(core_init_verbosity)" -gt 1 ]; then
+			core_variable_array_passToFunctionAsArguments options rpmbuild || core_exitError $core_commandLine_exitCode_SOFTWARE "rpmbuild failed"
+		else
+			core_variable_array_passToFunctionAsArguments options rpmbuild 1>/dev/null 2>/dev/null || core_exitError $core_commandLine_exitCode_SOFTWARE "rpmbuild failed (run again with  --verbose 2  to find out why)"
+		fi
+	)
 	
-	# Compute file name; weirdly Epoch is omitted
+	# Compute file name; weirdly Epoch is omitted from it (cf Debian)!
 	local rpmVersion="$(configure_getValue swaddle version)"
 	local rpmRelease="$(_swaddle_build_package_rpm_release)"
 	local rpmFileName="$_swaddle_build_swaddleName"-"$rpmVersion"-"$rpmRelease"."$_swaddle_build_package_translatedArchitecture"

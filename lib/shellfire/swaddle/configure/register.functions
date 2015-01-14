@@ -6,17 +6,33 @@ core_usesIn swaddle git
 
 core_functions_register _swaddle_configure_register_functions swaddle_git_findSwaddlesPathGitRoot
 
+_swaddle_configure_register_configuration_checkCombinationIsExtant()
+{
+	local variableName="$1"
+	local relativePathStartingWithSlashOrEmpty="$2"
+
+	if core_variable_isSet "$variableName"; then
+		local core_variable_indirectValue_result
+		core_variable_indirectValue "$variableName"
+		local gnupgHomePath="${core_variable_indirectValue_result}${relativePathStartingWithSlashOrEmpty}"
+
+		if core_path_isReadableAndSearchableFolderPath "$gnupgHomePath"; then
+			configure_register Value ReadableSearchableFolderPath swaddle keyring "$gnupgHomePath"
+			configure_register Value Boolean swaddle sign yes
+			return 0
+		fi
+	fi
+	
+	return 1
+}
+
 core_functions_register _swaddle_configure_register_functions swaddle_configure_register_configuration
 swaddle_configure_register_configuration()
 {
-	if core_variable_isSet HOME; then
-		if core_path_isReadableAndSearchableFolderPath "$HOME/.gnupg"; then
-			configure_register Value ReadableSearchableFolderPath swaddle keyring "$HOME/.gnupg"
-			configure_register Value Boolean swaddle sign yes
-		else
-			configure_register Value ReadableSearchableFolderPath swaddle keyring
-			configure_register Value Boolean swaddle sign no
-		fi
+	if _swaddle_configure_register_configuration_checkCombinationIsExtant GNUPGHOME ''; then
+		:
+	elif _swaddle_configure_register_configuration_checkCombinationIsExtant HOME '/.gnupg'; then
+		:
 	else
 		configure_register Value ReadableSearchableFolderPath swaddle keyring
 		configure_register Value Boolean swaddle sign no
