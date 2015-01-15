@@ -73,7 +73,7 @@ swaddle_configure_register_keyserver()
 	EOF
 	
 	# hkps key servers were only supported from gpg 1.4.10 (2009)
-	if version_isGreaterThanOrEqualTo 1.4.10; then
+	if version_isGreaterThanOrEqualTo "$gpgVersion" 1.4.10; then
 		_swaddle_default_keyserver='hkps://hkps.pool.sks-keyservers.net'
 	else
 		# We prefer port 80, as it means firewall issues will be less likely
