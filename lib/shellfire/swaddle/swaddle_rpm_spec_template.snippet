@@ -49,7 +49,7 @@ Group: $(configure_getValue swaddle_rpm category)
 License: $(_swaddle_build_package_rpm_licence)
 Vendor: $(configure_getValue swaddle vendor)
 URL: $(configure_getValue swaddle url)
-BugURL: $(swaddle_configure_bugsUrl)
+$(_swaddle_build_package_rpm_bugUrl)
 Packager: $(swaddle_configure_maintainer)
 
 $(_swaddle_build_package_rpm_iterateDependencies Requires depends)

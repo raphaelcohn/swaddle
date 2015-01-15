@@ -29,10 +29,5 @@ permissionsForFolderStructureFilePath="$folderStructurePath".permissions
 - could work with metastore (although this uses a binary format, keeps users / groups as names)
 - could just be a list of mkdir / chmod / chgrp / mkfifo, etc
 
-gpg vs gpg2 (only latter has cache, passphrase, etc)
-Need to create ~/.gnupg
-gpg --gen-key
-gpg-preset-passphrase
-
-
-https://ask.fedoraproject.org/en/question/56107/can-gpg-agent-be-used-when-signing-rpm-packages/
+Known Issues
+* Can't run multiple copies if creating signed RPMs
