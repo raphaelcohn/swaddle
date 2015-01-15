@@ -7,7 +7,7 @@ core_usesIn configure
 core_dependency_requires '*' gpg
 swaddle_gpg()
 {
-	gpg --home "$(configure_getValue swaddle keyring)" "$@"
+	gpg --quiet --no-verbose --home "$(configure_getValue swaddle keyring)" "$@"
 }
 
 swaddle_gpg_exportSigningKey()
