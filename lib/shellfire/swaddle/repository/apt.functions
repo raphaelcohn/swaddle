@@ -585,9 +585,9 @@ swaddle_repository_apt_parseDeb()
 			local controlTarFileName="$1"
 			local dataTarFileName="$2"
 		set -f
-		set -x
+		
 		tar --extract --file "$controlTarFileName" ./control
-		set +x
+		
 		local packageArchitecture
 		local package
 		local section
