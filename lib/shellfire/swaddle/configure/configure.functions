@@ -19,12 +19,6 @@ swaddle_configure_signer()
 	fi
 }
 
-swaddle_configure_signerForced()
-{
-	# ! is supposed to force that particular key
-	printf '%s!' "$(swaddle_configure_signer)"
-}
-
 swaddle_configure_sign()
 {
 	configure_getValue swaddle sign
