@@ -349,7 +349,6 @@ swaddle_build_package_deb_tarControl()
 	
 	local tarball="$_swaddle_build_package_temporaryFolderPath"/control.tar
 	
-	set -x
 	tar \
 		--create \
 		--file "$tarball" \
@@ -359,7 +358,6 @@ swaddle_build_package_deb_tarControl()
 		--numeric-owner \
 		--directory "$_swaddle_build_package_deb_controlFolderPath" \
 		.
-	set +x
 	
 	compress_gzip "$tarball"
 	rm "$tarball"
@@ -377,7 +375,6 @@ swaddle_build_package_deb_tarData()
 
 	local tarball="$_swaddle_build_package_temporaryFolderPath"/data.tar
 	
-	set -x
 	swaddle_simulateroot_execute tar \
 		--create \
 		--file "$tarball" \
@@ -385,7 +382,7 @@ swaddle_build_package_deb_tarData()
 		--numeric-owner \
 		--directory "$_swaddle_build_package_root" \
 		.
-	set +x
+	
 	local compression="$(configure_getValue swaddle_deb compression)"
 	if [ "$compression" = 'none' ]; then
 		_swaddle_build_package_deb_dataTarballFileName='data.tar'
