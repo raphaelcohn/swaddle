@@ -621,7 +621,7 @@ swaddle_repository_apt_parseDeb()
 			local dataTarFileName="$2"
 		set -f
 		
-		_swaddle_repository_apt_decompressTarball "$controlTarFileName" ./control --extract --file -
+		_swaddle_repository_apt_decompressTarball "$controlTarFileName" --extract --file - ./control
 		
 		local packageArchitecture
 		local package
