@@ -137,7 +137,7 @@ swaddle_build_package_rpm_generateSpecFile()
 }
 
 core_usesIn swaddle webserverFiles
-core_dependency_requires '*' rpmbuild awk cat mkdir mv
+core_dependency_requires '*' rpmbuild awk mkdir mv
 core_functions_register _swaddle_build_package_rpm_functions swaddle_package_rpm_rpmbuild
 swaddle_package_rpm_rpmbuild()
 {
@@ -193,16 +193,15 @@ swaddle_package_rpm_rpmbuild()
 		local TMP_FILE
 		core_temporaryFiles_newFileToRemoveOnExit
 		core_variable_array_append options --macros="$existingMacroPaths":"$TMP_FILE"
-		cat >"$TMP_FILE" <<EOF
-%_signature gpg
+		echo "%_signature gpg
 %_gpg_path $(configure_getValue swaddle keyring)
 %_gpg_name $(swaddle_configure_signerForced)
 %__gpg $(core_compatibility_which gpg)
 %__gpg_sign_cmd %{__gpg} \
     $(core_compatibility_which gpg) --home "$(configure_getValue swaddle keyring)" --force-v3-sigs --digest-algo=sha1 --batch --no-verbose --no-armor \
     --passphrase-fd 3 --no-secmem-warning -u "$(swaddle_configure_signerForced)" \
-    -sbo %{__signature_filename} %{__plaintext_filename}	
-EOF
+    -sbo %{__signature_filename} %{__plaintext_filename}
+" >"$TMP_FILE"
 	fi
 	
 	cat "$TMP_FILE" 1>&2
