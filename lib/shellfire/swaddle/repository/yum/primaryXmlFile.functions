@@ -40,7 +40,7 @@ swaddle_repository_yum_primaryXmlFile()
 				local rpmHeaderRangeStart
 				local rpmHeaderRangeEnd
 	
-				local rpmSha56Sum
+				local rpmSha256Sum
 				local rpmTimestamp
 				local rpmDescription
 				local rpmFileName
@@ -69,7 +69,7 @@ swaddle_repository_yum_primaryXmlFile()
 					rpmHeaderRangeEnd=0
 				fi
 				
-				rpmSha56Sum="$(swaddle_digest sha256 "$rpmFilePath")"
+				rpmSha256Sum="$(swaddle_digest sha256 "$rpmFilePath")"
 				rpmTimestamp="$(stat -c '%Y' "$rpmFilePath")"
 				rpmDescription="$(rpm --quiet --query --package "$rpmFilePath" --queryformat '%{DESCRIPTION}')" # Note the use of --quiet to suppress RPM 4 warnings about signatures
 				rpmFileName="$(core_compatibility_basename "$rpmFilePath")"
@@ -78,7 +78,7 @@ swaddle_repository_yum_primaryXmlFile()
 					xmlwriter_leaf name "$rpmName"
 					xmlwriter_leaf arch "$rpmArchitecture"
 					xmlwriter_leaf version epoch "$rpmEpoch" ver "$rpmVersion" rel "$rpmRelease"
-					xmlwriter_leaf checksum type 'sha256' pkgid 'YES' "$rpmSha56Sum"
+					xmlwriter_leaf checksum type 'sha256' pkgid 'YES' "$rpmSha256Sum"
 					xmlwriter_leaf summary "$rpmSummary"
 					xmlwriter_leaf description "$rpmDescription"
 					xmlwriter_leaf packager "$rpmPackager"
