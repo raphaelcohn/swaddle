@@ -135,7 +135,7 @@ swaddle_build_package_rpm_generateSpecFile()
 }
 
 core_usesIn swaddle webserverFiles
-core_dependency_requires '*' rpmbuild mkdir mv
+core_dependency_requires '*' rpmbuild awk mkdir mv
 core_functions_register _swaddle_build_package_rpm_functions swaddle_package_rpm_rpmbuild
 swaddle_package_rpm_rpmbuild()
 {
@@ -181,6 +181,27 @@ swaddle_package_rpm_rpmbuild()
 		printf '%s\n' "About to build RPM - you will be asked for the passphrase for your GPG key '$(swaddle_configure_signer)', even if using gpg-agent!"
 		
 		core_variable_array_append options --sign
+		
+		# Some versions of rpmbuild (eg CentOS 5) expect the various GPG macros to NOT be in the spec file
+		
+		# Find the default macros list so we can argmen
+		local existingMacroPaths="$(rpmbuild --showrc | awk '$1 ~/^macrofiles$/ {print $3}')"
+		
+		# Problem is that these default locations vary
+		local TMP_FILE
+		core_temporaryFiles_newFileToRemoveOnExit
+		core_variable_array_append options --macros="$existingMacroPaths":"$TMP_FILE"
+		cat >"$TMP_FILE" <<EOF
+# RPM sign stuff
+%define _signature gpg
+%define _gpg_path $(configure_getValue swaddle keyring)
+%define _gpg_name $(swaddle_configure_signerForced)
+%define __gpg $(core_compatibility_which gpg)
+%define __gpg_sign_cmd %{__gpg} \
+    $(core_compatibility_which gpg) --home "$(configure_getValue swaddle keyring)" --force-v3-sigs --digest-algo=sha1 --batch --no-verbose --no-armor \
+    --passphrase-fd 3 --no-secmem-warning -u "$(swaddle_configure_signerForced)" \
+    -sbo %{__signature_filename} %{__plaintext_filename}	
+EOF
 	fi
 	
 	core_variable_array_append options \
