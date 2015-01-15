@@ -54,7 +54,7 @@ swaddle_repository_yum_primaryXmlFile()
 				else
 					# Note the use of --quiet to suppress RPM 4 warnings about signatures
 					IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease rpmSummary rpmPackager rpmUrl rpmBuildTime rpmInstalledSize rpmArchiveSize rpmLicense rpmVendor rpmGroup rpmBuildHost rpmSourceRpm <<-EOF
-						$(rpm --quiet --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}\t%{SUMMARY}\t%{PACKAGER}\t%{URL}\t%{BUILDTIME}\t%{SIZE}\t%{ARCHIVESIZE}\t%{LICENSE}\t%{VENDOR}\t%{GROUP}\t%{BUILDHOST}\t%{SOURCERPM}')
+						$(rpm --quiet --nosignature --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}\t%{SUMMARY}\t%{PACKAGER}\t%{URL}\t%{BUILDTIME}\t%{SIZE}\t%{ARCHIVESIZE}\t%{LICENSE}\t%{VENDOR}\t%{GROUP}\t%{BUILDHOST}\t%{SOURCERPM}')
 					EOF
 					
 					packageSize="$(stat -c '%s' "$rpmFilePath")"
@@ -71,7 +71,7 @@ swaddle_repository_yum_primaryXmlFile()
 				
 				rpmSha256Sum="$(swaddle_digest sha256 "$rpmFilePath")"
 				rpmTimestamp="$(stat -c '%Y' "$rpmFilePath")"
-				rpmDescription="$(rpm --quiet --query --package "$rpmFilePath" --queryformat '%{DESCRIPTION}')" # Note the use of --quiet to suppress RPM 4 warnings about signatures
+				rpmDescription="$(rpm --quiet --nosignature --query --package "$rpmFilePath" --queryformat '%{DESCRIPTION}')" # Note the use of --quiet to suppress RPM 4 warnings about signatures
 				rpmFileName="$(core_compatibility_basename "$rpmFilePath")"
 				
 				xmlwriter_open package type 'rpm'
@@ -182,7 +182,7 @@ swaddle_repository_yum_primaryXmlFile_entries()
 			local entryVersion
 			local entryRelease
 			# Note the use of --quiet to suppress RPM 4 warnings about signatures
-			rpm --quiet --query --package "$rpmFilePath" --queryformat "$querystring" 2>/dev/null | while IFS="$(printf '\t')" read -r entryName entryEpochVersionRelease entryFlags
+			rpm --quiet --nosignature --query --package "$rpmFilePath" --queryformat "$querystring" 2>/dev/null | while IFS="$(printf '\t')" read -r entryName entryEpochVersionRelease entryFlags
 			do
 				set -- rpm:entry name "$entryName"
 		
