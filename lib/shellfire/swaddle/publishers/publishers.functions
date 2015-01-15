@@ -93,8 +93,7 @@ _swaddle_publishers_tagRetry()
 		set -- --annotate
 	fi
 	
-	set -x
-	if ! git tag "$@" --message="$thisAttemptTagMessage" "$$thisAttemptTagName"; then
+	if ! git tag "$@" --message="$thisAttemptTagMessage" "$thisAttemptTagName"; then
 		core_exitError $core_commandLine_exitCode_CANTCREAT "Could not tag with '$thisAttemptTagName' in '$(pwd)'"
 	fi
 	
