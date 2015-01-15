@@ -5,6 +5,8 @@
 core_usesIn xmlwriter
 core_usesIn swaddle/repository/yum rpmxml
 core_usesIn swaddle digest
+core_usesIn version
+core_usesIn swaddle/build/package rpm
 
 core_dependency_requires '*' rpm stat
 swaddle_repository_yum_primaryXmlFile()
@@ -25,7 +27,6 @@ swaddle_repository_yum_primaryXmlFile()
 				local rpmPackager
 				local rpmUrl
 				local rpmBuildTime
-				local rpmPackageSize
 				local rpmInstalledSize
 				local rpmArchiveSize
 				local rpmLicense
@@ -33,6 +34,9 @@ swaddle_repository_yum_primaryXmlFile()
 				local rpmGroup
 				local rpmBuildHost
 				local rpmSourceRpm
+				
+				# Aren't supported on CentOS 5
+				local rpmPackageSize
 				local rpmHeaderRangeStart
 				local rpmHeaderRangeEnd
 	
@@ -41,9 +45,25 @@ swaddle_repository_yum_primaryXmlFile()
 				local rpmDescription
 				local rpmFileName
 				
-				IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease rpmSummary rpmPackager rpmUrl rpmBuildTime rpmPackageSize rpmInstalledSize rpmArchiveSize rpmLicense rpmVendor rpmGroup rpmBuildHost rpmSourceRpm rpmHeaderRangeStart rpmHeaderRangeEnd <<-EOF
-					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}\t%{SUMMARY}\t%{PACKAGER}\t%{URL}\t%{BUILDTIME}\t%{PACKAGESIZE}\t%{SIZE}\t%{ARCHIVESIZE}\t%{LICENSE}\t%{VENDOR}\t%{GROUP}\t%{BUILDHOST}\t%{SOURCERPM}\t%{HEADERSTARTOFF}\t%{HEADERENDOFF}')
-				EOF
+				# PACKAGESIZE doesn't work on less than 5.1.2
+				# HEADERSTARTOFF & HEADERENDOFF were introduced sometime at or before 5.2.0
+				if swaddle_build_package_rpm_versionIsGreaterThanOrEqualTo 5.2.0; then
+					IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease rpmSummary rpmPackager rpmUrl rpmBuildTime rpmInstalledSize rpmArchiveSize rpmLicense rpmVendor rpmGroup rpmBuildHost rpmSourceRpm rpmPackageSize rpmHeaderRangeStart rpmHeaderRangeEnd <<-EOF
+						$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}\t%{SUMMARY}\t%{PACKAGER}\t%{URL}\t%{BUILDTIME}\t%{SIZE}\t%{ARCHIVESIZE}\t%{LICENSE}\t%{VENDOR}\t%{GROUP}\t%{BUILDHOST}\t%{SOURCERPM}\t%{PACKAGESIZE}\t%{HEADERSTARTOFF}\t%{HEADERENDOFF}')
+					EOF
+				else
+					IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease rpmSummary rpmPackager rpmUrl rpmBuildTime rpmInstalledSize rpmArchiveSize rpmLicense rpmVendor rpmGroup rpmBuildHost rpmSourceRpm <<-EOF
+						$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}\t%{SUMMARY}\t%{PACKAGER}\t%{URL}\t%{BUILDTIME}\t%{SIZE}\t%{ARCHIVESIZE}\t%{LICENSE}\t%{VENDOR}\t%{GROUP}\t%{BUILDHOST}\t%{SOURCERPM}')
+					EOF
+					
+					packageSize="$(stat -c '%s' "$rpmFilePath")"
+					
+					# It is possible to reimplement in shell script using od / dd (after all these are just offsets), etc, the logic of def _get_header_byte_range(self) in  http://yum.baseurl.org/gitweb?p=yum.git;a=blob;f=yum/packages.py;h=f72c068200587288a7c42371f7dacb2faba60991;hb=refs/heads/yum-3_2_X
+					# But this rpm issue suggests the data isn't used: http://rpm.org/ticket/850
+					core_message WARN "Older versions of RPM don't support any way of extracting Header Start and End Offsets. Forcing these to 440, which may break old yum clients."
+					rpmHeaderRangeStart=0
+					rpmHeaderRangeEnd=0
+				fi
 				
 				rpmSha56Sum="$(swaddle_digest sha256 "$rpmFilePath")"
 				rpmTimestamp="$(stat -c '%Y' "$rpmFilePath")"

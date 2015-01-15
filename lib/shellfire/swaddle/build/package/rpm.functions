@@ -452,17 +452,22 @@ _swaddle_build_package_rpm_licence()
 	rm "$validValuesFilePath"
 }
 
-core_usesIn version
-core_dependency_requires '*' rpmbuild cut
 _swaddle_build_package_rpm_bugUrl()
 {
-	local rpmbuildVersion="$(rpmbuild --version | cut -d' ' -f3)"
-
-	if version_isGreaterThanOrEqualTo "$rpmbuildVersion" 4.8.0; then
+	if swaddle_build_package_rpm_versionIsGreaterThanOrEqualTo 4.8.0; then
 		printf 'BugURL: %s' "$(swaddle_configure_bugsUrl)"
 	else
 		printf '%s' '#BugURL not supported on this version of rpm'
 	fi
+}
+
+core_usesIn version
+core_dependency_requires '*' rpm cut
+swaddle_build_package_rpm_versionIsGreaterThanOrEqualTo()
+{
+	local versionToTest="$1"
+	local rpmbuildVersion="$(rpm --version | cut -d' ' -f3)"
+	version_isGreaterThanOrEqualTo "$rpmbuildVersion" "$versionToTest"
 }
 
 _swaddle_build_package_rpm_iterateDependencies()
