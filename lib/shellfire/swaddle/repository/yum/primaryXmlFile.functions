@@ -57,7 +57,7 @@ swaddle_repository_yum_primaryXmlFile()
 						$(rpm --nosignature --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}\t%{SUMMARY}\t%{PACKAGER}\t%{URL}\t%{BUILDTIME}\t%{SIZE}\t%{ARCHIVESIZE}\t%{LICENSE}\t%{VENDOR}\t%{GROUP}\t%{BUILDHOST}\t%{SOURCERPM}')
 					EOF
 					
-					packageSize="$(stat -c '%s' "$rpmFilePath")"
+					rpmPackageSize="$(stat -c '%s' "$rpmFilePath")"
 					
 					# It is possible to reimplement in shell script using od / dd (after all these are just offsets), etc, the logic of def _get_header_byte_range(self) in  http://yum.baseurl.org/gitweb?p=yum.git;a=blob;f=yum/packages.py;h=f72c068200587288a7c42371f7dacb2faba60991;hb=refs/heads/yum-3_2_X
 					# But this rpm issue suggests the data isn't used: http://rpm.org/ticket/850
