@@ -32,8 +32,9 @@ swaddle_repository_yum_compsXmlFile()
 					_swaddle_repository_yum_compsXmlFile_callback()
 					{
 						local rpmName
+						# Note the use of --quiet to suppress RPM 4 warnings about signatures
 						IFS="$(printf '\t')" read -r rpmName <<-EOF
-							$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}')
+							$(rpm --quiet --query --package "$rpmFilePath" --queryformat '%{NAME}')
 						EOF
 						xmlwriter_leaf packagereq type 'optional' "$rpmName"
 					}

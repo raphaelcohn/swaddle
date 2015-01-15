@@ -22,15 +22,14 @@ swaddle_repository_yum_filelistsXmlFile()
 				local rpmVersion
 				local rpmRelease
 	
-				local rpmSha56Sum
-	
+				# Note the use of --quiet to suppress RPM 4 warnings about signatures
 				IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease <<-EOF
-					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}')
+					$(rpm --quiet --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}')
 				EOF
+	
+				local rpmSha256Sum="$(swaddle_digest sha256 "$rpmFilePath")"
 				
-				rpmSha56Sum="$(swaddle_digest sha256 "$rpmFilePath")"
-				
-				xmlwriter_open package pkgid "$rpmSha56Sum" name "$rpmName" arch "$rpmArchitecture"
+				xmlwriter_open package pkgid "$rpmSha256Sum" name "$rpmName" arch "$rpmArchitecture"
 					xmlwriter_leaf version epoch "$rpmEpoch" ver "$rpmVersion" rel "$rpmRelease"
 
 					swaddle_repository_yum_rpmxml_files _swaddle_repository_yum_filelistsXmlFile_onlyFilesFilterCallback

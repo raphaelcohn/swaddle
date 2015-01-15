@@ -27,9 +27,9 @@ swaddle_repository_yum_otherXmlFile()
 				local rpmChangelogDate
 				local rpmChangelogEntryRaw
 				local rpmChangelogEntry
-	
+				# Note the use of --quiet to suppress RPM 4 warnings about signatures
 				IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease <<-EOF
-					$(rpm --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}')
+					$(rpm --quiet --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}')
 				EOF
 				
 				rpmSha56Sum="$(swaddle_digest sha256 "$rpmFilePath")"
@@ -37,10 +37,11 @@ swaddle_repository_yum_otherXmlFile()
 				xmlwriter_open package pkgid "$rpmSha56Sum" name "$rpmName" arch "$rpmArchitecture"
 					xmlwriter_leaf version epoch "$rpmEpoch" ver "$rpmVersion" rel "$rpmRelease"
 					
+					# Note the use of --quiet to suppress RPM 4 warnings about signatures
 					# changelog text can have embedded line feeds, hence the 'tr' and strange '\r' at the end of the query
 					# head -n 10 | tac is to provide a maximum list of 10, reverse ordered, changlog entries. Weird, but that's yum for you.
 					# tac exists in GNU coreutils and BusyBox but not Mac OS X without Homebrew (tail -r does exist)
-					rpm --query --package "$rpmFilePath" --queryformat '[%{CHANGELOGNAME}\t%{CHANGELOGTIME}\t%{CHANGELOGTEXT}\r]' | tr '\r\n' '\n\r' | head -n 10 | tac | while IFS="$(printf '\t')" read -r rpmChangelogAuthor rpmChangelogDate rpmChangelogEntryRaw
+					rpm --quiet --query --package "$rpmFilePath" --queryformat '[%{CHANGELOGNAME}\t%{CHANGELOGTIME}\t%{CHANGELOGTEXT}\r]' | tr '\r\n' '\n\r' | head -n 10 | tac | while IFS="$(printf '\t')" read -r rpmChangelogAuthor rpmChangelogDate rpmChangelogEntryRaw
 					do
 						# Should use a CDATA entry, but yum doesn't...
 						local rpmChangelogEntry="$(printf '%s' "$rpmChangelogEntryRaw" | tr '\r' '\n')"
