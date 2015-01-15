@@ -65,7 +65,6 @@ swaddle_configure_register_keyserver()
 		return 0
 	fi
 	
-	set -x
 	local garbage1
 	local garbage2
 	local gpgVersion
@@ -85,7 +84,6 @@ swaddle_configure_register_keyserver()
 	
 	# comma-separated list
 	configure_register Array NotEmpty swaddle keyserver_options
-	set +x
 }
 
 core_dependency_requires '*' git date awk
