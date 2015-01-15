@@ -210,8 +210,7 @@ swaddle_package_rpm_rpmbuild()
 				exit $core_commandLine_exitCode_SOFTWARE
 			fi
 		fi
-	) || exit 99
-	echo $?
+	) || exit $core_commandLine_exitCode_SOFTWARE
 	
 	# Compute file name; weirdly Epoch is omitted from it (cf Debian)!
 	local rpmVersion="$(configure_getValue swaddle version)"
