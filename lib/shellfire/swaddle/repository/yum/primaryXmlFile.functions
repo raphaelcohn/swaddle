@@ -61,7 +61,10 @@ swaddle_repository_yum_primaryXmlFile()
 					
 					# It is possible to reimplement in shell script using od / dd (after all these are just offsets), etc, the logic of def _get_header_byte_range(self) in  http://yum.baseurl.org/gitweb?p=yum.git;a=blob;f=yum/packages.py;h=f72c068200587288a7c42371f7dacb2faba60991;hb=refs/heads/yum-3_2_X
 					# But this rpm issue suggests the data isn't used: http://rpm.org/ticket/850
-					core_message WARN "Older versions of RPM don't support any way of extracting Header Start and End Offsets. Forcing these to 440, which may break old yum clients."
+					if core_variable_isUnset _swaddle_repository_yum_warnedAboutHeaderOffsets; then
+						core_message WARN "Older versions of RPM don't support any way of extracting Header Start and End Offsets. Forcing these to 0, which may break old yum clients."
+						_swaddle_repository_yum_warnedAboutHeaderOffsets=true
+					fi
 					rpmHeaderRangeStart=0
 					rpmHeaderRangeEnd=0
 				fi
