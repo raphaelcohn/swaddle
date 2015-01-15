@@ -32,7 +32,6 @@ swaddle_publishers_tagAndPush()
 {
 	local gitRepositoryPath="$1"
 	local tagBase="$2"
-	local initialIterationCount=1
 	
 	local repositoryName="$(configure_getValue swaddle repository_name)"
 	local version="$(configure_getValue swaddle version)"
@@ -50,7 +49,8 @@ swaddle_publishers_tagAndPush()
 	
 		git fetch --all --prune --quiet
 		git fetch --tags --quiet
-		swaddle_publishers_tagRetry "$initialIterationCount"
+		
+		_swaddle_publishers_tagRetry "$initialIterationCount"
 
 		if core_variable_isTrue "$(swaddle_configure_sign)"; then
 			git push --quiet --signed origin "$actualTagName" 2>/dev/null || git push --quiet origin "$actualTagName"
@@ -61,31 +61,42 @@ swaddle_publishers_tagAndPush()
 	popd
 }
 
-swaddle_publishers_tagRetry()
+core_dependency_requires '*' grep
+_swaddle_publishers_tagRetry()
 {
-	local iterationCount=$1
-	if [ $iterationCount -ne 0 ]; then
-		local thisAttemptTagMessage="$tagMessage (revision $iterationCount)"
-		local thisAttemptTagName="${tagName}-${iterationCount}"
-	else
-		local thisAttemptTagMessage="$tagMessage"
-		local thisAttemptTagName="$tagName"
-	fi
+	local iterationCount=1
+	local thisAttemptTagMessage
+	local thisAttemptTagName
+	
+	while true
+	do
+		if [ $iterationCount -ne 0 ]; then
+			thisAttemptTagMessage="$tagMessage (revision $iterationCount)"
+			thisAttemptTagName="${tagName}-${iterationCount}"
+		else
+			thisAttemptTagMessage="$tagMessage"
+			thisAttemptTagName="$tagName"
+		fi
+	
+		if git tag -l | grep -q "^${thisAttemptTagName}\$"; then
+			core_message NOTICE "Could not tag, trying next iteration"
+			iterationCount=$((iterationCount+1))
+			continue
+		fi
+	
+		break
+	done
 	
 	if core_variable_isTrue "$(swaddle_configure_sign)"; then
-		set -- tag --sign --local-user="$(swaddle_configure_signer)" --message="$thisAttemptTagMessage" "$thisAttemptTagName"
+		set -- --local-user="$(swaddle_configure_signer)"
 	else
-		set -- tag --annotate --message="$thisAttemptTagMessage" "$thisAttemptTagName" 2>/dev/null || swaddle_publishers_tagRetry $((iterationCount+1))
+		set -- --annotate
 	fi
 	
-	if ! git "$@" 2>/dev/null; then
-		git "$@" || true
-		core_message NOTICE "Could not tag, trying next iteration"
-		swaddle_publishers_tagRetry $((iterationCount+1))
+	if ! git tag "$@" --message="$thisAttemptTagMessage" "$$thisAttemptTagName"; then
+		core_exitError $core_commandLine_exitCode_CANTCREAT "Could not tag with '$thisAttemptTagName' in '$(pwd)'"
 	fi
 	
-	if [ -z "$actualTagName" ]; then
-		actualTagName="$thisAttemptTagName"
-		actualIterationCount="$iterationCount"
-	fi
+	actualTagName="$thisAttemptTagName"
+	actualIterationCount="$iterationCount"
 }
