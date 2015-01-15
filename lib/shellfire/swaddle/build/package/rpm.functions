@@ -201,11 +201,13 @@ swaddle_package_rpm_rpmbuild()
 		
 		if [ "$(core_init_verbosity)" -gt 1 ]; then
 			if ! core_variable_array_passToFunctionAsArguments options rpmbuild; then
-				core_exitError $core_commandLine_exitCode_SOFTWARE "rpmbuild failed"
+				core_message FAIL "rpmbuild failed"
+				return $core_commandLine_exitCode_SOFTWARE
 			fi
 		else
 			if ! core_variable_array_passToFunctionAsArguments options rpmbuild 1>/dev/null 2>/dev/null; then 
-				core_exitError $core_commandLine_exitCode_SOFTWARE "rpmbuild failed (run again with  --verbose 2  to find out why)"
+				core_message FAIL "rpmbuild failed (run again with  --verbose 2  to find out why)"
+				return $core_commandLine_exitCode_SOFTWARE
 			fi
 		fi
 	)
