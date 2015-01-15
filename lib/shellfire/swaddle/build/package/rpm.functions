@@ -619,6 +619,7 @@ _swaddle_build_package_rpm_files_computeRpmPath()
 	rpmPath="$relativePath"/"$fileName"
 }
 
+core_dependency_requires '*' stat
 _swaddle_build_package_rpm_files_writeAttr()
 {
 	local potentiallyShortMode
@@ -636,6 +637,7 @@ _swaddle_build_package_rpm_files_writeAttr()
 	printf '%%attr(%s, %s, %s) ' "$mode" "$user" "$group"
 }
 
+core_dependency_requires '*' sed
 _swaddle_build_package_rpm_files_writeAdjustedPath()
 {
 	local trailingSlashIfAny="$1"
@@ -650,9 +652,10 @@ _swaddle_build_package_rpm_files_isSpecial()
 
 _swaddle_build_package_rpm_files_writeFolder()
 {
+	set -x
 	local rpmPath
 	_swaddle_build_package_rpm_files_computeRpmPath
-
+	
 	local configurationSettingValue
 	_configure_configurationSettingValue 'swaddle_rpm' 'package_folder_paths'
 	if core_variable_array_iterateShortcut "$configurationSettingValue" _swaddle_build_package_rpm_files_isSpecial; then
@@ -661,7 +664,7 @@ _swaddle_build_package_rpm_files_writeFolder()
 	
 	_swaddle_build_package_rpm_files_writeAttr
 	_swaddle_build_package_rpm_files_writeAdjustedPath '/'
-	
+	set +
 	_swaddle_build_package_rpm_files_recurse "$objectPath" "$rpmPath"
 }
 
