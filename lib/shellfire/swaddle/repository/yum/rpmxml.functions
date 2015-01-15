@@ -45,7 +45,7 @@ swaddle_repository_yum_rpmxml_files()
 	local filePath
 	local fileClass
 	# Note the use of --quiet to suppress RPM 4 warnings about signatures
-	rpm --quiet --nosignature --query --package "$rpmFilePath" --queryformat '[%{FILENAMES}\t%{FILECLASS}\n]' 2>/dev/null | while IFS="$(printf '\t')" read -r filePath fileClass
+	rpm --nosignature --query --package "$rpmFilePath" --queryformat '[%{FILENAMES}\t%{FILECLASS}\n]' 2>/dev/null | while IFS="$(printf '\t')" read -r filePath fileClass
 	do
 		if ! $filterCallback; then
 			continue

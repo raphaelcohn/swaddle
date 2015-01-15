@@ -24,7 +24,7 @@ swaddle_repository_yum_filelistsXmlFile()
 	
 				# Note the use of --quiet to suppress RPM 4 warnings about signatures
 				IFS="$(printf '\t')" read -r rpmName rpmArchitecture rpmEpoch rpmVersion rpmRelease <<-EOF
-					$(rpm --quiet --nosignature --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}')
+					$(rpm --nosignature --query --package "$rpmFilePath" --queryformat '%{NAME}\t%{ARCH}\t%{EPOCH}\t%{VERSION}\t%{RELEASE}')
 				EOF
 	
 				local rpmSha256Sum="$(swaddle_digest sha256 "$rpmFilePath")"
