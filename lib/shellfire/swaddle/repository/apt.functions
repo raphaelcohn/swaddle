@@ -573,6 +573,41 @@ swaddle_repository_apt_createDistsComponentReleaseFile()
 	swaddle_touch_setMtimeAndAtime Release
 }
 
+core_dependency_requires '*' gzip bzip2 lzma xz
+_swaddle_repository_apt_decompressTarball()
+{
+	local compressedTarballFilePath="$1"
+	shift 1
+	
+	case "$compressedTarballFilePath" in
+	
+		*.tar)
+			tar "$@"
+		;;
+	
+		*.tar.gz)
+			gzip -d -c "$compressedTarballFilePath" | tar "$@"
+		;;
+	
+		*.tar.bz2)
+			bzip2 -d -k -c "$compressedTarballFilePath" | tar "$@"
+		;;
+	
+		*.tar.lzma)
+			lzma -d -k -c "$compressedTarballFilePath" | tar "$@"
+		;;
+	
+		*.tar.xz)
+			xz -d -k -c "$compressedTarballFilePath" | tar "$@"
+		;;
+	
+		*)
+			core_exitError $core_commandLine_exitCode_DATAERR "Unknown file compression for '$compressedTarballFilePath' in Debian package"
+		;;
+	
+	esac
+}
+
 core_dependency_requires '*' ar tar rm
 swaddle_repository_apt_parseDeb()
 {
@@ -586,7 +621,7 @@ swaddle_repository_apt_parseDeb()
 			local dataTarFileName="$2"
 		set -f
 		
-		tar --extract --file "$controlTarFileName" ./control
+		_swaddle_repository_apt_decompressTarball ./control --extract --file -
 		
 		local packageArchitecture
 		local package
@@ -689,8 +724,7 @@ swaddle_repository_apt_parseDeb_extractContentsList()
 	local fragmentFilePath="$repositoryPath"/Contents.tmp
 	
 	local filePathWithLeadingDotSlash
-	set -x
-	tar --list --file "$dataTarFileName" | while IFS=' ' read -r filePathWithLeadingDotSlash
+	_swaddle_repository_apt_decompressTarball "$dataTarFileName" --list --file - | while IFS=' ' read -r filePathWithLeadingDotSlash
 	do
 		# Exclude folders
 		if [ "$(core_variable_lastCharacter "$filePathWithLeadingDotSlash")" = '/' ]; then
@@ -705,7 +739,7 @@ swaddle_repository_apt_parseDeb_extractContentsList()
 		
 		printf '%-60s%s\n' "$(core_variable_allButFirstN "$filePathWithLeadingDotSlash" 2)" "$location"
 	done >"$fragmentFilePath"
-	set +x
+	
 	_swaddle_repository_apt_parseDeb_extractContentsList_callback()
 	{
 		local packageArchitecture="$core_variable_array_element"
