@@ -132,10 +132,12 @@ swaddle_build_package_rpm_generateSpecFile()
 	
 	# Now that the spec file exists, we need to remove root permissions so rpmbuild's %clean will not fail
 	swaddle_simulateroot_ownAsExecutingUser "$_swaddle_build_package_root"
+	
+	cat "$_swaddle_build_package_rpm_specFile" 1>&2
 }
 
 core_usesIn swaddle webserverFiles
-core_dependency_requires '*' rpmbuild awk mkdir mv
+core_dependency_requires '*' rpmbuild awk cat mkdir mv
 core_functions_register _swaddle_build_package_rpm_functions swaddle_package_rpm_rpmbuild
 swaddle_package_rpm_rpmbuild()
 {
@@ -204,6 +206,8 @@ swaddle_package_rpm_rpmbuild()
 EOF
 	fi
 	
+	cat "$TMP_FILE" 1>&2
+	
 	core_variable_array_append options \
 		--target "${_swaddle_build_package_translatedArchitecture}-redhat-linux" \
 		--define "buildroot $_swaddle_build_package_root" \
@@ -219,10 +223,11 @@ EOF
 		if core_variable_isTrue "$(swaddle_configure_sign)"; then
 			export GNUPGHOME="$(configure_getValue swaddle keyring)"
 		fi
-		
 		if [ "$(core_init_verbosity)" -gt 1 ]; then
 			if ! core_variable_array_passToFunctionAsArguments options rpmbuild; then
+				set -x
 				core_message FAIL "rpmbuild failed"
+				set +x
 				exit $core_commandLine_exitCode_SOFTWARE
 			fi
 		else
