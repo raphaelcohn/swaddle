@@ -79,7 +79,7 @@ _swaddle_publishers_tagRetry()
 		fi
 	
 		if git tag -l | grep -q "^${thisAttemptTagName}\$"; then
-			core_message NOTICE "Could not tag, trying next iteration"
+			core_message INFO "Tag '${thisAttemptTagName}' already in use"
 			iterationCount=$((iterationCount+1))
 			continue
 		fi
