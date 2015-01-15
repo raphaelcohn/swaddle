@@ -18,7 +18,7 @@ swaddle_gpg_exportSigningKey()
 		return 0
 	fi
 	
-	swaddle_gpg --quiet --armor --export "$(swaddle_configure_signer)" >"$toFilePath"
+	swaddle_gpg --quiet --no-verbose --armor --export "$(swaddle_configure_signer)" >"$toFilePath"
 	swaddle_touch_setMtimeAndAtime "$toFilePath"
 }
 
