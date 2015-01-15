@@ -585,9 +585,9 @@ swaddle_repository_apt_parseDeb()
 			local controlTarFileName="$1"
 			local dataTarFileName="$2"
 		set -f
-		
+		set -x
 		tar --extract --file "$controlTarFileName" ./control
-		
+		set +x
 		local packageArchitecture
 		local package
 		local section
@@ -689,6 +689,7 @@ swaddle_repository_apt_parseDeb_extractContentsList()
 	local fragmentFilePath="$repositoryPath"/Contents.tmp
 	
 	local filePathWithLeadingDotSlash
+	set -x
 	tar --list --file "$dataTarFileName" | while IFS=' ' read -r filePathWithLeadingDotSlash
 	do
 		# Exclude folders
@@ -704,7 +705,7 @@ swaddle_repository_apt_parseDeb_extractContentsList()
 		
 		printf '%-60s%s\n' "$(core_variable_allButFirstN "$filePathWithLeadingDotSlash" 2)" "$location"
 	done >"$fragmentFilePath"
-	
+	set +x
 	_swaddle_repository_apt_parseDeb_extractContentsList_callback()
 	{
 		local packageArchitecture="$core_variable_array_element"
