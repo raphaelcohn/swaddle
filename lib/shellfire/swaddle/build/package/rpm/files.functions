@@ -117,7 +117,7 @@ swaddle_build_package_rpm_files_writeFileEntry()
 	local escapedRpmFilePath="$(printf '%s' "/${rpmFilePath}" sed -e 's;\[;\[\[\];g' -e 's;\*;\[\*\];g' -e 's;\?;\[\?\];g' -e 's;\%;\[\%\];g')"
 	
 	if [ $# -eq 2 ]; then
-		local optionalDirective="$2"
+		local directive="$2"
 		printf '%s(%s, %s, %s) %s /%s\n' 'attr' "$mode" "$user" "$group" "$directive" "$escapedRpmFilePath"
 	else
 		printf '%s(%s, %s, %s) /%s\n' 'attr' "$mode" "$user" "$group" "$escapedRpmFilePath"
