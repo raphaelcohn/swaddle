@@ -24,14 +24,11 @@ swaddle_build_package_rpm_files_outputDirective()
 	
 	if [ -L "$rpmFilePath" ]; then
 		swaddle_build_package_rpm_files_outputDirective_symlink
-		return 0
-	fi
-	
-	if [ ! -d "$rpmFilePath" ]; then
+	elif [ ! -d "$rpmFilePath" ]; then
 		swaddle_build_package_rpm_files_outputDirective_file
+	else
+		swaddle_build_package_rpm_files_outputDirective_directoryAndRecurseIfRequired
 	fi
-	
-	swaddle_build_package_rpm_files_outputDirective_directoryAndRecurseIfRequired
 }
 
 swaddle_build_package_rpm_files_outputDirective_symlink()
