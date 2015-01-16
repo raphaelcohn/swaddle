@@ -313,6 +313,39 @@ This namespace is intended to be used in `swaddling/swaddle/zip/zip.conf`. If th
 
 This namespace is intended to be used in `swaddling/swaddle/deb/deb.conf`. If the folder `swaddling/swaddle/deb` is present, you'll get debian packages created.
 
+|Key|Default|Purpose|
+|---|-------|-------|
+|`supported`|`9m`|Ubuntu support period (values are usually `9m`, `18m`, `3y` or `5y`)\*|
+|`section`|`misc`|Debian apt repository section, see [this list](https://github.com/raphaelcohn/swaddle/blob/master/lib/shellfire/swaddle/validate_deb_section.snippet)\*|
+|`priority`|`extra`|Debian priority, see [this list](https://github.com/raphaelcohn/swaddle/blob/master/lib/shellfire/swaddle/validate_deb_priority.snippet)\*|
+|`component`|`multiverse`|Debian priority, see [this list](https://github.com/raphaelcohn/swaddle/blob/master/lib/shellfire/swaddle/validate_deb_component.snippet)\*|
+|`multiarch`|`no`|Package multiarch setting, see [this list](https://github.com/raphaelcohn/swaddle/blob/master/lib/shellfire/swaddle/validate_deb_multiarch.snippet)\*|
+|`compression`|`xz`|Package's `data.tar` compression. One of `xz`, `lzma`, `bzip2`, `gzip` or none. `xz` does not work on Debian 6.|
+|`essential`|`no`|Is package essential?\*|
+|`build_essential`|`no`|Is package build essential?\*|
+|`uploaders`|*Empty*|An *array* of uploaders as `User Name <user.name@company.com>`|
+|`depends`|*Empty*|An *array* of package name dependencies (which may include comparison operators)†|
+|`pre_depends`|*Empty*|An *array* of package name pre-dependencies (which may include comparison operators)†|
+|`recommends`|*Empty*|An *array* of package name recommends†|
+|`suggests`|*Empty*|An *array* of package name suggests†|
+|`breaks`|*Empty*|An *array* of package name breaks (which may include comparison operators)†|
+|`conflicts`|*Empty*|An *array* of package name conflicts (which may include comparison operators†)|
+|`provides`|*Empty*|An *array* of virtual package name provides†|
+|`replaces`|*Empty*|An *array* of package name replaces (which may include comparison operators)†|
+|`enhances`|*Empty*|An *array* of package name enhances (rare)†|
+|`built_using`|*Empty*|An *array* of package names (typically used when linking with static libraries†)|
+|`extra_control_fields`|*Empty*|An *array* of extra control fields (such as `Original-Maintainer: xyz <xyz@mail.com>`)|
+|`shlibs`|*Empty*|An *array*†|
+|`config_files`|*Empty*|An *array* of absolute file paths (as if from `/`) to be treated as config files†|
+|`triggers_interest`|*Empty*|An *array* of trigger names|
+|`triggers_activate_noawait`|*Empty*|An *array* of trigger names|
+|`triggers_activate`|*Empty*|An *array* of trigger names|
+|`triggers_interest_noawait`|*Empty*|An *array* of trigger names|
+|`tasks`|*Empty*|An *array* of task names, typically used by apt-get to install all packages with a particular task name when nothing else connects them. Used by the Ubuntu installer.|
+|`tasks`|*Empty*|An *array* of tags used against packages|
+
+\* These values are also used by the apt repository code to supply defaults for any packages that don't have them. This is possible, because the apt repo can include packages not built by [swaddle].
+† Refer to [Debian Policy](https://www.debian.org/doc/debian-policy/ch-relationships)
 
 
 #### swaddle_rpm
