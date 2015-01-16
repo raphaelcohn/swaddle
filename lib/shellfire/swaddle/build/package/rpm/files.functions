@@ -55,7 +55,7 @@ swaddle_build_package_rpm_files_outputDirective_file()
 }
 
 # Generated from  rpm -ql filesytem  on CentOS 7
-core_snippet embed raw rpm_excluded_paths
+core_snippet_embed raw rpm_excluded_paths
 swaddle_build_package_rpm_files_outputDirective_directoryAndRecurseIfRequired()
 {
 	# insert docdir here (we're not going to bother)
