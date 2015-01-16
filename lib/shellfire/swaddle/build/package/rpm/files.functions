@@ -16,8 +16,6 @@ swaddle_build_package_rpm_files()
 		done
 		set -f
 	popd
-	
-	_swaddle_build_package_rpm_files_recurse "$_swaddle_build_package_root" ''
 }
 
 swaddle_build_package_rpm_files_outputDirective()
