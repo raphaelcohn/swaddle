@@ -22,45 +22,99 @@ swaddle_build_package_rpm_files_outputDirective()
 {
 	local rpmFilePath="$1"
 	
-	if   swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial "$rpmFilePath" '%ghost' ghost_files false; then
+	if [ -L "$rpmFilePath" ]; then
+		swaddle_build_package_rpm_files_outputDirective_symlink
 		return 0
-	elif swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial "$rpmFilePath" '%doc' doc_files false; then
+	fi
+	
+	if [ ! -d "$rpmFilePath" ]; then
+		swaddle_build_package_rpm_files_outputDirective_file
+	fi
+	
+	swaddle_build_package_rpm_files_outputDirective_directoryAndRecurseIfRequired
+	
+	# directories
+	
+	
+	# doc dir 
+	
+	
+	if swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial "$rpmFilePath" '%docdir' docdir_files true; then
 		return 0
-	elif swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial "$rpmFilePath" '%docdir' docdir_files true; then
-		return 0
-	elif swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial "$rpmFilePath" '%config(noreplace)' unreplaceable_config_files false; then
-		return 0
-	elif swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial "$rpmFilePath" '%config' replaceable_config_files false; then
+	fi
+		
 		return 0
 	elif [ -L "$rpmFilePath" ]; then
 		swaddle_build_package_rpm_files_writeFileEntry "$rpmFilePath"
 	elif [ -d "$rpmFilePath" ]; then
-		# Are we empty? Output %dir
-		set +f
-		pushd "$rpmFilePath"
-			set -- *
-			set -f
-			if [ $# -eq 1 ]; then
-				if [ ! -e "$1" ]; then
-					popd
-					swaddle_build_package_rpm_files_writeFileEntry "$rpmFilePath" '%dir'
-					return 0
-				fi
-			fi
-		popd
-		set -f
 		
-		# recurse
-		set +f
-		for rpmFilePath in "$rpmFilePath"/*
-		do
-			set -f
-			swaddle_build_package_rpm_files_outputDirective "$rpmFilePath"
-		done
-		set -f
 	else
 		swaddle_build_package_rpm_files_writeFileEntry "$rpmFilePath"
 	fi
+}
+
+swaddle_build_package_rpm_files_outputDirective_symlink()
+{
+	swaddle_build_package_rpm_files_writeFileEntry "$rpmFilePath"
+}
+
+swaddle_build_package_rpm_files_outputDirective_file()
+{
+	if   swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial "$rpmFilePath" '%ghost' ghost_files; then
+		return 0
+	elif swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial "$rpmFilePath" '%doc' doc_files; then
+		return 0
+	elif swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial "$rpmFilePath" '%config(noreplace)' unreplaceable_config_files; then
+		return 0
+	elif swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial "$rpmFilePath" '%config' replaceable_config_files; then
+		return 0
+	else
+		swaddle_build_package_rpm_files_writeFileEntry "$rpmFilePath"
+	fi
+}
+
+# Generated from  rpm -ql filesytem  on CentOS 7
+core_snippet embed raw rpm_excluded_paths
+swaddle_build_package_rpm_files_outputDirective_directoryAndRecurseIfRequired()
+{
+	# insert docdir here (we're not going to bother)
+	
+	if core_variable_isUnset swaddle_build_package_rpm_files_rpmExcludedPaths; then
+		local TMP_FILE
+		core_temporaryFiles_newFileToRemoveOnExit
+		swaddle_build_package_rpm_files_rpmExcludedPaths="$TMP_FILE"
+		
+		core_snippet_retrieve rpm_excluded_paths false "$swaddle_build_package_rpm_files_rpmExcludedPaths"
+		
+		_swaddle_build_package_rpm_files_outputDirective_directoryAndRecurseIfRequired_callback()
+		{
+			printf '%s\n' "$core_variable_array_element"
+		}
+		configure_iterateOverArrayWithDefaultsIfEmpty swaddle_rpm excluded_directories _swaddle_build_package_rpm_files_outputDirective_directoryAndRecurseIfRequired_callback >>"$swaddle_build_package_rpm_files_rpmExcludedPaths"
+	fi
+	
+	local include=true
+	local excludedPath
+	while IFS='' read -r excludedPath
+	do
+		if [ "$excludedPath" = /"$rpmFilePath" ]; then
+			include=false
+			break
+		fi
+	done <"$swaddle_build_package_rpm_files_rpmExcludedPaths"
+
+	if $include; then
+		swaddle_build_package_rpm_files_writeFileEntry "$rpmFilePath" '%dir'
+	fi
+	
+	# recurse
+	set +f
+	for rpmFilePath in "$rpmFilePath"/*
+	do
+		set -f
+		swaddle_build_package_rpm_files_outputDirective "$rpmFilePath"
+	done
+	set -f
 }
 
 swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial()
@@ -68,16 +122,6 @@ swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial()
 	local rpmFilePath="$1"
 	local directive="$2"
 	local valueName="$3"
-	local appliesOnlyToFolders="$4"
-	
-	if $appliesOnlyToFolders; then
-		if [ -L "$rpmFilePath" ]; then
-			return 1
-		fi
-		if [ ! -d "$rpmFilePath" ]; then
-			return 1
-		fi
-	fi
 	
 	_swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial_callback()
 	{
