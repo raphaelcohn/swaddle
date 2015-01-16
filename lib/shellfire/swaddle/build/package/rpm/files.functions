@@ -115,15 +115,15 @@ swaddle_build_package_rpm_files_writeFileEntry()
 		mode="$potentiallyShortMode"
 	fi
 	
-	local escapedRpmFilePath="$(printf '%s' "/${rpmFilePath}" sed -e 's;\[;\[\[\];g' -e 's;\*;\[\*\];g' -e 's;\?;\[\?\];g' -e 's;\%;\[\%\];g')"
+	local escapedRpmFilePath="$(printf '%s' "${rpmFilePath}" | sed -e 's;\[;\[\[\];g' -e 's;\*;\[\*\];g' -e 's;\?;\[\?\];g' -e 's;\%;\[\%\];g')"
 	if [ -d "$rpmFilePath" ]; then
 		escapedRpmFilePath="$escapedRpmFilePath"/
 	fi
 	
 	if [ $# -eq 2 ]; then
 		local directive="$2"
-		printf '%s(%s, %s, %s) %s /%s\n' 'attr' "$mode" "$user" "$group" "$directive" "$escapedRpmFilePath"
+		printf '%s(%s, %s, %s) %s /%s\n' '%attr' "$mode" "$user" "$group" "$directive" "$escapedRpmFilePath"
 	else
-		printf '%s(%s, %s, %s) /%s\n' 'attr' "$mode" "$user" "$group" "$escapedRpmFilePath"
+		printf '%s(%s, %s, %s) /%s\n' '%attr' "$mode" "$user" "$group" "$escapedRpmFilePath"
 	fi
 }
