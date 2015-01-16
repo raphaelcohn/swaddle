@@ -41,9 +41,16 @@ swaddle_build_package_rpm_registerConfiguration()
 core_usesIn swaddle/build/generators manpage copyinreadme copyright
 swaddle_build_package_rpm_generateContent()
 {
+	configure swaddle_rpm docdir_files "/usr/share/doc/${_swaddle_build_swaddleName}"
+	
 	swaddle_build_generators_manpage_generate no '/usr'
+	configure swaddle_rpm doc_files "/usr/share/man/man7/${_swaddle_build_swaddleName}.7"
+	
 	swaddle_build_generators_copyinreadme_generate no '/usr' README
+	configure swaddle_rpm doc_files "/usr/share/doc/${_swaddle_build_swaddleName}/README"
+	
 	swaddle_build_generators_copyright_generate no '/usr' copyright
+	configure swaddle_rpm doc_files "/usr/share/doc/${_swaddle_build_swaddleName}/copyright"
 }
 
 swaddle_build_package_rpm()
@@ -52,39 +59,6 @@ swaddle_build_package_rpm()
 	local _swaddle_repository_yum_repositoryPath="$_swaddle_repository_parentPath"/"$repositoryName"
 	
 	core_functions_execute _swaddle_build_package_rpm_functions "$@"
-}
-
-core_functions_register _swaddle_build_package_rpm_functions swaddle_build_package_rpm_validateConfigFiles
-swaddle_build_package_rpm_validateConfigFiles()
-{
-	_swaddle_build_package_rpm_validateConfigFiles_callback()
-	{
-		local configFile="$core_variable_array_element"
-		if core_variable_doesNotStartWith "$configFile" '/'; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The $what file '$configFile' does not start with a '/'"
-		fi
-		if core_variable_endsWith "$configFile" '/'; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The $what file '$configFile' ends with a '/'"
-		fi
-		local absoluteConfigFilePath="$_swaddle_build_package_root"/"$configFile"
-		if [ -L "$absoluteConfigFilePath" ]; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The $what file '$configFile' is a symlink"
-		fi
-		if [ ! -f "$absoluteConfigFilePath" ]; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The $what file '$configFile' does not exist or is not a file"
-		fi
-	}
-	
-	local what
-	local configurationSettingValue
-	
-	what="unreplaceable_config_files"
-	_configure_configurationSettingValue 'swaddle_rpm' "$what"
-	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_rpm_validateConfigFiles_callback
-
-	what="replaceable_config_files"
-	_configure_configurationSettingValue 'swaddle_rpm' "$what"
-	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_rpm_validateConfigFiles_callback
 }
 
 core_functions_register _swaddle_build_package_rpm_functions swaddle_build_package_rpm_setSpecFilePath
