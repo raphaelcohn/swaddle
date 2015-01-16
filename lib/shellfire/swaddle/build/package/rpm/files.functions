@@ -1,5 +1,6 @@
 swaddle_build_package_rpm_files()
 {
+	set -x
 	pushd "$_swaddle_build_package_root"
 	
 		set +f
@@ -11,15 +12,19 @@ swaddle_build_package_rpm_files()
 				continue
 			fi
 			
-			swaddle_build_package_rpm_files_outputDirective
+			swaddle_build_package_rpm_files_outputDirective "$rpmFilePath" 1>&2
 			
 		done
 		set -f
 	popd
+	set +x
+	exit 99
 }
 
 swaddle_build_package_rpm_files_outputDirective()
 {
+	local rpmFilePath="$1"
+	
 	if   swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial "$rpmFilePath" '%ghost' ghost_files false; then
 		return 0
 	elif swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial "$rpmFilePath" '%doc' doc_files false; then
@@ -53,7 +58,7 @@ swaddle_build_package_rpm_files_outputDirective()
 		for rpmFilePath in "$rpmFilePath"/*
 		do
 			set -f
-			swaddle_build_package_rpm_files_outputDirective
+			swaddle_build_package_rpm_files_outputDirective "$rpmFilePath"
 		done
 		set -f
 	else
