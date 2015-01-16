@@ -81,10 +81,10 @@ swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial()
 	
 	_swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial_callback()
 	{
-		local potentiallyMatchingFilePath="$core_variable_array_element"
+		local potentiallyMatchingFilePath
 		for potentiallyMatchingFilePath in "$@"
 		do
-			if [ "$potentiallyMatchingFile" = /"$rpmFilePath" ]; then
+			if [ "$potentiallyMatchingFilePath" = /"$rpmFilePath" ]; then
 				return 0
 			fi
 		done
