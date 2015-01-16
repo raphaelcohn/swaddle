@@ -5,6 +5,7 @@
 core_usesIn core/variable array
 core_usesIn swaddle touch
 core_usesIn swaddle configure
+core_usesIn swaddle/build/package/rpm files
 
 swaddle_build_package_rpm_registerConfiguration()
 {
@@ -23,10 +24,12 @@ swaddle_build_package_rpm_registerConfiguration()
 	configure_register Array NotEmpty swaddle_rpm regex_filter_from_provides
 	configure_register Array NotEmpty swaddle_rpm regex_filter_from_requires
 		
+	configure_register Array NotEmpty swaddle_rpm ghost_files
+	configure_register Array NotEmpty swaddle_rpm doc_files
+	configure_register Array NotEmpty swaddle_rpm docdir_files
 	configure_register Array NotEmpty swaddle_rpm unreplaceable_config_files
 	configure_register Array NotEmpty swaddle_rpm replaceable_config_files
-	configure_register Array NotEmpty swaddle_rpm package_folder_paths
-
+	
 	configure_register Value RpmDigest swaddle_rpm digest 'sha512'
 	configure_register Value RpmCompression swaddle_rpm compression 'xz'
 	configure_register Value RpmGroup swaddle_rpm category 'Applications/System'
@@ -85,35 +88,6 @@ swaddle_build_package_rpm_validateConfigFiles()
 	what="replaceable_config_files"
 	_configure_configurationSettingValue 'swaddle_rpm' "$what"
 	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_rpm_validateConfigFiles_callback
-}
-
-core_functions_register _swaddle_build_package_rpm_functions swaddle_build_package_rpm_validatePackageFolders
-swaddle_build_package_rpm_validatePackageFolders()
-{
-	_swaddle_build_package_rpm_validatePackageFolders_callback()
-	{
-		local packageFolder="$core_variable_array_element"
-		if core_variable_doesNotStartWith "$packageFolder" '/'; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The $what folder '$packageFolder' does not start with a '/'"
-		fi
-		if core_variable_endsWith "$packageFolder" '/'; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The $what folder '$packageFolder' ends with a '/'"
-		fi
-		local absoluteConfigFolderPath="$_swaddle_build_package_root"/"$configFile"
-		if [ -L "$absoluteConfigFolderPath" ]; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The $what folder '$packageFolder' is a symlink"
-		fi
-		if [ ! -d "$absoluteConfigFolderPath" ]; then
-			core_exitError $core_commandLine_exitCode_CONFIG "The $what file '$packageFolder' does not exist or is not a file"
-		fi
-	}
-	
-	local what
-	local configurationSettingValue
-	
-	what="package_folder_paths"
-	_configure_configurationSettingValue 'swaddle_rpm' "$what"
-	core_variable_array_iterate "$configurationSettingValue" _swaddle_build_package_rpm_validatePackageFolders_callback
 }
 
 core_functions_register _swaddle_build_package_rpm_functions swaddle_build_package_rpm_setSpecFilePath
@@ -611,121 +585,4 @@ _swaddle_build_package_rpm_trigger()
 			printf '\n'
 		fi
 	done
-}
-
-_swaddle_build_package_rpm_files_computeRpmPath()
-{
-	local fileName="$(core_compatibility_basename "$objectPath")"
-	rpmPath="$relativePath"/"$fileName"
-}
-
-core_dependency_requires '*' stat
-_swaddle_build_package_rpm_files_writeAttr()
-{
-	local potentiallyShortMode
-	local mode
-	local user
-	local group
-	IFS=' ' read -r potentiallyShortMode user group <<-EOF
-		$(stat -c '%a %U %G' "$objectPath")
-	EOF
-	if [ ${#potentiallyShortMode} -eq 3 ]; then
-		mode="0${potentiallyShortMode}"
-	else
-		mode="$potentiallyShortMode"
-	fi
-	printf '%%attr(%s, %s, %s) ' "$mode" "$user" "$group"
-}
-
-core_dependency_requires '*' sed
-_swaddle_build_package_rpm_files_writeAdjustedPath()
-{
-	local trailingSlashIfAny="$1"
-	local adjustedRpmPath="${rpmPath}${trailingSlashIfAny}"
-	printf '"%s"\n' "$adjustedRpmPath" | sed -e 's;\[;\[\[\];g' -e 's;\*;\[\*\];g' -e 's;\?;\[\?\];g' -e 's;\%;\[\%\];g'
-}
-
-_swaddle_build_package_rpm_files_isSpecial()
-{
-	[ "$core_variable_array_element" = "$rpmPath" ]
-}
-
-_swaddle_build_package_rpm_files_writeFolder()
-{
-	set -x
-	local rpmPath
-	_swaddle_build_package_rpm_files_computeRpmPath
-	
-	local configurationSettingValue
-	_configure_configurationSettingValue 'swaddle_rpm' 'package_folder_paths'
-	if core_variable_array_iterateShortcut "$configurationSettingValue" _swaddle_build_package_rpm_files_isSpecial; then
-		printf '%%dir '
-	fi
-	
-	_swaddle_build_package_rpm_files_writeAttr
-	_swaddle_build_package_rpm_files_writeAdjustedPath '/'
-	set +
-	_swaddle_build_package_rpm_files_recurse "$objectPath" "$rpmPath"
-}
-
-core_dependency_requires '*' stat rm sed
-_swaddle_build_package_rpm_files_writeFile()
-{
-	local rpmPath
-	_swaddle_build_package_rpm_files_computeRpmPath
-
-	local configurationSettingValue
-	_configure_configurationSettingValue 'swaddle_rpm' 'unreplaceable_config_files'
-	local configFileCount=0
-	if core_variable_array_iterateShortcut "$configurationSettingValue" _swaddle_build_package_rpm_files_isSpecial; then
-		printf '%%config(noreplace) '
-		configFileCount=1
-	fi
-	_configure_configurationSettingValue 'swaddle_rpm' 'replaceable_config_files'
-	if core_variable_array_iterateShortcut "$configurationSettingValue" _swaddle_build_package_rpm_files_isSpecial; then
-		if [ $configFileCount -eq 1 ]; then
-			core_exitError $core_commandLine_exitCode_CONFIG "Config file '$rpmPath' specified in both 'unreplaceable_config_files' and 'replaceable_config_files'"
-		fi
-		printf '%%config '
-	fi
-	
-	_swaddle_build_package_rpm_files_writeAttr
-	_swaddle_build_package_rpm_files_writeAdjustedPath ''
-}
-
-_swaddle_build_package_rpm_files()
-{
-	_swaddle_build_package_rpm_files_recurse "$_swaddle_build_package_root" ''
-}
-
-_swaddle_build_package_rpm_files_recurse()
-{
-	local currentFolderPath="$1"
-	local relativePath="$2"
-	
-	set +f
-	local objectPath
-	local basename
-	for objectPath in "$currentFolderPath"/*
-	do
-		set -f
-		if [ ! -e "$objectPath" ]; then
-			continue
-		fi
-		
-		basename="$(core_compatibility_basename "$objectPath")"
-		if core_variable_endsWith "$basename" ".swaddle-settings"; then
-			core_exitError $core_commandLine_exitCode_CONFIG "swaddle-settings without matching parent '$objectPath'"
-		fi
-	
-		if [ -L "$objectPath" ]; then
-			_swaddle_build_package_rpm_files_writeFile
-		elif [ -d "$objectPath" ]; then
-			_swaddle_build_package_rpm_files_writeFolder
-		else
-			_swaddle_build_package_rpm_files_writeFile
-		fi
-	
-	done
-	set -f
 }

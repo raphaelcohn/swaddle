@@ -101,7 +101,7 @@ $(_swaddle_build_package_rpm_trigger triggerpostun trigger-fixerrors)
 %files
 %defattr(0644,root,root,0755)
 
-$(_swaddle_build_package_rpm_files)
+$(swaddle_build_package_rpm_files)
 
 %changelog
 $(configure_getValue swaddle_rpm changelog)
