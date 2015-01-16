@@ -108,7 +108,7 @@ swaddle_build_package_rpm_files_writeFileEntry()
 	local user
 	local group
 	IFS=' ' read -r potentiallyShortMode user group <<-EOF
-		$(swaddle_simulateroot_execute stat -c '%a %U %G' "$objectPath")
+		$(swaddle_simulateroot_execute stat -c '%a %U %G' "$rpmFilePath")
 	EOF
 	if [ ${#potentiallyShortMode} -eq 3 ]; then
 		mode="0${potentiallyShortMode}"
@@ -118,7 +118,7 @@ swaddle_build_package_rpm_files_writeFileEntry()
 	
 	local escapedRpmFilePath="$(printf '%s' "/${rpmFilePath}" sed -e 's;\[;\[\[\];g' -e 's;\*;\[\*\];g' -e 's;\?;\[\?\];g' -e 's;\%;\[\%\];g')"
 	
-	if [ $# -eq 2]; then
+	if [ $# -eq 2 ]; then
 		local optionalDirective="$2"
 		printf '%s(%s, %s, %s) %s /%s\n' 'attr' "$mode" "$user" "$group" "$directive" "$escapedRpmFilePath"
 	else
