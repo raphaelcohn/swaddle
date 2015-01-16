@@ -41,9 +41,6 @@ swaddle_build_package_rpm_registerConfiguration()
 core_usesIn swaddle/build/generators manpage copyinreadme copyright
 swaddle_build_package_rpm_generateContent()
 {
-	core_TODO "%doc directive"
-	# http://www.rpm.org/max-rpm/s1-rpm-inside-files-list-directives.html
-
 	swaddle_build_generators_manpage_generate no '/usr'
 	swaddle_build_generators_copyinreadme_generate no '/usr' README
 	swaddle_build_generators_copyright_generate no '/usr' copyright
@@ -188,7 +185,7 @@ swaddle_package_rpm_rpmbuild()
 		--define "_rpmdir $_swaddle_repository_yum_repositoryPath" \
 		--define "_tmppath $rpmbuildTemporaryScriptsPath"
 	core_variable_array_append options "$_swaddle_build_package_rpm_specFile"
-	
+	cat "$_swaddle_build_package_rpm_specFile"
 	# Executed in a sub-shell so we can force GNUPGHOME
 	(
 		if core_variable_isTrue "$(swaddle_configure_sign)"; then
