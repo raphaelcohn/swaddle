@@ -309,6 +309,11 @@ This namespace is intended to be used in `swaddling/swaddle/zip/zip.conf`. If th
 |`use_bzip2`|*no*|Boolean value (in the [shellfire] sense). Create bzip2 compressed ZIPs. Despire being in the format since 2003, not widely supported.|
 
 
+#### swaddle_deb
+
+This namespace is intended to be used in `swaddling/swaddle/deb/deb.conf`. If the folder `swaddling/swaddle/deb` is present, you'll get debian packages created.
+
+
 
 #### swaddle_rpm
 
@@ -317,8 +322,63 @@ This namespace is intended to be used in `swaddling/swaddle/rpm/rpm.conf`. Its s
 |Key|Default|Purpose|
 |---|-------|-------|
 |`changelog`|*None* or derived from repository git data|Changelog history for RPM|
+|`depends`|*Empty*|An *array* of dependencies|
+|`depends_before_install`|*Empty*|An *array* of dependencies needed before installation|
+|`depends_after_install`|*Empty*|An *array* of dependencies needed after installation|
+|`depends_before_remove`|*Empty*|An *array* of dependencies needed before removal|
+|`depends_after_remove`|*Empty*|An *array* of dependencies needed after removal|
+|`depends_pre_transaction`|*Empty*|An *array* of dependencies needed before a transaction|
+|`depends_post_transaction`|*Empty*|An *array* of dependencies needed after a transaction|
+|`depends_verify`|*Empty*|An *array* of dependencies needed for verification|
+|`provides`|*Empty*|An *array* of dependencies provided to other packages|
+|`conflicts`|*Empty*|An *array* of other packages (or dependencies they have) we conflict with|
+|`replaces`|*Empty*|An *array* of other packages (or dependencies they have) we replace|
+|`regex_filter_from_provides`|*Empty*|An *array*: refer to <https://fedoraproject.org/wiki/Packaging:AutoProvidesAndRequiresFiltering>|
+|`regex_filter_from_requires`|*Empty*|An *array*: refer to <https://fedoraproject.org/wiki/Packaging:AutoProvidesAndRequiresFiltering> |
+|`ghost_files`|*Empty*|An *array* of file paths (absolute, as if installed in `/`) to treat as *ghost* files|
+|`doc_files`|*Empty*|An *array* of file paths (absolute, as if installed in `/`) to treat as *doc* files|
+|`unreplaceable_config_files`|*Empty*|An *array* of file paths (absolute, as if installed in `/`) to treat as *%config(noreplace)* files|
+|`replaceable_config_files`|*Empty*|An *array* of file paths (absolute, as if installed in `/`) to treat as *%config* files|
+|`excluded_directories`|*Empty*|An *array* of folder paths (absolute, as if installed in `/`) that are not included in the RPM\*|
+|`digest`|`sha512`|RPM digest type|
+|`compression`|`xz`|RPM compression type. `xz` won't work on CentOS 5 - use `bzip2`|
+|`category`|`Applications/System`|RPM category or group|
+|`auto_req_prov`|*yes*|Boolean value (in the [shellfire] sense). Let rpmbuild determine requires and provides dependencies|
+|`auto_req`|*yes*|Boolean value (in the [shellfire] sense). Let rpmbuild determine requires dependencies|
+|`auto_prov`|*yes*|Boolean value (in the [shellfire] sense). Let rpmbuild determine provides dependencies|
+
+'dependencies' can be:-
+
+* package names
+* files
+* expressions (such as greater than X, etc)
+
+`digest` is restricted to this list:-
+
+* `sha512`
+* `sha384`
+* `sha256`
+* `sha224`
+* `sha1`
+* `md5`
+
+RPM supports other digest types, but they're obsolete. Frankly, it's bad enough that we have to allow `sha1` and `md5`.
+
+`compression` is restricted to this list:-
+
+* `xz`
+* `lzma`
+* `bzip2`
+* `gzip`
+* `none`
+
+Interestingly, `pigz -11` on a typical small RPM can often shave off another 10K…
+
+`category` is restricted to [this list](https://github.com/raphaelcohn/swaddle/blob/master/lib/shellfire/swaddle/validate_rpm_group.snippet)
 
 
+
+\* By default, we also exclude everything in the list equivalent to `rpm -ql filesytem`, so it's unlikely you'll need to put anything in here.
 
 
 
