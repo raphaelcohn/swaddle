@@ -32,25 +32,6 @@ swaddle_build_package_rpm_files_outputDirective()
 	fi
 	
 	swaddle_build_package_rpm_files_outputDirective_directoryAndRecurseIfRequired
-	
-	# directories
-	
-	
-	# doc dir 
-	
-	
-	if swaddle_build_package_rpm_files_writeDirectivesIfRpmFilePathSpecial "$rpmFilePath" '%docdir' docdir_files true; then
-		return 0
-	fi
-		
-		return 0
-	elif [ -L "$rpmFilePath" ]; then
-		swaddle_build_package_rpm_files_writeFileEntry "$rpmFilePath"
-	elif [ -d "$rpmFilePath" ]; then
-		
-	else
-		swaddle_build_package_rpm_files_writeFileEntry "$rpmFilePath"
-	fi
 }
 
 swaddle_build_package_rpm_files_outputDirective_symlink()
