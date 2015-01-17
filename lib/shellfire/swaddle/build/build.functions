@@ -53,7 +53,7 @@ swaddle_build_packages()
 	done
 	
 	if [ $count -eq 0 ]; then
-		core_message WARN "No package kinds (tar, deb, rpm, zip, 7z) in '$_swaddle_build_sourcePath' for swaddle '$_swaddle_build_swaddleName"
+		core_message WARN "No package kinds (tar, deb, rpm, zip, 7z, rar) in '$_swaddle_build_sourcePath' for swaddle '$_swaddle_build_swaddleName"
 	fi
 }
 
