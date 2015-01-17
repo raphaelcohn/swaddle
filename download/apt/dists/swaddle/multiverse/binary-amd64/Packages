@@ -8,10 +8,10 @@ Architecture: all
 Source: swaddle
 Version: 2015.0117.1737-1
 Filename: pool/multiverse/s/swaddle/swaddle_2015.0117.1737-1_all.deb
-Size: 105084
-MD5sum: 2f2a363186d007c55c89a60000399c06
-SHA1: 6537bdfa5bb5cd031d61e4349a057e99529bad94
-SHA256: 32e0628c13ee300fa5ba16e3fa84c5476b92e02322fb10ca393e94467892374a
+Size: 105136
+MD5sum: 05c3c6600982795ac22e978e58dc2152
+SHA1: 59353cf7a8d03c9de26f82316c7d592f2a624ab5
+SHA256: d994b46d814430de2e18c118b5ef26dc849fce74fa289a4d4fa8c1192eb6157b
 Description: swaddle is a tool for creating packages and repositories
  extremely easily. It integrates with Git and GitHub,
  and can even upload GitHub releases and sign your
