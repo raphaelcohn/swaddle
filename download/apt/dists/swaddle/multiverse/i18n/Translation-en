@@ -1,0 +1,7 @@
+Package: swaddle
+Description-md5: fc785ac4634248f4f388e8f4611db0af
+Description-en: swaddle is a tool for creating packages and repositories
+ extremely easily. It integrates with Git and GitHub,
+ and can even upload GitHub releases and sign your
+ tags.
+
