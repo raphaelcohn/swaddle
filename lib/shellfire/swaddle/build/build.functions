@@ -40,7 +40,7 @@ swaddle_build_packages()
 {
 	local count=0
 	local _swaddle_build_package_kind
-	for _swaddle_build_package_kind in tar zip 7z file rar deb rpm
+	for _swaddle_build_package_kind in zip 7z tar file rar deb rpm
 	do
 		if ! core_path_isReadableAndSearchableFolderPath "$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"; then
 			continue
