@@ -20,7 +20,7 @@
   * InRelease and Release.gpg for maximal compatibility
   * and can even import packages from other sources, so you need never use `reprepro` or anything else again
     * you could even use it just for that alone
-  * oh, and we already mentioned their versioned, too
+  * oh, and we already mentioned they're versioned, too
 * it tags, using a signature, your source and binaries
 * it creates whatever packages you want, with the best possible settings
   * Deb
