@@ -194,6 +194,8 @@ This namespace is intended to be used in `swaddling/swaddling.conf` and `swaddli
 |`copyright_file`|Location of `COPYRIGHT` or *None* if not found|Used to discover licensing information and embed in Debian packages. Should be in Debian format.|
 |`licence`|[SPDX licence identifier](https://spdx.org/licenses/) for packages; derived from `COPYRIGHT` if possible or *None*|Package licence. Automatically converted to Fedora-format licence code if possible, too.|
 |`url`|*None* or derived from repository git data|Package url|
+|`bugs_url`|*Empty*|Use this if bugs are reported at a different URL to `url`|
+|`host_base_url`|*None*|Used for repository locations|
 |`repository_name`|*None* or derived from repository git data|Name of this repository (eg top-level folder's name, typically, if a git clone was done)|
 |`vendor`|*None*|The package vendor. Your company or project name, or GitHub user name|
 |`fix_permissions`|*yes*|Boolean value (in the [shellfire] sense). Used to force all package files and folders to have root:root permissions and the `timestamp`. Unless you have a post-build step that adjusts file metadata in the `body` and `skeleton` folders (say using sudo or etckeeper or somesuch), leave this as `yes`.|
@@ -409,23 +411,50 @@ Interestingly, `pigz -11` on a typical small RPM can often shave off another 10K
 
 `category` is restricted to [this list](https://github.com/raphaelcohn/swaddle/blob/master/lib/shellfire/swaddle/validate_rpm_group.snippet)
 
-
-
 \* By default, we also exclude everything in the list equivalent to `rpm -ql filesytem`, so it's unlikely you'll need to put anything in here.
 
+#### swaddle_apt
 
+This namespace is intended to be used in `swaddling/swaddling.conf`. Its settings control apt repository creation.
 
+|Key|Default|Purpose|
+|---|-------|-------|
+|`compressions`|`none` `gzip` `bzip2` `lzma` `xz`|An *array* of compressions to apply to repository files (Index, Release, Translation, etc)|
+|`architectures`|`amd64` `i386`|An *array* of Debian architectures to create sub-repositories for. Needed even if you only have `all` packages. Valid [list](https://github.com/raphaelcohn/swaddle/blob/master/lib/shellfire/swaddle/validate_apt_architecture.snippet)|
+|`language`|`en`|ISO language code (or subcode, eg `en_GB`) that packages descriptions are *assumed* to be in|
+|`translations`|`language`|ISO languages codes for package translations|
 
+##### Package Description Translations
+If you want to prepare package description translations, then you can add them as `PACKAGE.translation-CODE` files (at `outputPath/download/apt/COMPONENT/i18n`). This is a semi-documented feature that might change, particularly as it not is not yet source control friendly.
 
+When preparing apt translation files, Debian 6 and Ubuntu 10.04 (but not later versions of these distributions) require _both_ the language code _and_ sub-language code translations to exist. [swaddle] prepares these automatically for `en` (creating `en_AU`, `en_CA`, `en_GB`, `en_US` and `en_ZA`), `fr` (creating `fr_FR`), `no` (creating `no_NB`), pt (creating `pt_BR`) and `zh` (creating `zh_CN`, `zh_HK` and `zh_TW`). The implemented technique unfortunately overwrites any translation files you have prepared for these subcodes.
 
+#### swaddle_yum
 
-eg swaddle_apt translations _swaddle_repository_apt_createDistsComponentsTranslations_callback "$(configure_getValue swaddle_apt language)"
-	- ordering is important, eg en before en_GB, to overcome a bug in Debiam 6 / Ubuntu 10.04
-	- This logic creates these extra files, but will fail if they are explicitly called out (ie do not specify en_GB in the list)
+This namespace is intended to be used in `swaddling/swaddling.conf`. Its settings control yum repository creation.
 
+|Key|Default|Purpose|
+|---|-------|-------|
+|`mirrors`|*Empty*|An *array* of URLs (ending in `/`) which will also host your yum repository. The swaddle `url` is used regardless.|
 
+#### swaddle_webs
 
+This namespace is intended to be used in `swaddling/swaddling.conf`. Its settings control website creation.
 
+|Key|Default|Purpose|
+|---|-------|-------|
+|`digests`|`sha1` `sha256`|An *array* of file digests to be calculated for hosted content and embedded in `index.html` files.|
+|`pandoc_options`|Defaults suitable for creating HTML|Options to pass to pandoc to turn pandoc+github-flavoured markdown into whatever you want|
+|`index_name`|`index.html`|Name for index files|
+|`use_index_name_in_directory_links`|*yes*|Boolean value (in the [shellfire] sense). Do generated URLs include `index_name` in them?|
+
+`digests` may be any of:-
+
+* `md5`
+* `sha1`
+* `sha256`
+* `sha384`
+* `sha512`
 
 [fpm]: https://github.com/jordansissel/fpm "FPM GitHub page"
 [swaddle]: https://github.com/raphaelcohn/swaddle "Swaddle homepage"
