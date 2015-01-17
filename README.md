@@ -349,6 +349,18 @@ This namespace is intended to be used in `swaddling/swaddle/deb/deb.conf`. If th
 \* These values are also used by the apt repository code to supply defaults for any packages that don't have them. This is possible, because the apt repo can include packages not built by [swaddle].
 † Refer to [Debian Policy](https://www.debian.org/doc/debian-policy/ch-relationships)
 
+##### Scripts
+It is possible to create script for pre and post install actions, etc. To do this create a folder for the particular action, and put a script snippet into it. There is not needed to put a shebang line (we run all scripts as `#!/usr/bin/env sh`). This is about the only thing one can be sure exists at install time without creating unnecessary dependencies that are user-inconvenient (eg depending on perl just to run an install script). Avoid bashisms in your scripts. Unfortunately, at this time, these script snippets can't use [shellfire], but they could if there's demand for it.
+
+It is possible to create script for pre and post install actions, etc. To do this create a folder for the particular action, and put a script snippet into it. There is not needed to put a shebang line (we run all scripts as `#!/usr/bin/env sh`). This is about the only thing one can be sure exists at install time without creating unnecessary dependencies that are user-inconvenient (eg depending on perl just to run an install script). Avoid bashisms in your scripts. Unfortunately, at this time, these script snippets can't use [shellfire], but they could if there's demand for it.
+
+Each folder is searched in glob-expansion-order for readable, non-empty regular files (or symlinks) ending in `.sh`. These are then concatenated together. If your script has a requirement on a particular package or program being in place before execution, use a `pre_depends` (see above). The folders are:-
+
+* preinst
+* postinst
+* prerm
+* postrm
+
 
 #### swaddle_rpm
 
@@ -412,6 +424,28 @@ Interestingly, `pigz -11` on a typical small RPM can often shave off another 10K
 `category` is restricted to [this list](https://github.com/raphaelcohn/swaddle/blob/master/lib/shellfire/swaddle/validate_rpm_group.snippet)
 
 \* By default, we also exclude everything in the list equivalent to `rpm -ql filesytem`, so it's unlikely you'll need to put anything in here.
+
+##### Scripts
+It is possible to create script for pre and post install actions, etc. To do this create a folder for the particular action, and put a script snippet into it. There is not needed to put a shebang line (we run all scripts as `#!/usr/bin/env sh`). This is about the only thing one can be sure exists at install time without creating unnecessary dependencies that are user-inconvenient (eg depending on perl just to run an install script). Avoid bashisms in your scripts. Unfortunately, at this time, these script snippets can't use [shellfire], but they could if there's demand for it.
+
+Each folder is searched in glob-expansion-order for readable, non-empty regular files (or symlinks) ending in `.sh`. These are concatenated together and inserted as a scriptlet into a RPM Spec file. If a folder is missing, no RPM scriptlet is generated. If there are readable, non-empty regular files (or symlinks) ending `.depends`, then these are processed in glob-expansion-order, and each line of each file becomes a scriptlet dependency of the form `Requires(XXXX)`, where `XXXX` is either a package name (`info`) or package name predicated by version (`info > 3.1`). If a line is empty or starts with '#', it is ignored.
+
+The folders are:-
+
+|Folder|RPM Scriptlet|Value of $1| Value of $2|
+|------|-------------|-----------|------------|
+|before-install|pre|1 is install, 2 or more is upgrade|N/A|
+|after-install|post|1 is install, 2 or more is upgrade|N/A|
+|before-remove|preun|1 or more is upgrade, 0 is erase|N/A|
+|after-remove|postun|1 or more is upgrade, 0 is erase|N/A|
+|verify|verifyscript|0| N/A|
+|pre-transaction|pretrans|N/A| N/A|
+|post-transaction|posttrans|N/A| N/A|
+|trigger-on|triggerin|Trigger Packages|Number of Instances when complete|0 / 1 (if 0, exit 0)|
+|trigger-off|triggerun|Trigger Packages|Number of Instances when complete|0 / 1 (if 0, exit 0)|
+|trigger-fixerrors|triggerpostun|Trigger Packages|Number of Instances when complete|0 / 1 (if 0, exit 0)|
+
+Please note that the `trigger-*` folders are experimental and may change.
 
 #### swaddle_apt
 
