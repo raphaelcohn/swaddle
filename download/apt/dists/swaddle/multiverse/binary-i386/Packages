@@ -22,3 +22,27 @@ Build-Essential: no
 Origin: stormmq
 Supported: 9m
 
+Package: swaddle
+Essential: no
+Priority: extra
+Section: misc
+Installed-Size: 863
+Maintainer: Raphael Cohn <raphael.cohn@stormmq.com>
+Architecture: all
+Source: swaddle
+Version: 2015.0422.1105-1
+Filename: pool/multiverse/s/swaddle/swaddle_2015.0422.1105-1_all.deb
+Size: 103440
+MD5sum: 1749af4b2483b3cca20e159011c15813
+SHA1: 215439dcc57378c97e2edce869155bd1aab48306
+SHA256: ed1149a2e5fcee986ada33c324dd4ef4fe31ee27634d6f5b84a3ab28d54811cc
+Description: swaddle is a tool for creating packages and repositories
+ extremely easily. It integrates with Git and GitHub,
+ and can even upload GitHub releases and sign your
+ tags.
+Homepage: https://github.com/raphaelcohn/swaddle
+Bugs: https://github.com/raphaelcohn/swaddle/issues
+Build-Essential: no
+Origin: stormmq
+Supported: 9m
+
