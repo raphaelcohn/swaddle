@@ -117,7 +117,7 @@ configure swaddle vendor 'someone else'
 Of course, using this couldn't be easier:-
 
 ```bash
-swaddle --swaddling-path /path/to/swaddling /path/to/output -- overdrive
+swaddle --swaddling-path /path/to/swaddling --output-path /path/to/output -- overdrive
 ```
 
 And off we go!
