@@ -54,7 +54,7 @@ swaddle_gpg_clearsign()
 	
 	swaddle_gpg --default-key "$(swaddle_configure_signer)" --output "$outputFilePath" --armor --sign --clearsign "$filePath"
 	
-	touch -r "$filePath" "$$outputFilePath"
+	touch -r "$filePath" "$outputFilePath"
 }
 
 core_snippet_embed raw sks_keyservers_netCA
