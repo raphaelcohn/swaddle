@@ -42,8 +42,8 @@ All this seems complex. It isn't. Take a look at the [swaddling](https://github.
 
 ## Who Uses it?
 
-* [ReleaseQueue](http://www.releasequeue.com/) have integrated it into their upcoming product management platform
-* [bish-bosh](https://github.com/raphaelcohn/bish-bosh)
+* [ReleaseQueue](http://www.releasequeue.com/) have integrated it into their upcoming product management platform.
+* [bish-bosh](https://github.com/raphaelcohn/bish-bosh), a pure shellscript MQTT 3.1.1 client
 * And, of course, we use it to release itself. Eating our own dog food and all that. See [shellfire]'s `build` script, which shows how to go from a bunch of stuff in source to a complete automated release, just by typing `./build`.
 
 ## Differences with everything else
