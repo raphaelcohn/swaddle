@@ -1,6 +1,10 @@
 # swaddle
 
-[swaddle] wraps up your newly built programs (with 'swaddling') as ready-to-go signed releases: packages, package repositories and even websites, using simple data files stored in source control _laid out as you would have them in a package_. It is designed to be the final step after build and test:-
+[swaddle] wraps up your newly built programs (with 'swaddling') as ready-to-go signed releases: archives, packages, package repositories and even release note websites, using simple data files stored in source control _laid out as you would have them in a package_. It's MIT-licensed, making it friendly to adopt.
+
+## The Final Step
+
+[swaddle] is your final step after build and test:-
 
 * it creates a GitHub release
   * with all files attached
@@ -36,6 +40,12 @@
 
 All this seems complex. It isn't. Take a look at the [swaddling](https://github.com/raphaelcohn/swaddle/tree/master/swaddling) for [swaddle] itself. Not much to see, is there?
 
+## Who Uses it?
+
+* [ReleaseQueue](http://www.releasequeue.com/) have integrated it into their upcoming product management platform
+* [bish-bosh](https://github.com/raphaelcohn/bish-bosh)
+* And, of course, we use it to release itself. Eating our own dog food and all that. See [shellfire]'s `build` script, which shows how to go from a bunch of stuff in source to a complete automated release, just by typing `./build`.
+
 ## Differences with everything else
 
 In many ways, we see this as the logically conclusion of [fpm]. It is to [fpm] what [fpm] was to RPM. Now, if only yum would die…
@@ -43,7 +53,9 @@ In many ways, we see this as the logically conclusion of [fpm]. It is to [fpm] w
 * it completely separates build from packaging (unlike, say, `dh-*`)
 * source control is king: package files are just stored in source control wherever possible
 * it is data-driven rather than script-driven
-* all configuration data is just shell-like text files
+* all configuration data is just shell-like text files - not 200 shell scripts
+* it produces valid, thorough Debian packages which use every ounce of cleverness Debian's packaging system provides
+* it provides a one stop shop for creating signed, valid and versioned repositories with yours and third party packages, and even server config packages, which you can even roll back
 * and, unlike everything else, it doesn't need C, Python, Perl or Ruby. It's pure shell script, built using [shellfire]\*
 
 \* Yep, that's right. No need to have the `dpkg-*` or `yum-utils` tools installed. It'll even run on the Mac with Homebrew. The only downside is you'll need `rpmbuild`, because, RPM, being ~~a brilliant format~~ is ~~unusable~~ unimplementable with anything else. At least you won't have to write any more spec files, though.
