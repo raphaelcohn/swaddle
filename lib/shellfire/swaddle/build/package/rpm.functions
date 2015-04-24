@@ -144,7 +144,7 @@ swaddle_package_rpm_rpmbuild()
     --passphrase-fd 3 --no-secmem-warning -u "$(swaddle_configure_signer)" \\
     -sbo %{__signature_filename} %{__plaintext_filename}" >~/.rpmmacros
 		
-		printf '%s: %s\n' "$_program_name" "About to build RPM - you will be asked for the passphrase for your GPG key '$(swaddle_configure_signer)', even if using gpg-agent!"
+		printf '%s: %s\n' "$_program_name" "About to build RPM - you will be asked for the passphrase for your GPG key '$(swaddle_configure_signer)', even if using gpg-agent (and even if it doesn't have one)!"
 		
 		core_variable_array_append options --sign
 	fi

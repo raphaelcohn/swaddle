@@ -38,8 +38,12 @@ swaddle_configure_register_configuration()
 	configure_register Value Any swaddle maintainer_comment
 	configure_register Value NotEmpty swaddle maintainer_email
 	
+	local TMP_FOLDER
+	core_temporaryFiles_newFolderToRemoveOnExit
+	local emptyKeyRingFolderIfNoneExistsToSuppressFatalChecks="$TMP_FOLDER"
+	
 	if ! core_compatibility_whichNoOutput gpg; then
-		configure_register Value ReadableSearchableFolderPath swaddle keyring
+		configure_register Value ReadableSearchableFolderPath swaddle keyring "$emptyKeyRingFolderIfNoneExistsToSuppressFatalChecks"
 		configure_register Value Boolean swaddle sign no
 		core_message WARN "Signing disabled by default as no gpg in your PATH"
 	elif _swaddle_configure_register_configuration_checkCombinationIsExtant GNUPGHOME ''; then
@@ -50,7 +54,7 @@ swaddle_configure_register_configuration()
 		:
 	else
 		core_message WARN "Signing disabled by default as no keyring at GNUPGHOME"
-		configure_register Value ReadableSearchableFolderPath swaddle keyring
+		configure_register Value ReadableSearchableFolderPath swaddle keyring "$emptyKeyRingFolderIfNoneExistsToSuppressFatalChecks"
 		configure_register Value Boolean swaddle sign no
 	fi
 }
