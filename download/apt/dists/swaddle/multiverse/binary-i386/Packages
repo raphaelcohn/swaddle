@@ -26,41 +26,17 @@ Package: swaddle
 Essential: no
 Priority: extra
 Section: misc
-Installed-Size: 863
+Installed-Size: 864
 Maintainer: Raphael Cohn <raphael.cohn@stormmq.com>
 Architecture: all
 Source: swaddle
-Version: 2015.0422.1105-1
-Filename: pool/multiverse/s/swaddle/swaddle_2015.0422.1105-1_all.deb
-Size: 103440
-MD5sum: 1749af4b2483b3cca20e159011c15813
-SHA1: 215439dcc57378c97e2edce869155bd1aab48306
-SHA256: ed1149a2e5fcee986ada33c324dd4ef4fe31ee27634d6f5b84a3ab28d54811cc
-Description: swaddle is a tool for creating packages and repositories
- extremely easily. It integrates with Git and GitHub,
- and can even upload GitHub releases and sign your
- tags.
-Homepage: https://github.com/raphaelcohn/swaddle
-Bugs: https://github.com/raphaelcohn/swaddle/issues
-Build-Essential: no
-Origin: stormmq
-Supported: 9m
-
-Package: swaddle
-Essential: no
-Priority: extra
-Section: misc
-Installed-Size: 863
-Maintainer: Raphael Cohn <raphael.cohn@stormmq.com>
-Architecture: all
-Source: swaddle
-Version: 2015.0424.0847-1
-Depends: dash, coreutils, grep, awk, sed, git, binutils-multiarch, file, gnupg, rsync, curl, pandoc, p7zip-full, rar, zip, tar, lzop, gzip, bzip2, rzip, lrzip, plzip, pbzip2, pigz, pixz, lzma, xz-utils, zopfliSection: misc
-Filename: pool/multiverse/s/swaddle/swaddle_2015.0424.0847-1_all.deb
-Size: 103510
-MD5sum: 9602f322faf72da8f7cc8d34fc97135d
-SHA1: 1200ded8bd5b44a2d06f5f7335326c6fcca8bf68
-SHA256: d31adb613c64430f9cdc307f62438abd0247b1fa98b1ca9a0d01bab8dfa6b293
+Version: 2015.0424.1024-1
+Depends: dash, coreutils, grep, awk, sed, git, binutils-multiarch, file, gnupg, rsync, curl, pandoc, p7zip-full, rar, zip, tar, lzop, gzip, bzip2, rzip, lrzip, plzip, pbzip2, pigz, pixz, lzma, xz-utils, zopfli
+Filename: pool/multiverse/s/swaddle/swaddle_2015.0424.1024-1_all.deb
+Size: 104286
+MD5sum: 31da0a66a004249e17b46afe5f826392
+SHA1: ac1e93514265b4f09cb5402587d1f29c1a74730d
+SHA256: 0d46158d78921cffd3b5572e6364a82fcdb5645d20b92957f7243ca791f9b46b
 Description: swaddle is a tool for creating packages and repositories
  extremely easily. It integrates with Git and GitHub,
  and can even upload GitHub releases and sign your
@@ -79,13 +55,13 @@ Installed-Size: 864
 Maintainer: Raphael Cohn <raphael.cohn@stormmq.com>
 Architecture: all
 Source: swaddle
-Version: 2015.0424.1024-1
+Version: 2015.0424.1107-1
 Depends: dash, coreutils, grep, awk, sed, git, binutils-multiarch, file, gnupg, rsync, curl, pandoc, p7zip-full, rar, zip, tar, lzop, gzip, bzip2, rzip, lrzip, plzip, pbzip2, pigz, pixz, lzma, xz-utils, zopfli
-Filename: pool/multiverse/s/swaddle/swaddle_2015.0424.1024-1_all.deb
-Size: 104286
-MD5sum: 31da0a66a004249e17b46afe5f826392
-SHA1: ac1e93514265b4f09cb5402587d1f29c1a74730d
-SHA256: 0d46158d78921cffd3b5572e6364a82fcdb5645d20b92957f7243ca791f9b46b
+Filename: pool/multiverse/s/swaddle/swaddle_2015.0424.1107-1_all.deb
+Size: 104192
+MD5sum: 99ba632dae98212ee324127b0760c366
+SHA1: ba57f0e99b6851a878f72f0880f79f04e441cbf6
+SHA256: 10a735c0ac9870a6be3f083c2915abf3dbb2481450e421727dad82a57cbf6014
 Description: swaddle is a tool for creating packages and repositories
  extremely easily. It integrates with Git and GitHub,
  and can even upload GitHub releases and sign your
