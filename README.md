@@ -33,10 +33,10 @@
   * zip
   * 7z
   * etc
-* It can use maximal compression (eg lrzip or xz), best-practice gzip (eg with pigz to turn it up to 11) or even none at all
+* It can use maximal compression (eg `lrzip` or `xz`), best-practice `gzip` (eg with `pigz` to turn it up to 11) or even none at all
 * Works with gpg-agent for silent signing
-  * Except for rpm signing, which is so badly coded that it _can't_ use gpg-agent
-* Automtically uploads your GPG key after releasing, so everyone can check it's your release
+  * Except for rpm signing, which is so badly coded that it _can't_ use `gpg-agent`
+* Automtically uploads your GPG key to a keyserver after releasing, so everyone can check it's your release
 
 All this seems complex. It isn't. Take a look at the [swaddling](https://github.com/raphaelcohn/swaddle/tree/master/swaddling) for [swaddle] itself. Not much to see, is there?
 
