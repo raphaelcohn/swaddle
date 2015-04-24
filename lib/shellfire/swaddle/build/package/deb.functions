@@ -499,7 +499,7 @@ _swaddle_build_package_deb_commaSeparatedControlField()
 	local configurationSettingValue
 	_configure_configurationSettingValue "$namespace" "$configurationSettingName"
 	
-	if ! core_variable_array_isEmpty "$configurationSettingValue"; then
+	if core_variable_array_isEmpty "$configurationSettingValue"; then
 		return
 	fi
 	
