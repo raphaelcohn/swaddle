@@ -9,20 +9,27 @@ core_usesIn github/api/v3 releases
 core_usesIn jsonreader
 swaddle_publishers_githubreleases_prepare()
 {
+	swaddle_releaseGithub=false
+	
 	local githubOwner="$(configure_getValue swaddle_github owner)"
 	if [ -z "$githubOwner" ]; then
+		core_message NOTICE "Can't release to GitHub (no value for configuration setting 'swaddle_github owner')"
 		return 0
 	fi
 	
 	local githubRepository="$(configure_getValue swaddle_github repository)"
 	if [ -z "$githubRepository" ]; then
+		core_message NOTICE "Can't release to GitHub (no value for configuration setting 'swaddle_github repository')"
 		return 0
 	fi
 	
 	local githubApiTokenFile="$(configure_getValue swaddle_github api_token_file)"
 	if [ -z "$githubApiTokenFile" ]; then
+		core_message WARN "Can't release to GitHub (no value for configuration setting 'swaddle_github api_token_file')"
 		return 0
 	fi
+	
+	swaddle_releaseGithub=true
 	
 	local actualTagName=''
 	local acutalIterationCount=''
@@ -103,6 +110,10 @@ swaddle_publishers_githubreleases_publish()
 
 swaddle_publishers_githubreleases_augmentReleaseMarkdownBody()
 {
+	if core_variable_isFalse "$swaddle_releaseGithub"; then
+		return 0
+	fi
+	
 	_swaddle_publishers_githubreleases_releaseMarkdownBody="${_swaddle_publishers_githubreleases_releaseMarkdownBody}${1}"
 }
 
