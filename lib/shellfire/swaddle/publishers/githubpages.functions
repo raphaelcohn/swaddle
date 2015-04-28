@@ -116,8 +116,13 @@ swaddle_publishers_githubpages_publish()
 	:
 }
 
+core_dependency_requires '*' git
 swaddle_publishers_githubpages_finish()
 {
+	if core_variable_isFalse "$swaddle_publishGithub"; then
+		return 0
+	fi
+	
 	if core_variable_isFalse "$_swaddle_canPublishToGithubPages"; then
 		return 0
 	fi
