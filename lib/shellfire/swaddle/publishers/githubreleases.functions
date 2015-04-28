@@ -9,27 +9,30 @@ core_usesIn github/api/v3 releases
 core_usesIn jsonreader
 swaddle_publishers_githubreleases_prepare()
 {
-	swaddle_releaseGithub=false
+	if core_variable_isFalse "$swaddle_releaseGithub"; then
+		return 0
+	fi
 	
 	local githubOwner="$(configure_getValue swaddle_github owner)"
 	if [ -z "$githubOwner" ]; then
-		core_message NOTICE "Can't release to GitHub (no value for configuration setting 'swaddle_github owner')"
+		swaddle_releaseGithub=off
+		core_message WARN "Can't release to GitHub (no value for configuration setting 'swaddle_github owner')"
 		return 0
 	fi
 	
 	local githubRepository="$(configure_getValue swaddle_github repository)"
 	if [ -z "$githubRepository" ]; then
-		core_message NOTICE "Can't release to GitHub (no value for configuration setting 'swaddle_github repository')"
+		swaddle_releaseGithub=off
+		core_message WARN "Can't release to GitHub (no value for configuration setting 'swaddle_github repository')"
 		return 0
 	fi
 	
 	local githubApiTokenFile="$(configure_getValue swaddle_github api_token_file)"
 	if [ -z "$githubApiTokenFile" ]; then
+		swaddle_releaseGithub=off
 		core_message WARN "Can't release to GitHub (no value for configuration setting 'swaddle_github api_token_file')"
 		return 0
 	fi
-	
-	swaddle_releaseGithub=true
 	
 	local actualTagName=''
 	local acutalIterationCount=''
@@ -99,6 +102,10 @@ swaddle_publishers_githubreleases_publish()
 	local descriptiveName="$1"
 	local filePath="$2"
 	local contentType="$3"
+
+	if core_variable_isFalse "$swaddle_releaseGithub"; then
+		return 0
+	fi
 	
 	if _swaddle_publishers_githubreleases_guard; then
 		return 0
@@ -114,11 +121,19 @@ swaddle_publishers_githubreleases_augmentReleaseMarkdownBody()
 		return 0
 	fi
 	
+	if _swaddle_publishers_githubreleases_guard; then
+		return 0
+	fi
+	
 	_swaddle_publishers_githubreleases_releaseMarkdownBody="${_swaddle_publishers_githubreleases_releaseMarkdownBody}${1}"
 }
 
 swaddle_publishers_githubreleases_finish()
 {
+	if core_variable_isFalse "$swaddle_releaseGithub"; then
+		return 0
+	fi
+	
 	if _swaddle_publishers_githubreleases_guard; then
 		return 0
 	fi

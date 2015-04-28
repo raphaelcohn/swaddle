@@ -42,6 +42,8 @@ _program_commandLine_helpMessage()
                               $(pwd)
   -c, --clean-output [OFF]    Clean output on start. Defaults to OFF
   -p, --publish-github [OFF]  Publish to GitHub pages.
+                              Defaults to OFF.
+  -p, --release-github [OFF]  Release to GitHub Releases.
                               Defaults to OFF."
     _program_commandLine_helpMessage_optionsSpacing='     '
 	_program_commandLine_helpMessage_configurationKeys="
@@ -49,6 +51,7 @@ _program_commandLine_helpMessage()
   swaddle_outputPath      Equivalent to --output-path
   swaddle_cleanOutput     Equivalent to --clean-output
   swaddle_publishGithub   Equivalent to --publish-github
+  swaddle_releaseGithub   Equivalent to --release-github
 "
 	_program_commandLine_helpMessage_examples="
   ${_program_name} -s /some/path -- some-package
@@ -72,6 +75,10 @@ _program_commandLine_optionExists()
 		;;
 		
 		p|publish-github)
+			echo 'yes-optionally-argumented'
+		;;
+		
+		r|release-github)
 			echo 'yes-optionally-argumented'
 		;;
 		
@@ -102,6 +109,11 @@ _program_commandLine_processOptionWithArgument()
 			swaddle_publishGithub="$optionValue"
 		;;
 		
+		r|release-github)
+			core_validate_isBoolean $core_commandLine_exitCode_USAGE 'option' "$optionNameIncludingHyphens" "$optionValue"
+			swaddle_releaseGithub="$optionValue"
+		;;
+		
 	esac
 }
 
@@ -115,6 +127,10 @@ _program_commandLine_processOptionWithoutArgument()
 		
 		p|publish-github)
 			swaddle_publishGithub=on
+		;;
+		
+		r|release-github)
+			swaddle_releaseGithub=on
 		;;
 		
 	esac
@@ -157,6 +173,12 @@ _program_commandLine_validate()
 		core_validate_isBoolean $core_commandLine_exitCode_CONFIG 'configuration setting' 'swaddle_publishGithub' "$swaddle_publishGithub"
 	else
 		swaddle_publishGithub=off
+	fi
+	
+	if core_variable_isSet swaddle_releaseGithub; then
+		core_validate_isBoolean $core_commandLine_exitCode_CONFIG 'configuration setting' 'swaddle_releaseGithub' "$swaddle_releaseGithub"
+	else
+		swaddle_releaseGithub=off
 	fi
 	
 	local potentialSwaddle
