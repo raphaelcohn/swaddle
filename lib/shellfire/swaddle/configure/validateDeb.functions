@@ -34,12 +34,13 @@ configure_validate_DebTask()
 	configure_isValueValid validate_deb_task "$1"
 }
 
+core_usesIn swaddle/configure validateApt
 configure_validate_DebPackageArchitecture()
 {
 	if [ "$1" = 'all' ]; then
 		return 0
 	fi
-	configure_validateAptArchitecture "$1"
+	configure_validate_AptArchitecture "$1"
 }
 
 configure_validate_DebCompression()

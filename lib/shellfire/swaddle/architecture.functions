@@ -4,6 +4,7 @@
 
 # Unsupported in Debian: i586, i686, sparc64, m68kint, sh3, sh4
 
+core_usesIn swaddle/configure validateApt
 swaddle_architecture_translate()
 {
 	local toPackageKind="$1"
@@ -16,7 +17,7 @@ swaddle_architecture_translate()
 		
 		deb)
 			if [ "$debianArchitecture" != 'all' ]; then
-				configure_validateAptArchitecture "$debianArchitecture"
+				configure_validate_AptArchitecture "$debianArchitecture"
 			fi
 			packageArchitecture="$debianArchitecture"
 		;;
