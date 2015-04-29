@@ -314,7 +314,9 @@ swaddle_build_package_deb_createControlFile()
 		EOF
 		_swaddle_build_package_deb_commaSeparatedControlField Built-Using built_using
 		if [ "$_swaddle_build_package_translatedArchitecture" != 'all' ]; then
-			_swaddle_build_package_deb_commaSeparatedControlField Multi-Arch "$(configure_getValue swaddle_deb multiarch)"
+			cat <<-EOF
+				Multi-Arch: $(configure_getValue swaddle_deb multiarch)
+			EOF
 		fi
 		_swaddle_build_package_deb_extraControlFields
 		_swaddle_build_package_deb_description
