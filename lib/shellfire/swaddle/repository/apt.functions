@@ -206,6 +206,8 @@ swaddle_repository_apt_createDistsComponentsPackagesFileAndReleaseFile()
 			if [ -d "$poolComponent" ]; then
 				local componentFilesFolderPath="$repositoryPath"/"$poolComponent"/binary-"$packageArchitecture"
 				
+				mkdir -m 0755 -p "$componentFilesFolderPath"
+				
 				pushd "$componentFilesFolderPath"
 					
 					_swaddle_repository_apt_sortAndConcatenateFragments Packages
