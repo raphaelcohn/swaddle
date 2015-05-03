@@ -86,16 +86,21 @@ Inside swaddling, you'll create a configuration. For example, to create a tarbal
                              # You can have many of these (eg for multiple packages, etc) but most people need just one.
 	        package.conf     # Configuration settings for all package kinds (tarball, debian, etc) built for this swaddle
 			skeleton\        # Put files that never change and aren't built in here
-			    any\           # For any architecture
+			    any\         # For any architecture
 				    etc\
 					    overdrive.conf
-					          
-				all\           # For packages without an architecture (Debian's 'all', RPM's 'noarch')
-				amd64\         # For amd64 (and other architectures, as appropriate) - we use the Debian names (as these are highly consistent), and convert as necessary for RPM
+				all\         # For packages without an architecture (Debian's 'all', RPM's 'noarch')
+				amd64\       # For amd64 (and other architectures, as appropriate) - we use the Debian names (as these 
+							 # are highly consistent), and convert as necessary for RPM
 			body\            # Identical structure to skeleton\, but intended for files that are build outputs (so you can `.gitignore` it; often symlinked to your build folder).
 			    …
             deb\             # Create this, and you're making debian packages
 			    deb.conf     # Debian specific settings, if any; entirely optional
+			    scripts\     # Package scripts folder
+			       preinst\  # Folder containing pre installation script snippets
+			       postinst\ # Folder containing post installation script snippets
+			       prerm\    # Folder containing pre removal script snippets
+			       postrm\   # Folder containing post removal script snippets
 			    skeleton\    # As above. Merged using rsync. Allows per-package-kind, per-architecture-variant file differences
 			    body\        # As above. Merged using rsync.
 			        …
@@ -134,7 +139,7 @@ swaddle --swaddling-path /path/to/swaddling --output-path /path/to/output -- ove
 
 And off we go!
 
-## ~~Education, Education, Education~~ Configuration, Configuration, Congfiguration
+## ~~Education, Education, Education~~ Configuration, Configuration, Configuration
 
 The key to [swaddle] is configuration. In [swaddle], there are configuration _namespaces_. Each namespace is useful at a different level in the hierarchy above. Some are global; some are only useful, for, say, a deb. Configuration uses the file system layout, as well, to be useful. All are designed to be source control friendly. Indeed, [swaddle] works best when used with git and especially GitHub.
 
@@ -362,9 +367,7 @@ This namespace is intended to be used in `swaddling/swaddle/deb/deb.conf`. If th
 † Refer to [Debian Policy](https://www.debian.org/doc/debian-policy/ch-relationships)
 
 ##### Scripts
-It is possible to create script for pre and post install actions, etc. To do this create a folder for the particular action, and put a script snippet into it. There is not needed to put a shebang line (we run all scripts as `#!/usr/bin/env sh`). This is about the only thing one can be sure exists at install time without creating unnecessary dependencies that are user-inconvenient (eg depending on perl just to run an install script). Avoid bashisms in your scripts. Unfortunately, at this time, these script snippets can't use [shellfire], but they could if there's demand for it.
-
-It is possible to create script for pre and post install actions, etc. To do this create a folder for the particular action, and put a script snippet into it. There is not needed to put a shebang line (we run all scripts as `#!/usr/bin/env sh`). This is about the only thing one can be sure exists at install time without creating unnecessary dependencies that are user-inconvenient (eg depending on perl just to run an install script). Avoid bashisms in your scripts. Unfortunately, at this time, these script snippets can't use [shellfire], but they could if there's demand for it.
+It is possible to create script for pre and post install actions, etc. To do this create a folder for the particular action under `deb\scripts`, and put a script snippet into it. There is not needed to put a shebang line (we run all scripts as `#!/usr/bin/env sh`). This is about the only thing one can be sure exists at install time without creating unnecessary dependencies that are user-inconvenient (eg depending on perl just to run an install script). Avoid bashisms in your scripts. Unfortunately, at this time, these script snippets can't use [shellfire], but they could if there's demand for it.
 
 Each folder is searched in glob-expansion-order for readable, non-empty regular files (or symlinks) ending in `.sh`. These are then concatenated together. If your script has a requirement on a particular package or program being in place before execution, use a `pre_depends` (see above). The folders are:-
 
