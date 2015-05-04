@@ -228,37 +228,29 @@ swaddle_build_package_deb_createControlMd5sumsAndCalculateInstalledSize()
 	_swaddle_build_package_deb_createControlMd5sums_recurse "$_swaddle_build_package_root" '' >"$_swaddle_build_package_deb_controlFolderPath"/md5sums
 }
 
-core_dependency_requires '*' cat
+core_dependency_requires '*' cat chmod
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_createControlScripts
 swaddle_build_package_deb_createControlScripts()
 {
-	_swaddle_build_package_deb_createControlScript()
-	{
-		local scriptKind="$1"
+	local scriptKind
+	for scriptKind in preinst postinst prerm postrm
+	do
 		local scriptTypePath="$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/scripts/"$scriptKind"
 	
 		if ! core_path_isReadableAndSearchableFolderPath "$scriptTypePath"; then
 			return 0
 		fi
-	
+		
 		set +f
 		set -- "$scriptTypePath"/*
 		set -f
 		if [ ! -e "$1" ]; then
-			return 0
+			continue
 		fi
 		
 		{
-			printf '#!/bin/sh\n'
-	
-			# https://fedoraproject.org/wiki/How_to_create_an_RPM_package
-			# $1 is passed to this script as a number
-			# For pre and post, 1 for first install, 2+ for upgrade
-			# For preun and postun, 0 is when last version is removed (1 is for upgrade)
-			# For verify, not used
-			# For pretrans and posttrans, always 0
-	
-			printf '%s\n' "%${rpmScriptType}"
+			printf '#!/usr/bin/env sh\n'
+			
 			local scriptFile
 			for scriptFile in "$@"
 			do
@@ -269,12 +261,7 @@ swaddle_build_package_deb_createControlScripts()
 			done
 		} >"$_swaddle_build_package_deb_controlFolderPath"/"$scriptKind"
 		chmod +x "$_swaddle_build_package_deb_controlFolderPath"/"$scriptKind"
-	}
-	
-	_swaddle_build_package_deb_createControlScript preinst
-	_swaddle_build_package_deb_createControlScript postinst
-	_swaddle_build_package_deb_createControlScript prerm
-	_swaddle_build_package_deb_createControlScript postrm
+	done
 }
 
 core_dependency_requires '*' cat
