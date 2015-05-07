@@ -238,7 +238,7 @@ swaddle_build_package_deb_createControlScripts()
 		local scriptTypePath="$_swaddle_build_sourcePath"/"$_swaddle_build_package_kind"/scripts/"$scriptKind"
 	
 		if ! core_path_isReadableAndSearchableFolderPath "$scriptTypePath"; then
-			return 0
+			continue
 		fi
 		
 		set +f
