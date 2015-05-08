@@ -1,20 +1,18 @@
 # swaddle
 
-[swaddle] wraps up your newly built programs (with 'swaddling') as ready-to-go signed releases: archives, packages, package repositories and even release note websites, using simple data files stored in source control _laid out as you would have them in a package_. It's MIT-licensed, making it friendly to adopt.
+[swaddle] wraps up your newly built programs (with 'swaddling') as ready-to-go signed releases: archives, packages, package repositories and even release note websites, using simple data files stored in source control _laid out as you would have them in a package_. It's MIT-licensed, making it friendly to adopt. And it's in pure shellscript; no need for a working ruby or python or perl installation. You can even use it directly from git, and it'll bootstrap itself. Oh, and it eats its own dog food. Those [releases on GitHub](https://github.com/raphaelcohn/swaddle/releases) were made by swaddle.
 
 ## The Final Step
 
 [swaddle] is your final step after build and test:-
 
-* it creates a GitHub release
-  * with all files attached
-  * with lots of sensible default copy
-  * with links to standalone websites and versioned, signed package repositories
-* it creates a standalone website for your packages on GitHub, referenced in the release notes
-* it pushes and tags, using a signature, a _versioned_ set of repositories to GitHub pages
-  * so you can _always_ rollback
-  * and never deletes older released files
-  * with automatic installation scripts included in your release notes
+* It creates whatever packages you want, with the best possible settings
+  * Deb
+  * RPM
+  * tarball
+  * zip
+  * 7z
+  * etc
 * It creates debian repositories with
   * complete file contents for `apt-file`
   * translations
@@ -24,19 +22,20 @@
   * InRelease and Release.gpg for maximal compatibility
   * and can even import packages from other sources, so you need never use `reprepro` or anything else again
     * you could even use it just for that alone
-  * oh, and we already mentioned they're versioned, too
-* it tags, using a signature, your source and binaries
-* it creates whatever packages you want, with the best possible settings
-  * Deb
-  * RPM
-  * tarball
-  * zip
-  * 7z
-  * etc
-* It can use maximal compression (eg `lrzip` or `xz`), best-practice `gzip` (eg with `pigz` to turn it up to 11) or even none at all
-* Works with gpg-agent for silent signing
-  * Except for rpm signing, which is so badly coded that it _can't_ use `gpg-agent`
+  * oh, and they're versioned, too
+* It tags, using a signature, your source and binaries
+  * Works with gpg-agent for silent signing packages and repositories
+  * Except for rpm signing, which is so badly coded that it _can't_ use `gpg-agent` (workarounds welcomed)
 * Automtically uploads your GPG key to a keyserver after releasing, so everyone can check it's your release
+* It can create a GitHub release
+  * with all files attached
+  * with lots of sensible default copy
+  * with links to standalone websites and versioned, signed package repositories
+  * with automatic installation scripts included in your release notes tested for all major distributions
+* It can create a standalone website for your packages on GitHub, referenced in the release notes
+* It can push and tag, using a signature, a _versioned_ set of repositories to GitHub pages
+  * so you can _always_ rollback
+  * and never deletes older released files
 
 All this seems complex. It isn't. Take a look at the [swaddling](https://github.com/raphaelcohn/swaddle/tree/master/swaddling) for [swaddle] itself. Not much to see, is there?
 
