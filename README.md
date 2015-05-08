@@ -1,6 +1,6 @@
 # swaddle
 
-[swaddle] wraps up your newly built programs (with 'swaddling') as ready-to-go signed releases: archives, packages, package repositories and even release note websites, using simple data files stored in source control _laid out as you would have them in a package_. It's MIT-licensed, making it friendly to adopt. And it's in pure shellscript; no need for a working ruby or python or perl installation. You can even use it directly from git, and it'll bootstrap itself. Oh, and it eats its own dog food. Those [releases on GitHub](https://github.com/raphaelcohn/swaddle/releases) were made by swaddle.
+[swaddle] wraps up your newly built programs (with 'swaddling') as ready-to-go signed releases: archives, packages, package repositories and even release note websites, using simple data files stored in source control _laid out as you would have them in a package_. It's MIT-licensed, making it friendly to adopt. And it's in pure shellscript: there's no need for a working Ruby or Python or Perl installation. You can even use it directly from git, and it'll bootstrap itself. Oh, and it eats its own dog food. Those [releases on GitHub](https://github.com/raphaelcohn/swaddle/releases) were made by swaddle.
 
 ## The Final Step
 
