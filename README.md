@@ -26,7 +26,7 @@
 * It tags, using a signature, your source and binaries
   * Works with gpg-agent for silent signing packages and repositories
   * Except for rpm signing, which is so badly coded that it _can't_ use `gpg-agent` (workarounds welcomed)
-* Automtically uploads your GPG key to a keyserver after releasing, so everyone can check it's your release
+* Automatically uploads your GPG key to a keyserver after releasing, so everyone can check it's your release
 * It can create a GitHub release
   * with all files attached
   * with lots of sensible default copy
