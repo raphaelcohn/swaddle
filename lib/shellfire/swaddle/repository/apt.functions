@@ -636,7 +636,7 @@ swaddle_repository_apt_parseDeb()
 	popd
 }
 
-core_dependency_requires '*' ln rm
+core_dependency_requires '*' rm cp
 core_usesIn swaddle configure
 swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 {	
@@ -707,7 +707,9 @@ swaddle_repository_apt_parseDeb_transformControlToPackagesFileEntry()
 		local packagesFolderPath="$repositoryPath"/"$poolComponent"/binary-"$packageArchitecture"
 		mkdir -m 0755 -p "$packagesFolderPath"
 		
-		ln -f "$_swaddle_repository_apt_temporaryFolderPath"/package "$packagesFolderPath"/"$poolDebFile".Packages
+		local destinationPackagesFilePath="$packagesFolderPath"/"$poolDebFile".Packages
+		rm -rf "$destinationPackagesFilePath"
+		cp "$_swaddle_repository_apt_temporaryFolderPath"/package "$destinationPackagesFilePath"
 	}
 	
 	if [ "$packageArchitecture" = 'all' ]; then
