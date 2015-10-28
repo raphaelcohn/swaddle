@@ -15,28 +15,9 @@ swaddle_touch_setMtimeAndAtimeAllRecursivelyUnderSimulatedRoot()
 {
 	local timestampInEpochSeconds="$(swaddle_configure_timestamp)"
 	local mtime="$(date -d @$timestampInEpochSeconds +'%Y%m%d%H%M.%S')"
-	_swaddle_touch_setMtimeAndAtimeAllRecursivelyUnderSimulatedRoot "$@"
-}
-
-_swaddle_touch_setMtimeAndAtimeAllRecursivelyUnderSimulatedRoot()
-{
-	for filePath in "$@"
+	local filePath
+ 	for filePath in "$@"
 	do
-		if [ ! -e "$filePath" ]; then
-			continue
-		fi
-	
-		if [ -L "$filePath" ]; then
-			continue
-		fi
-	
-		if [ -d "$filePath" ]; then
-			set +f
-			set -- "$filePath"/*
-			set -f
-			_swaddle_touch_setMtimeAndAtimeAllRecursivelyUnderSimulatedRoot "$@"
-		fi
-		
-		swaddle_simulateroot_execute touch -m -a -c -t "$mtime" "$filePath"
-	done	
+		swaddle_simulateroot_execute find "$filePath" -type f -exec touch -m -a -c -t "$mtime" '{}' \;
+	done
 }
