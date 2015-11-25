@@ -247,3 +247,53 @@ Build-Essential: no
 Origin: stormmq
 Supported: 9m
 
+Package: swaddle
+Essential: no
+Priority: extra
+Section: misc
+Installed-Size: 29
+Maintainer: Raphael Cohn <raphael.cohn@stormmq.com>
+Architecture: all
+Source: swaddle
+Version: 2015.1125.1531-1
+Depends: dash, coreutils, grep, awk, sed, git, binutils-multiarch, file, gnupg, rsync, curl, pandoc, p7zip-full, rar, zip, tar, lzop, gzip, bzip2, rzip, lrzip, plzip, pbzip2, pigz, pixz, lzma, xz-utils, zopfli
+Filename: pool/multiverse/s/swaddle/swaddle_2015.1125.1531-1_all.deb
+Size: 25556
+MD5sum: caefb91641bd37a70c8d7221f08df178
+SHA1: 68aea14a9c884813e86c9914781c1f5d2c087e86
+SHA256: 4b812b27c111f462daee5c266b3c62ce153f5bbf951e709dd7ef8dd1914213b1
+Description: swaddle is a tool for creating packages and repositories
+ extremely easily. It integrates with Git and GitHub,
+ and can even upload GitHub releases and sign your
+ tags.
+Homepage: https://github.com/raphaelcohn/swaddle
+Bugs: https://github.com/raphaelcohn/swaddle/issues
+Build-Essential: no
+Origin: stormmq
+Supported: 9m
+
+Package: swaddle
+Essential: no
+Priority: extra
+Section: misc
+Installed-Size: 873
+Maintainer: Raphael Cohn <raphael.cohn@stormmq.com>
+Architecture: all
+Source: swaddle
+Version: 2015.1125.1559-1
+Depends: dash, coreutils, grep, awk, sed, git, binutils-multiarch, file, gnupg, rsync, curl, pandoc, p7zip-full, rar, zip, tar, lzop, gzip, bzip2, rzip, lrzip, plzip, pbzip2, pigz, pixz, lzma, xz-utils, zopfli
+Filename: pool/multiverse/s/swaddle/swaddle_2015.1125.1559-1_all.deb
+Size: 105830
+MD5sum: 9da55b5c8e6368afadb7f9eb36f3f777
+SHA1: 1d1c41b087f16a09f3f3c95c4e4cfa081c939ffa
+SHA256: b54ad271c676db8e1c316f3fba3ace1257c13b2c42f3aeb45a0775cd81f2e2ae
+Description: swaddle is a tool for creating packages and repositories
+ extremely easily. It integrates with Git and GitHub,
+ and can even upload GitHub releases and sign your
+ tags.
+Homepage: https://github.com/raphaelcohn/swaddle
+Bugs: https://github.com/raphaelcohn/swaddle/issues
+Build-Essential: no
+Origin: stormmq
+Supported: 9m
+

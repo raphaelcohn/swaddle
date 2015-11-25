@@ -1,263 +1,263 @@
 Origin: stormmq
 Label: stormmq
 Suite: swaddle
-Version: 2015.0513.0920
+Version: 2015.1125.1559
 Codename: swaddle
-Date: Wed, 13 May 2015 08:20:29 UTC
+Date: Wed, 25 Nov 2015 15:59:01 UTC
 Architectures: amd64 i386
 Components: multiverse
-Description: stormmq swaddle 2015.0513.0920
+Description: stormmq swaddle 2015.1125.1559
 NotAutomatic: no
 ButAutomaticUpgrades: no
 MD5Sum:
- 98e151a3a0ec82b8712bcba208f6d13f              9590 multiverse/binary-amd64/Packages
- aad92ce50b1bc2c0a8d03a88285cb1f6               819 multiverse/binary-amd64/Packages.asc
- 7a755fa549b1d455ff55da03af481ff8              1991 multiverse/binary-amd64/Packages.bz2
- 6172e2668d20b556f7fd06adfdd59ba1               819 multiverse/binary-amd64/Packages.bz2.asc
- b1c86bf0b24508294f82ce087bea0f6e              1498 multiverse/binary-amd64/Packages.gz
- 5d4394876a8d8351e57db606f00e8bb8               819 multiverse/binary-amd64/Packages.gz.asc
- 5576a31c315f090da024bfc24dc7872f              1543 multiverse/binary-amd64/Packages.lzma
- a35282e845fc19f88f006137b3d4c60b               819 multiverse/binary-amd64/Packages.lzma.asc
- 0e0cb07fb34847842b4d9e5995bf3d86              1584 multiverse/binary-amd64/Packages.xz
- b84b0e14d264d60c259b953ef97c2531               819 multiverse/binary-amd64/Packages.xz.asc
- 31e8837596054891d99fd1978c083dc8               114 multiverse/binary-amd64/Release
- 98e151a3a0ec82b8712bcba208f6d13f              9590 multiverse/binary-i386/Packages
- d0120ed2a83706b180849c241143ace8               819 multiverse/binary-i386/Packages.asc
- 7a755fa549b1d455ff55da03af481ff8              1991 multiverse/binary-i386/Packages.bz2
- a01de3db86b824d9eafb04c14d35db55               819 multiverse/binary-i386/Packages.bz2.asc
- b1c86bf0b24508294f82ce087bea0f6e              1498 multiverse/binary-i386/Packages.gz
- 7b919ae891b44b01f3668f51dfe09315               819 multiverse/binary-i386/Packages.gz.asc
- 5576a31c315f090da024bfc24dc7872f              1543 multiverse/binary-i386/Packages.lzma
- 0bef0bd7248c7fc266a6f8ed936f3f9d               819 multiverse/binary-i386/Packages.lzma.asc
- 0e0cb07fb34847842b4d9e5995bf3d86              1584 multiverse/binary-i386/Packages.xz
- 72aede56118631877e2755301754e4c2               819 multiverse/binary-i386/Packages.xz.asc
- 028fdb2db6508bdf3b68c10b6f335d76               113 multiverse/binary-i386/Release
- 3f332b3c25dcd71c68043eaaa54c0e83              2121 multiverse/i18n/Index
+ 4b4f2bf30ae216e10462e2f815da0ca2             11548 multiverse/binary-amd64/Packages
+ c96f29af6e5178f8dec6cf72379019ed               819 multiverse/binary-amd64/Packages.asc
+ 575620b88fbcc95f002d2f00f2613f2d              2209 multiverse/binary-amd64/Packages.bz2
+ 3806bcd8f5e4b85b27bc9ff3fa481778               819 multiverse/binary-amd64/Packages.bz2.asc
+ faf8ff796372fa62e7b1c7a5090acb50              1699 multiverse/binary-amd64/Packages.gz
+ 7e75b457ef4c3b5e57e849d577f4ad57               819 multiverse/binary-amd64/Packages.gz.asc
+ 83725cee2fa0989a95e7575beff22d7c              1737 multiverse/binary-amd64/Packages.lzma
+ 2a58090ace89b76477328940b3d6b40b               819 multiverse/binary-amd64/Packages.lzma.asc
+ d324757caf146f4c602e648237be3345              1776 multiverse/binary-amd64/Packages.xz
+ 620dfcb61cfdc7b7a26465d90bde419f               819 multiverse/binary-amd64/Packages.xz.asc
+ c0f55ae4558a7186d3c68e0a78721d9d               114 multiverse/binary-amd64/Release
+ 4b4f2bf30ae216e10462e2f815da0ca2             11548 multiverse/binary-i386/Packages
+ c96f29af6e5178f8dec6cf72379019ed               819 multiverse/binary-i386/Packages.asc
+ 575620b88fbcc95f002d2f00f2613f2d              2209 multiverse/binary-i386/Packages.bz2
+ 3806bcd8f5e4b85b27bc9ff3fa481778               819 multiverse/binary-i386/Packages.bz2.asc
+ faf8ff796372fa62e7b1c7a5090acb50              1699 multiverse/binary-i386/Packages.gz
+ 7e75b457ef4c3b5e57e849d577f4ad57               819 multiverse/binary-i386/Packages.gz.asc
+ 83725cee2fa0989a95e7575beff22d7c              1737 multiverse/binary-i386/Packages.lzma
+ 2a58090ace89b76477328940b3d6b40b               819 multiverse/binary-i386/Packages.lzma.asc
+ d324757caf146f4c602e648237be3345              1776 multiverse/binary-i386/Packages.xz
+ 620dfcb61cfdc7b7a26465d90bde419f               819 multiverse/binary-i386/Packages.xz.asc
+ 37fc874ca56109030dfd90d14e049e0b               113 multiverse/binary-i386/Release
+ 9edb8889c5623bcb88a1b406cc1abdbd              2121 multiverse/i18n/Index
  82bc2f20b87874cb162eb19b945a5f72               253 multiverse/i18n/Translation-en
- 060346e2cc6e7440aaa7b671d747240f               819 multiverse/i18n/Translation-en.asc
+ afc02b6e67691a091670298b0320edd5               819 multiverse/i18n/Translation-en.asc
  2fef03822ccebe4ca23acc4614a7c6cf               230 multiverse/i18n/Translation-en.bz2
- cc3d91ec54d2ff465a6ff7784436f3af               819 multiverse/i18n/Translation-en.bz2.asc
- f65a5834012b01fe76ec2671b754ba67               191 multiverse/i18n/Translation-en.gz
- 2dd71c80dfd9de2fb6d2c6bd0b9bfa50               819 multiverse/i18n/Translation-en.gz.asc
+ d48a1b416b3b154bdaa5d4de260404d4               819 multiverse/i18n/Translation-en.bz2.asc
+ 0d2bd194b66290bf3aea7d7062a088c2               196 multiverse/i18n/Translation-en.gz
+ 5bdabb832c16cbe4f678fc6fee6acd4d               819 multiverse/i18n/Translation-en.gz.asc
  e3d589c73f33c8ed884bc29e699774b4               213 multiverse/i18n/Translation-en.lzma
- 6834ba37cdcf1b0f7ab336eca1bfe287               819 multiverse/i18n/Translation-en.lzma.asc
+ a6a8ffe1506b0524e7bb9fcfbe368fb1               819 multiverse/i18n/Translation-en.lzma.asc
  c8d0a4199a2016eb3d729c84246aabe1               260 multiverse/i18n/Translation-en.xz
- af30e88e86e113770b6d2f335425b469               819 multiverse/i18n/Translation-en.xz.asc
+ 3b189934682f8067750d5a8807ee9777               819 multiverse/i18n/Translation-en.xz.asc
  82bc2f20b87874cb162eb19b945a5f72               253 multiverse/i18n/Translation-en_AU
- 060346e2cc6e7440aaa7b671d747240f               819 multiverse/i18n/Translation-en_AU.asc
+ afc02b6e67691a091670298b0320edd5               819 multiverse/i18n/Translation-en_AU.asc
  2fef03822ccebe4ca23acc4614a7c6cf               230 multiverse/i18n/Translation-en_AU.bz2
- cc3d91ec54d2ff465a6ff7784436f3af               819 multiverse/i18n/Translation-en_AU.bz2.asc
- f65a5834012b01fe76ec2671b754ba67               191 multiverse/i18n/Translation-en_AU.gz
- 2dd71c80dfd9de2fb6d2c6bd0b9bfa50               819 multiverse/i18n/Translation-en_AU.gz.asc
+ d48a1b416b3b154bdaa5d4de260404d4               819 multiverse/i18n/Translation-en_AU.bz2.asc
+ 0d2bd194b66290bf3aea7d7062a088c2               196 multiverse/i18n/Translation-en_AU.gz
+ 5bdabb832c16cbe4f678fc6fee6acd4d               819 multiverse/i18n/Translation-en_AU.gz.asc
  e3d589c73f33c8ed884bc29e699774b4               213 multiverse/i18n/Translation-en_AU.lzma
- 6834ba37cdcf1b0f7ab336eca1bfe287               819 multiverse/i18n/Translation-en_AU.lzma.asc
+ a6a8ffe1506b0524e7bb9fcfbe368fb1               819 multiverse/i18n/Translation-en_AU.lzma.asc
  c8d0a4199a2016eb3d729c84246aabe1               260 multiverse/i18n/Translation-en_AU.xz
- af30e88e86e113770b6d2f335425b469               819 multiverse/i18n/Translation-en_AU.xz.asc
+ 3b189934682f8067750d5a8807ee9777               819 multiverse/i18n/Translation-en_AU.xz.asc
  82bc2f20b87874cb162eb19b945a5f72               253 multiverse/i18n/Translation-en_CA
- 68c275c115bdf9681f80681424814731               819 multiverse/i18n/Translation-en_CA.asc
+ afc02b6e67691a091670298b0320edd5               819 multiverse/i18n/Translation-en_CA.asc
  2fef03822ccebe4ca23acc4614a7c6cf               230 multiverse/i18n/Translation-en_CA.bz2
- b3f98155f082a6c671434b17d0c8ff0c               819 multiverse/i18n/Translation-en_CA.bz2.asc
- f65a5834012b01fe76ec2671b754ba67               191 multiverse/i18n/Translation-en_CA.gz
- fecb6c997457ceb7c40443c4a221c1bb               819 multiverse/i18n/Translation-en_CA.gz.asc
+ d48a1b416b3b154bdaa5d4de260404d4               819 multiverse/i18n/Translation-en_CA.bz2.asc
+ 0d2bd194b66290bf3aea7d7062a088c2               196 multiverse/i18n/Translation-en_CA.gz
+ 5bdabb832c16cbe4f678fc6fee6acd4d               819 multiverse/i18n/Translation-en_CA.gz.asc
  e3d589c73f33c8ed884bc29e699774b4               213 multiverse/i18n/Translation-en_CA.lzma
- 89f6e8b836f12a3eeef5d08295cefdf6               819 multiverse/i18n/Translation-en_CA.lzma.asc
+ a6a8ffe1506b0524e7bb9fcfbe368fb1               819 multiverse/i18n/Translation-en_CA.lzma.asc
  c8d0a4199a2016eb3d729c84246aabe1               260 multiverse/i18n/Translation-en_CA.xz
- 59b443486d5ff9c6789448ffac9dc6d4               819 multiverse/i18n/Translation-en_CA.xz.asc
+ 3b189934682f8067750d5a8807ee9777               819 multiverse/i18n/Translation-en_CA.xz.asc
  82bc2f20b87874cb162eb19b945a5f72               253 multiverse/i18n/Translation-en_GB
- 68c275c115bdf9681f80681424814731               819 multiverse/i18n/Translation-en_GB.asc
+ afc02b6e67691a091670298b0320edd5               819 multiverse/i18n/Translation-en_GB.asc
  2fef03822ccebe4ca23acc4614a7c6cf               230 multiverse/i18n/Translation-en_GB.bz2
- b3f98155f082a6c671434b17d0c8ff0c               819 multiverse/i18n/Translation-en_GB.bz2.asc
- f65a5834012b01fe76ec2671b754ba67               191 multiverse/i18n/Translation-en_GB.gz
- fecb6c997457ceb7c40443c4a221c1bb               819 multiverse/i18n/Translation-en_GB.gz.asc
+ d48a1b416b3b154bdaa5d4de260404d4               819 multiverse/i18n/Translation-en_GB.bz2.asc
+ 0d2bd194b66290bf3aea7d7062a088c2               196 multiverse/i18n/Translation-en_GB.gz
+ 5bdabb832c16cbe4f678fc6fee6acd4d               819 multiverse/i18n/Translation-en_GB.gz.asc
  e3d589c73f33c8ed884bc29e699774b4               213 multiverse/i18n/Translation-en_GB.lzma
- 89f6e8b836f12a3eeef5d08295cefdf6               819 multiverse/i18n/Translation-en_GB.lzma.asc
+ 48d074dbb17181f4b57427f3e660526a               819 multiverse/i18n/Translation-en_GB.lzma.asc
  c8d0a4199a2016eb3d729c84246aabe1               260 multiverse/i18n/Translation-en_GB.xz
- 59b443486d5ff9c6789448ffac9dc6d4               819 multiverse/i18n/Translation-en_GB.xz.asc
+ 70a94472bb776f51134fa441b42f0782               819 multiverse/i18n/Translation-en_GB.xz.asc
  82bc2f20b87874cb162eb19b945a5f72               253 multiverse/i18n/Translation-en_US
- 68c275c115bdf9681f80681424814731               819 multiverse/i18n/Translation-en_US.asc
+ 0d403717502beb51935b01182920a0cc               819 multiverse/i18n/Translation-en_US.asc
  2fef03822ccebe4ca23acc4614a7c6cf               230 multiverse/i18n/Translation-en_US.bz2
- 9f97770e4d236ccbd4efd5c62cd31861               819 multiverse/i18n/Translation-en_US.bz2.asc
- f65a5834012b01fe76ec2671b754ba67               191 multiverse/i18n/Translation-en_US.gz
- 69f5a2b4a766c08d6783f8fd0dd23169               819 multiverse/i18n/Translation-en_US.gz.asc
+ e0145e009844f31d99615fb4b525aed2               819 multiverse/i18n/Translation-en_US.bz2.asc
+ 0d2bd194b66290bf3aea7d7062a088c2               196 multiverse/i18n/Translation-en_US.gz
+ 8bfcc01a86a24da54896d269cc0bfcdb               819 multiverse/i18n/Translation-en_US.gz.asc
  e3d589c73f33c8ed884bc29e699774b4               213 multiverse/i18n/Translation-en_US.lzma
- e6fc9a63102165be60ab9e91abe6315a               819 multiverse/i18n/Translation-en_US.lzma.asc
+ 48d074dbb17181f4b57427f3e660526a               819 multiverse/i18n/Translation-en_US.lzma.asc
  c8d0a4199a2016eb3d729c84246aabe1               260 multiverse/i18n/Translation-en_US.xz
- f1d077eff402764f8f3826d83946744a               819 multiverse/i18n/Translation-en_US.xz.asc
+ 70a94472bb776f51134fa441b42f0782               819 multiverse/i18n/Translation-en_US.xz.asc
  82bc2f20b87874cb162eb19b945a5f72               253 multiverse/i18n/Translation-en_ZA
- 76d88f0956cb3a6525a94db82f36a649               819 multiverse/i18n/Translation-en_ZA.asc
+ 0d403717502beb51935b01182920a0cc               819 multiverse/i18n/Translation-en_ZA.asc
  2fef03822ccebe4ca23acc4614a7c6cf               230 multiverse/i18n/Translation-en_ZA.bz2
- 9f97770e4d236ccbd4efd5c62cd31861               819 multiverse/i18n/Translation-en_ZA.bz2.asc
- f65a5834012b01fe76ec2671b754ba67               191 multiverse/i18n/Translation-en_ZA.gz
- 69f5a2b4a766c08d6783f8fd0dd23169               819 multiverse/i18n/Translation-en_ZA.gz.asc
+ e0145e009844f31d99615fb4b525aed2               819 multiverse/i18n/Translation-en_ZA.bz2.asc
+ 0d2bd194b66290bf3aea7d7062a088c2               196 multiverse/i18n/Translation-en_ZA.gz
+ 8bfcc01a86a24da54896d269cc0bfcdb               819 multiverse/i18n/Translation-en_ZA.gz.asc
  e3d589c73f33c8ed884bc29e699774b4               213 multiverse/i18n/Translation-en_ZA.lzma
- e6fc9a63102165be60ab9e91abe6315a               819 multiverse/i18n/Translation-en_ZA.lzma.asc
+ 48d074dbb17181f4b57427f3e660526a               819 multiverse/i18n/Translation-en_ZA.lzma.asc
  c8d0a4199a2016eb3d729c84246aabe1               260 multiverse/i18n/Translation-en_ZA.xz
- f1d077eff402764f8f3826d83946744a               819 multiverse/i18n/Translation-en_ZA.xz.asc
+ 70a94472bb776f51134fa441b42f0782               819 multiverse/i18n/Translation-en_ZA.xz.asc
 SHA1:
- fa0d2d2f427eaf2a22aa9e372e3c0930df21cdbe              9590 multiverse/binary-amd64/Packages
- 1339da1917297800d9dae1f46acff7307a156c35               819 multiverse/binary-amd64/Packages.asc
- 23b99256e480cdb1f68a234bb09155f9403798ba              1991 multiverse/binary-amd64/Packages.bz2
- b0b29a57a6bab5669b2c9d17d7ffeb38dc3331a3               819 multiverse/binary-amd64/Packages.bz2.asc
- 42575ce2a8a173d0946cbcc74e8ae891d42c7f12              1498 multiverse/binary-amd64/Packages.gz
- 7d3cc8c05371d983c7650daff5ba3d1e22a312d1               819 multiverse/binary-amd64/Packages.gz.asc
- 7d9da664f25e744522e5ac3680e728ea969e748a              1543 multiverse/binary-amd64/Packages.lzma
- e073f964f9684ec7efdb0688db780cb8607812c4               819 multiverse/binary-amd64/Packages.lzma.asc
- e0ebf2b34c827809970f34de4acef8aaf76af634              1584 multiverse/binary-amd64/Packages.xz
- 614cb6d480285b8128148c49819f0184a60deeef               819 multiverse/binary-amd64/Packages.xz.asc
- 80be82279e93b4b32c97b03628bee15e49b80384               114 multiverse/binary-amd64/Release
- fa0d2d2f427eaf2a22aa9e372e3c0930df21cdbe              9590 multiverse/binary-i386/Packages
- 843a3c9fb10d7106a7c48d097bafcea49d6288e7               819 multiverse/binary-i386/Packages.asc
- 23b99256e480cdb1f68a234bb09155f9403798ba              1991 multiverse/binary-i386/Packages.bz2
- 90b61accc3b04f69ae8d5c0142da7581fd728d83               819 multiverse/binary-i386/Packages.bz2.asc
- 42575ce2a8a173d0946cbcc74e8ae891d42c7f12              1498 multiverse/binary-i386/Packages.gz
- d6cbd4534c0e8ceb664f57d1d8de6fbd7212e53d               819 multiverse/binary-i386/Packages.gz.asc
- 7d9da664f25e744522e5ac3680e728ea969e748a              1543 multiverse/binary-i386/Packages.lzma
- 5af57c044c76018364ed92ae47f87bd78af47987               819 multiverse/binary-i386/Packages.lzma.asc
- e0ebf2b34c827809970f34de4acef8aaf76af634              1584 multiverse/binary-i386/Packages.xz
- abfaf06ed4c580ea4731ab2c8e4513b529662954               819 multiverse/binary-i386/Packages.xz.asc
- df08630acbb6e8c8bc149be6ef0b6d8791b2f9dc               113 multiverse/binary-i386/Release
- 457bcd481e18d1dd47bd1b78ddbd1feac06210d3              2121 multiverse/i18n/Index
+ d7a960b0e57996f0fdac276476140cefcf266040             11548 multiverse/binary-amd64/Packages
+ accbac3e61a05a85b64e83681ee035d67652fed7               819 multiverse/binary-amd64/Packages.asc
+ 54a90e61f86038c181eff229f2a215c4990e3f37              2209 multiverse/binary-amd64/Packages.bz2
+ 92d6ac161a3e3871946d8a0e4d487fdc5831c381               819 multiverse/binary-amd64/Packages.bz2.asc
+ beaf4bee5a4c55799414fe27f106a16667b8a6e8              1699 multiverse/binary-amd64/Packages.gz
+ 6d67c9b924a7e7cb0b2771713aa41c17124a1de5               819 multiverse/binary-amd64/Packages.gz.asc
+ 432e0bb2e9db20682b97b29b3ceda15d02d5173a              1737 multiverse/binary-amd64/Packages.lzma
+ cecb9d58d8effd2c389ec31fdbbb3fdadc54e25f               819 multiverse/binary-amd64/Packages.lzma.asc
+ c79047e898cf8ad9531a6a265cae0668e308420f              1776 multiverse/binary-amd64/Packages.xz
+ e2272c8e8871211a93ac8423ba476eff2699cf97               819 multiverse/binary-amd64/Packages.xz.asc
+ 7720c0fba02b8b5ba77d59aad57c0a2a8d08c42a               114 multiverse/binary-amd64/Release
+ d7a960b0e57996f0fdac276476140cefcf266040             11548 multiverse/binary-i386/Packages
+ accbac3e61a05a85b64e83681ee035d67652fed7               819 multiverse/binary-i386/Packages.asc
+ 54a90e61f86038c181eff229f2a215c4990e3f37              2209 multiverse/binary-i386/Packages.bz2
+ 92d6ac161a3e3871946d8a0e4d487fdc5831c381               819 multiverse/binary-i386/Packages.bz2.asc
+ beaf4bee5a4c55799414fe27f106a16667b8a6e8              1699 multiverse/binary-i386/Packages.gz
+ 6d67c9b924a7e7cb0b2771713aa41c17124a1de5               819 multiverse/binary-i386/Packages.gz.asc
+ 432e0bb2e9db20682b97b29b3ceda15d02d5173a              1737 multiverse/binary-i386/Packages.lzma
+ cecb9d58d8effd2c389ec31fdbbb3fdadc54e25f               819 multiverse/binary-i386/Packages.lzma.asc
+ c79047e898cf8ad9531a6a265cae0668e308420f              1776 multiverse/binary-i386/Packages.xz
+ e2272c8e8871211a93ac8423ba476eff2699cf97               819 multiverse/binary-i386/Packages.xz.asc
+ 36b81897093a7d1bc10c5f9127eb61a60019f477               113 multiverse/binary-i386/Release
+ 0df25fbb56d87dde5af02f83c3125d36b917c2bd              2121 multiverse/i18n/Index
  3527cc5c3b5a9ee9403aa73a6dac6109e3aa1a57               253 multiverse/i18n/Translation-en
- 7b164a3de87d06eaffa8fc39a634d3a8d07c8ad8               819 multiverse/i18n/Translation-en.asc
+ 48cce8d1819185769e1a79e8221d255a7ad155d6               819 multiverse/i18n/Translation-en.asc
  9a350e2f13d7d5087f7316ad0dadbf8eface5c87               230 multiverse/i18n/Translation-en.bz2
- c426e3a1403dd95fcd2c21955a6ada4f2712802e               819 multiverse/i18n/Translation-en.bz2.asc
- 321474c93c53cf6f20f150bbf5f057d633e2c3a0               191 multiverse/i18n/Translation-en.gz
- fd091c2523c16dc0f412cc20e21703cc163d2da8               819 multiverse/i18n/Translation-en.gz.asc
+ c20f000436f831e7f5ef1218ff5a1fcf5d23c644               819 multiverse/i18n/Translation-en.bz2.asc
+ 2d5b5f0e54d698e7a3a082ea306e332f1b95efdf               196 multiverse/i18n/Translation-en.gz
+ c6fe90e16f0e96181d740651643fcb6bf3f17ab0               819 multiverse/i18n/Translation-en.gz.asc
  2b0d49ffdc8aedb97c6806e772af5ec71c0371a1               213 multiverse/i18n/Translation-en.lzma
- 1cd1e080d568a989c50694feffa1a8a830f25900               819 multiverse/i18n/Translation-en.lzma.asc
+ 584e2d6ac4f8bece9770b68c981dc0ebf27425e9               819 multiverse/i18n/Translation-en.lzma.asc
  48005bcd00f9fac237607cca4af1c6b3474be108               260 multiverse/i18n/Translation-en.xz
- f75f48e46596955913bd46150a0aa0e9763eff99               819 multiverse/i18n/Translation-en.xz.asc
+ 1c05a08ff32e059ee77d5c77a2a11efd94e94472               819 multiverse/i18n/Translation-en.xz.asc
  3527cc5c3b5a9ee9403aa73a6dac6109e3aa1a57               253 multiverse/i18n/Translation-en_AU
- 7b164a3de87d06eaffa8fc39a634d3a8d07c8ad8               819 multiverse/i18n/Translation-en_AU.asc
+ 48cce8d1819185769e1a79e8221d255a7ad155d6               819 multiverse/i18n/Translation-en_AU.asc
  9a350e2f13d7d5087f7316ad0dadbf8eface5c87               230 multiverse/i18n/Translation-en_AU.bz2
- c426e3a1403dd95fcd2c21955a6ada4f2712802e               819 multiverse/i18n/Translation-en_AU.bz2.asc
- 321474c93c53cf6f20f150bbf5f057d633e2c3a0               191 multiverse/i18n/Translation-en_AU.gz
- fd091c2523c16dc0f412cc20e21703cc163d2da8               819 multiverse/i18n/Translation-en_AU.gz.asc
+ c20f000436f831e7f5ef1218ff5a1fcf5d23c644               819 multiverse/i18n/Translation-en_AU.bz2.asc
+ 2d5b5f0e54d698e7a3a082ea306e332f1b95efdf               196 multiverse/i18n/Translation-en_AU.gz
+ c6fe90e16f0e96181d740651643fcb6bf3f17ab0               819 multiverse/i18n/Translation-en_AU.gz.asc
  2b0d49ffdc8aedb97c6806e772af5ec71c0371a1               213 multiverse/i18n/Translation-en_AU.lzma
- 1cd1e080d568a989c50694feffa1a8a830f25900               819 multiverse/i18n/Translation-en_AU.lzma.asc
+ 584e2d6ac4f8bece9770b68c981dc0ebf27425e9               819 multiverse/i18n/Translation-en_AU.lzma.asc
  48005bcd00f9fac237607cca4af1c6b3474be108               260 multiverse/i18n/Translation-en_AU.xz
- f75f48e46596955913bd46150a0aa0e9763eff99               819 multiverse/i18n/Translation-en_AU.xz.asc
+ 1c05a08ff32e059ee77d5c77a2a11efd94e94472               819 multiverse/i18n/Translation-en_AU.xz.asc
  3527cc5c3b5a9ee9403aa73a6dac6109e3aa1a57               253 multiverse/i18n/Translation-en_CA
- c13f4314540840c54e800973a5149db4482be5e1               819 multiverse/i18n/Translation-en_CA.asc
+ 48cce8d1819185769e1a79e8221d255a7ad155d6               819 multiverse/i18n/Translation-en_CA.asc
  9a350e2f13d7d5087f7316ad0dadbf8eface5c87               230 multiverse/i18n/Translation-en_CA.bz2
- ae6a0bf310ed019047868cc85f2aebbcea6f0666               819 multiverse/i18n/Translation-en_CA.bz2.asc
- 321474c93c53cf6f20f150bbf5f057d633e2c3a0               191 multiverse/i18n/Translation-en_CA.gz
- 64ff3d114c9eb7995d4d325206723eba89ca7606               819 multiverse/i18n/Translation-en_CA.gz.asc
+ c20f000436f831e7f5ef1218ff5a1fcf5d23c644               819 multiverse/i18n/Translation-en_CA.bz2.asc
+ 2d5b5f0e54d698e7a3a082ea306e332f1b95efdf               196 multiverse/i18n/Translation-en_CA.gz
+ c6fe90e16f0e96181d740651643fcb6bf3f17ab0               819 multiverse/i18n/Translation-en_CA.gz.asc
  2b0d49ffdc8aedb97c6806e772af5ec71c0371a1               213 multiverse/i18n/Translation-en_CA.lzma
- 52f1d1725f1df451c8ad9686e1180e32362e2cc9               819 multiverse/i18n/Translation-en_CA.lzma.asc
+ 584e2d6ac4f8bece9770b68c981dc0ebf27425e9               819 multiverse/i18n/Translation-en_CA.lzma.asc
  48005bcd00f9fac237607cca4af1c6b3474be108               260 multiverse/i18n/Translation-en_CA.xz
- 6c6bd063f231c840c13475279aab291e6f5bca2c               819 multiverse/i18n/Translation-en_CA.xz.asc
+ 1c05a08ff32e059ee77d5c77a2a11efd94e94472               819 multiverse/i18n/Translation-en_CA.xz.asc
  3527cc5c3b5a9ee9403aa73a6dac6109e3aa1a57               253 multiverse/i18n/Translation-en_GB
- c13f4314540840c54e800973a5149db4482be5e1               819 multiverse/i18n/Translation-en_GB.asc
+ 48cce8d1819185769e1a79e8221d255a7ad155d6               819 multiverse/i18n/Translation-en_GB.asc
  9a350e2f13d7d5087f7316ad0dadbf8eface5c87               230 multiverse/i18n/Translation-en_GB.bz2
- ae6a0bf310ed019047868cc85f2aebbcea6f0666               819 multiverse/i18n/Translation-en_GB.bz2.asc
- 321474c93c53cf6f20f150bbf5f057d633e2c3a0               191 multiverse/i18n/Translation-en_GB.gz
- 64ff3d114c9eb7995d4d325206723eba89ca7606               819 multiverse/i18n/Translation-en_GB.gz.asc
+ c20f000436f831e7f5ef1218ff5a1fcf5d23c644               819 multiverse/i18n/Translation-en_GB.bz2.asc
+ 2d5b5f0e54d698e7a3a082ea306e332f1b95efdf               196 multiverse/i18n/Translation-en_GB.gz
+ c6fe90e16f0e96181d740651643fcb6bf3f17ab0               819 multiverse/i18n/Translation-en_GB.gz.asc
  2b0d49ffdc8aedb97c6806e772af5ec71c0371a1               213 multiverse/i18n/Translation-en_GB.lzma
- 52f1d1725f1df451c8ad9686e1180e32362e2cc9               819 multiverse/i18n/Translation-en_GB.lzma.asc
+ 0d5c2f61c20fb7a7d00a34aa7f5451f0db46b187               819 multiverse/i18n/Translation-en_GB.lzma.asc
  48005bcd00f9fac237607cca4af1c6b3474be108               260 multiverse/i18n/Translation-en_GB.xz
- 6c6bd063f231c840c13475279aab291e6f5bca2c               819 multiverse/i18n/Translation-en_GB.xz.asc
+ 014f79124891dd5b4d6e4181b6c7a0a590eed78b               819 multiverse/i18n/Translation-en_GB.xz.asc
  3527cc5c3b5a9ee9403aa73a6dac6109e3aa1a57               253 multiverse/i18n/Translation-en_US
- c13f4314540840c54e800973a5149db4482be5e1               819 multiverse/i18n/Translation-en_US.asc
+ 4a0cd0211cca6265b73e44e796e3d779599dff86               819 multiverse/i18n/Translation-en_US.asc
  9a350e2f13d7d5087f7316ad0dadbf8eface5c87               230 multiverse/i18n/Translation-en_US.bz2
- efa549e609d29f744a3a34b5cf946da098ac534b               819 multiverse/i18n/Translation-en_US.bz2.asc
- 321474c93c53cf6f20f150bbf5f057d633e2c3a0               191 multiverse/i18n/Translation-en_US.gz
- 5b6ce263cc3fe21b657636364212042c7f0fb008               819 multiverse/i18n/Translation-en_US.gz.asc
+ 0169281a30c1233221f5163943101fbebac39962               819 multiverse/i18n/Translation-en_US.bz2.asc
+ 2d5b5f0e54d698e7a3a082ea306e332f1b95efdf               196 multiverse/i18n/Translation-en_US.gz
+ 9d67afe00e390105bda50d35ed37ef7e3aecd4f5               819 multiverse/i18n/Translation-en_US.gz.asc
  2b0d49ffdc8aedb97c6806e772af5ec71c0371a1               213 multiverse/i18n/Translation-en_US.lzma
- 5920c84f16fbc9585a7f455d0e39b368b39be943               819 multiverse/i18n/Translation-en_US.lzma.asc
+ 0d5c2f61c20fb7a7d00a34aa7f5451f0db46b187               819 multiverse/i18n/Translation-en_US.lzma.asc
  48005bcd00f9fac237607cca4af1c6b3474be108               260 multiverse/i18n/Translation-en_US.xz
- 12c9604328cb335aa8b47a488cc87d46abe13496               819 multiverse/i18n/Translation-en_US.xz.asc
+ 014f79124891dd5b4d6e4181b6c7a0a590eed78b               819 multiverse/i18n/Translation-en_US.xz.asc
  3527cc5c3b5a9ee9403aa73a6dac6109e3aa1a57               253 multiverse/i18n/Translation-en_ZA
- 99c6db0cc89e7a6207baf5178a0353e717716fc6               819 multiverse/i18n/Translation-en_ZA.asc
+ 4a0cd0211cca6265b73e44e796e3d779599dff86               819 multiverse/i18n/Translation-en_ZA.asc
  9a350e2f13d7d5087f7316ad0dadbf8eface5c87               230 multiverse/i18n/Translation-en_ZA.bz2
- efa549e609d29f744a3a34b5cf946da098ac534b               819 multiverse/i18n/Translation-en_ZA.bz2.asc
- 321474c93c53cf6f20f150bbf5f057d633e2c3a0               191 multiverse/i18n/Translation-en_ZA.gz
- 5b6ce263cc3fe21b657636364212042c7f0fb008               819 multiverse/i18n/Translation-en_ZA.gz.asc
+ 0169281a30c1233221f5163943101fbebac39962               819 multiverse/i18n/Translation-en_ZA.bz2.asc
+ 2d5b5f0e54d698e7a3a082ea306e332f1b95efdf               196 multiverse/i18n/Translation-en_ZA.gz
+ 9d67afe00e390105bda50d35ed37ef7e3aecd4f5               819 multiverse/i18n/Translation-en_ZA.gz.asc
  2b0d49ffdc8aedb97c6806e772af5ec71c0371a1               213 multiverse/i18n/Translation-en_ZA.lzma
- 5920c84f16fbc9585a7f455d0e39b368b39be943               819 multiverse/i18n/Translation-en_ZA.lzma.asc
+ 0d5c2f61c20fb7a7d00a34aa7f5451f0db46b187               819 multiverse/i18n/Translation-en_ZA.lzma.asc
  48005bcd00f9fac237607cca4af1c6b3474be108               260 multiverse/i18n/Translation-en_ZA.xz
- 12c9604328cb335aa8b47a488cc87d46abe13496               819 multiverse/i18n/Translation-en_ZA.xz.asc
+ 014f79124891dd5b4d6e4181b6c7a0a590eed78b               819 multiverse/i18n/Translation-en_ZA.xz.asc
 SHA256:
- f041462155d50a8089ec5c7b9bab29a3537f8beb7b7356134ce998257e2495e6              9590 multiverse/binary-amd64/Packages
- 9d78cda420b253cd9a5bd2bf1f49254bf3566a9642fbd5eea7f2bca83fae92ec               819 multiverse/binary-amd64/Packages.asc
- 176703a2340f7c222361b8c4d78916094c6445efa77b3b7d3a20df3494fd1db8              1991 multiverse/binary-amd64/Packages.bz2
- 1c1966e2d41723cd4fda9344caf72fcc0dffd450b6a84d8432040cfed3d39f8f               819 multiverse/binary-amd64/Packages.bz2.asc
- 2921862793fc2d82a8af73389a8a866e72f84d089c1acdb17606ca902d81c459              1498 multiverse/binary-amd64/Packages.gz
- df4571197b613f1b798872b8ee73c7b2312494ee177c3c522854579857d169d3               819 multiverse/binary-amd64/Packages.gz.asc
- f7759e93059fe5c0855d9282a72a488ea63a0bb53fbac6692fa801db1f200680              1543 multiverse/binary-amd64/Packages.lzma
- ceeeb0ed91b88db03294c81b3cfda26a9c1bd88208832a3bde4cf50099a655b9               819 multiverse/binary-amd64/Packages.lzma.asc
- 0efd069b42453f8bd4e56200ef568ac1daef0062de9ca28ea5bdca5695264020              1584 multiverse/binary-amd64/Packages.xz
- 0e39aa40b911233255544dde9eff9e7e4fc733c99ae0b9c28e6ef636d5578d37               819 multiverse/binary-amd64/Packages.xz.asc
- d2b316f3b68e4161ed4b2133b4f86f3ab618edc574a6850d85ef64bf555ade93               114 multiverse/binary-amd64/Release
- f041462155d50a8089ec5c7b9bab29a3537f8beb7b7356134ce998257e2495e6              9590 multiverse/binary-i386/Packages
- 692128424339cac5cb6ecfd8c0fa412be8ec5acfa6379129948527aad1062d9f               819 multiverse/binary-i386/Packages.asc
- 176703a2340f7c222361b8c4d78916094c6445efa77b3b7d3a20df3494fd1db8              1991 multiverse/binary-i386/Packages.bz2
- 370c262d8167331b994c5203ba225b31940eceaf666bf7555dfa4d4decb7575d               819 multiverse/binary-i386/Packages.bz2.asc
- 2921862793fc2d82a8af73389a8a866e72f84d089c1acdb17606ca902d81c459              1498 multiverse/binary-i386/Packages.gz
- 451f1bd72c05722d42c5b0962e0027e47d42eab7c0e026b76d049c296e223d76               819 multiverse/binary-i386/Packages.gz.asc
- f7759e93059fe5c0855d9282a72a488ea63a0bb53fbac6692fa801db1f200680              1543 multiverse/binary-i386/Packages.lzma
- 369856284a6fb32474ffd43e5e60b949b263a78b25b4f21917c08ea6f65b228c               819 multiverse/binary-i386/Packages.lzma.asc
- 0efd069b42453f8bd4e56200ef568ac1daef0062de9ca28ea5bdca5695264020              1584 multiverse/binary-i386/Packages.xz
- dea75fa5df4137c7d85cfd65cd5cae85bb15912bc897b6b22aa3639e6cbdcd5d               819 multiverse/binary-i386/Packages.xz.asc
- bdcdfcf8ec2bd2494e24f47e2746c0aaf6bb295d38d7f2ec32ea9b8620c143ca               113 multiverse/binary-i386/Release
- 36f12b1e58895d17f7fbc4ec3a5d5f85da6c33226195cbb8f3e3fdc2a2f7dc73              2121 multiverse/i18n/Index
+ 7584e3f92507edb28512fff2ec6410f4b89da270647f6c25291dbb5c081582b4             11548 multiverse/binary-amd64/Packages
+ bd2e8e8a7618a232521947ecd624db9b136c313643688e4ff31692bcd9de4bc7               819 multiverse/binary-amd64/Packages.asc
+ 6646296ed3b7c44a403aa0afe7a9715b74714ca2c18f6354a46c86f7c8a24d9b              2209 multiverse/binary-amd64/Packages.bz2
+ fd083d0c71fce1058a25d7ef61e1ca3d7e9f3c8dc10f5759ba527b48dda4f7bb               819 multiverse/binary-amd64/Packages.bz2.asc
+ 86a91300e58713f1391afba76810719be3f6e23a7846f7cc355c55a57a0d891b              1699 multiverse/binary-amd64/Packages.gz
+ 725981b012d250d3814b373d4271fdbc6737ee029a7c4835aa1b48c5626894cf               819 multiverse/binary-amd64/Packages.gz.asc
+ 65d7076f5d2a058324e29e50a73ac3afedd1d5a5f6aa2e9a77beedd2dcdfc174              1737 multiverse/binary-amd64/Packages.lzma
+ dc545e39b320cb6dae5c518d18b9589930dd3b35fdbe9647f10c8a02c9f5fef8               819 multiverse/binary-amd64/Packages.lzma.asc
+ 0dd2e253067567894ff0ade52af7321f88bc9bdaf7fa479187097658ce60e53c              1776 multiverse/binary-amd64/Packages.xz
+ 60e37357649d9052e130b067bef222b8cab75f7dfce36493551d76cb02f4b3cb               819 multiverse/binary-amd64/Packages.xz.asc
+ 3dfb07e0e865dcdcc6ddfbbf07e4e32bd80430ff33c37d90699887698aa59bfc               114 multiverse/binary-amd64/Release
+ 7584e3f92507edb28512fff2ec6410f4b89da270647f6c25291dbb5c081582b4             11548 multiverse/binary-i386/Packages
+ bd2e8e8a7618a232521947ecd624db9b136c313643688e4ff31692bcd9de4bc7               819 multiverse/binary-i386/Packages.asc
+ 6646296ed3b7c44a403aa0afe7a9715b74714ca2c18f6354a46c86f7c8a24d9b              2209 multiverse/binary-i386/Packages.bz2
+ fd083d0c71fce1058a25d7ef61e1ca3d7e9f3c8dc10f5759ba527b48dda4f7bb               819 multiverse/binary-i386/Packages.bz2.asc
+ 86a91300e58713f1391afba76810719be3f6e23a7846f7cc355c55a57a0d891b              1699 multiverse/binary-i386/Packages.gz
+ 725981b012d250d3814b373d4271fdbc6737ee029a7c4835aa1b48c5626894cf               819 multiverse/binary-i386/Packages.gz.asc
+ 65d7076f5d2a058324e29e50a73ac3afedd1d5a5f6aa2e9a77beedd2dcdfc174              1737 multiverse/binary-i386/Packages.lzma
+ dc545e39b320cb6dae5c518d18b9589930dd3b35fdbe9647f10c8a02c9f5fef8               819 multiverse/binary-i386/Packages.lzma.asc
+ 0dd2e253067567894ff0ade52af7321f88bc9bdaf7fa479187097658ce60e53c              1776 multiverse/binary-i386/Packages.xz
+ 60e37357649d9052e130b067bef222b8cab75f7dfce36493551d76cb02f4b3cb               819 multiverse/binary-i386/Packages.xz.asc
+ bdab482157234b63ba089263148292fe5e828edad42a27eb65926179d81ddef2               113 multiverse/binary-i386/Release
+ fe4607ccafd8fac7dff809fb0c826fbb705f207a238bffb38a0c5355b54c061b              2121 multiverse/i18n/Index
  aad187bd0367f7632e2e70914258ec6abbf3fcdbf7f188bbd3df0b64e37b8ccb               253 multiverse/i18n/Translation-en
- 438c41a2e429162eebccb48392166ede6a77f1d305db7fc5e702452e32e6e45a               819 multiverse/i18n/Translation-en.asc
+ 7ac1bac474e5afe298eb51f811eb4959fcbe1f3e6ac087d5ce8fde9ad3280aa7               819 multiverse/i18n/Translation-en.asc
  a3979b8b10e12a8fa131871825b5baa4d59d7afac838b2682e006200e55c1fe8               230 multiverse/i18n/Translation-en.bz2
- bc954223bcd146ad09c49d5ad2d8fef04b63904d181e0aa0cf46485ae083c1b5               819 multiverse/i18n/Translation-en.bz2.asc
- 3d77392cddb6151a8932f5020095e922838d48ee2ed4171fab7ddd36d0a6b68a               191 multiverse/i18n/Translation-en.gz
- 907051ad95c712dc5738696cfcdb454665e6b5db1f996f25afd259aab625a93c               819 multiverse/i18n/Translation-en.gz.asc
+ daf5844115e855f7c0fe9b159ad12a87a08fb24efefc5e8271448a2a7db3b4ad               819 multiverse/i18n/Translation-en.bz2.asc
+ 86741c442e4ceb2b81b3371d627f98bea4a8deb90018f6951fced94cc13f060f               196 multiverse/i18n/Translation-en.gz
+ 71ebdf92459951a031f703abf5886dff40c6cf306561bdd6451007b5038874d2               819 multiverse/i18n/Translation-en.gz.asc
  2f79274eb60abf8f4b300aa301d1f602ab4f49a997a6f45d100ff9bcd4c7e06c               213 multiverse/i18n/Translation-en.lzma
- b51b38ba492efa462c4367a4f7ab0f4c0f105b71feba1904810341fd50881d93               819 multiverse/i18n/Translation-en.lzma.asc
+ 349f6b6d96f08340815382cd113fec813a0c7c3d73ae9594e7656b4c7cc0a77a               819 multiverse/i18n/Translation-en.lzma.asc
  7818591fc2929c7647a3fc5e835a80026ca7fa3730f8b698fa74c5f4c24c5d65               260 multiverse/i18n/Translation-en.xz
- 1d296d91b732cb25610c8b2a329e4b5c6358f666602eaa92ee7e11b22e46b73d               819 multiverse/i18n/Translation-en.xz.asc
+ ba42c0c60e691c77587d5ecb510996f8312db2cba5fa1a9371d4191c937610ac               819 multiverse/i18n/Translation-en.xz.asc
  aad187bd0367f7632e2e70914258ec6abbf3fcdbf7f188bbd3df0b64e37b8ccb               253 multiverse/i18n/Translation-en_AU
- 438c41a2e429162eebccb48392166ede6a77f1d305db7fc5e702452e32e6e45a               819 multiverse/i18n/Translation-en_AU.asc
+ 7ac1bac474e5afe298eb51f811eb4959fcbe1f3e6ac087d5ce8fde9ad3280aa7               819 multiverse/i18n/Translation-en_AU.asc
  a3979b8b10e12a8fa131871825b5baa4d59d7afac838b2682e006200e55c1fe8               230 multiverse/i18n/Translation-en_AU.bz2
- bc954223bcd146ad09c49d5ad2d8fef04b63904d181e0aa0cf46485ae083c1b5               819 multiverse/i18n/Translation-en_AU.bz2.asc
- 3d77392cddb6151a8932f5020095e922838d48ee2ed4171fab7ddd36d0a6b68a               191 multiverse/i18n/Translation-en_AU.gz
- 907051ad95c712dc5738696cfcdb454665e6b5db1f996f25afd259aab625a93c               819 multiverse/i18n/Translation-en_AU.gz.asc
+ daf5844115e855f7c0fe9b159ad12a87a08fb24efefc5e8271448a2a7db3b4ad               819 multiverse/i18n/Translation-en_AU.bz2.asc
+ 86741c442e4ceb2b81b3371d627f98bea4a8deb90018f6951fced94cc13f060f               196 multiverse/i18n/Translation-en_AU.gz
+ 71ebdf92459951a031f703abf5886dff40c6cf306561bdd6451007b5038874d2               819 multiverse/i18n/Translation-en_AU.gz.asc
  2f79274eb60abf8f4b300aa301d1f602ab4f49a997a6f45d100ff9bcd4c7e06c               213 multiverse/i18n/Translation-en_AU.lzma
- b51b38ba492efa462c4367a4f7ab0f4c0f105b71feba1904810341fd50881d93               819 multiverse/i18n/Translation-en_AU.lzma.asc
+ 349f6b6d96f08340815382cd113fec813a0c7c3d73ae9594e7656b4c7cc0a77a               819 multiverse/i18n/Translation-en_AU.lzma.asc
  7818591fc2929c7647a3fc5e835a80026ca7fa3730f8b698fa74c5f4c24c5d65               260 multiverse/i18n/Translation-en_AU.xz
- 1d296d91b732cb25610c8b2a329e4b5c6358f666602eaa92ee7e11b22e46b73d               819 multiverse/i18n/Translation-en_AU.xz.asc
+ ba42c0c60e691c77587d5ecb510996f8312db2cba5fa1a9371d4191c937610ac               819 multiverse/i18n/Translation-en_AU.xz.asc
  aad187bd0367f7632e2e70914258ec6abbf3fcdbf7f188bbd3df0b64e37b8ccb               253 multiverse/i18n/Translation-en_CA
- 6a050441dc17874ee21ae0f096fbd68ce2c4de8d4554a6e2f56fa79c32c29b9d               819 multiverse/i18n/Translation-en_CA.asc
+ 7ac1bac474e5afe298eb51f811eb4959fcbe1f3e6ac087d5ce8fde9ad3280aa7               819 multiverse/i18n/Translation-en_CA.asc
  a3979b8b10e12a8fa131871825b5baa4d59d7afac838b2682e006200e55c1fe8               230 multiverse/i18n/Translation-en_CA.bz2
- c242de1b52110a8dffcb942c50d344a6309163f222a82fc8835092dec22fb30f               819 multiverse/i18n/Translation-en_CA.bz2.asc
- 3d77392cddb6151a8932f5020095e922838d48ee2ed4171fab7ddd36d0a6b68a               191 multiverse/i18n/Translation-en_CA.gz
- 1b59331c7960f18f949adfc551f155eb8e127edf58296a45306336df4d0ea39c               819 multiverse/i18n/Translation-en_CA.gz.asc
+ daf5844115e855f7c0fe9b159ad12a87a08fb24efefc5e8271448a2a7db3b4ad               819 multiverse/i18n/Translation-en_CA.bz2.asc
+ 86741c442e4ceb2b81b3371d627f98bea4a8deb90018f6951fced94cc13f060f               196 multiverse/i18n/Translation-en_CA.gz
+ 71ebdf92459951a031f703abf5886dff40c6cf306561bdd6451007b5038874d2               819 multiverse/i18n/Translation-en_CA.gz.asc
  2f79274eb60abf8f4b300aa301d1f602ab4f49a997a6f45d100ff9bcd4c7e06c               213 multiverse/i18n/Translation-en_CA.lzma
- 5b2769f67c89bfa9b6fe5229e1cfd5b0a0fd9d03d8cfc67f87d148037d9f37ad               819 multiverse/i18n/Translation-en_CA.lzma.asc
+ 349f6b6d96f08340815382cd113fec813a0c7c3d73ae9594e7656b4c7cc0a77a               819 multiverse/i18n/Translation-en_CA.lzma.asc
  7818591fc2929c7647a3fc5e835a80026ca7fa3730f8b698fa74c5f4c24c5d65               260 multiverse/i18n/Translation-en_CA.xz
- 521be97115200c03dfbcb3d348ea15413aedecffc9288167b6b70af76b0eaa31               819 multiverse/i18n/Translation-en_CA.xz.asc
+ ba42c0c60e691c77587d5ecb510996f8312db2cba5fa1a9371d4191c937610ac               819 multiverse/i18n/Translation-en_CA.xz.asc
  aad187bd0367f7632e2e70914258ec6abbf3fcdbf7f188bbd3df0b64e37b8ccb               253 multiverse/i18n/Translation-en_GB
- 6a050441dc17874ee21ae0f096fbd68ce2c4de8d4554a6e2f56fa79c32c29b9d               819 multiverse/i18n/Translation-en_GB.asc
+ 7ac1bac474e5afe298eb51f811eb4959fcbe1f3e6ac087d5ce8fde9ad3280aa7               819 multiverse/i18n/Translation-en_GB.asc
  a3979b8b10e12a8fa131871825b5baa4d59d7afac838b2682e006200e55c1fe8               230 multiverse/i18n/Translation-en_GB.bz2
- c242de1b52110a8dffcb942c50d344a6309163f222a82fc8835092dec22fb30f               819 multiverse/i18n/Translation-en_GB.bz2.asc
- 3d77392cddb6151a8932f5020095e922838d48ee2ed4171fab7ddd36d0a6b68a               191 multiverse/i18n/Translation-en_GB.gz
- 1b59331c7960f18f949adfc551f155eb8e127edf58296a45306336df4d0ea39c               819 multiverse/i18n/Translation-en_GB.gz.asc
+ daf5844115e855f7c0fe9b159ad12a87a08fb24efefc5e8271448a2a7db3b4ad               819 multiverse/i18n/Translation-en_GB.bz2.asc
+ 86741c442e4ceb2b81b3371d627f98bea4a8deb90018f6951fced94cc13f060f               196 multiverse/i18n/Translation-en_GB.gz
+ 71ebdf92459951a031f703abf5886dff40c6cf306561bdd6451007b5038874d2               819 multiverse/i18n/Translation-en_GB.gz.asc
  2f79274eb60abf8f4b300aa301d1f602ab4f49a997a6f45d100ff9bcd4c7e06c               213 multiverse/i18n/Translation-en_GB.lzma
- 5b2769f67c89bfa9b6fe5229e1cfd5b0a0fd9d03d8cfc67f87d148037d9f37ad               819 multiverse/i18n/Translation-en_GB.lzma.asc
+ 1a3656847dc0076794de76090d6a0d3a9262386ff59c0f74c3f6cd237a82daf7               819 multiverse/i18n/Translation-en_GB.lzma.asc
  7818591fc2929c7647a3fc5e835a80026ca7fa3730f8b698fa74c5f4c24c5d65               260 multiverse/i18n/Translation-en_GB.xz
- 521be97115200c03dfbcb3d348ea15413aedecffc9288167b6b70af76b0eaa31               819 multiverse/i18n/Translation-en_GB.xz.asc
+ a553b417950afdedeca64f7f2ffc4ffdd619b5e22822567745b093da814f90fc               819 multiverse/i18n/Translation-en_GB.xz.asc
  aad187bd0367f7632e2e70914258ec6abbf3fcdbf7f188bbd3df0b64e37b8ccb               253 multiverse/i18n/Translation-en_US
- 6a050441dc17874ee21ae0f096fbd68ce2c4de8d4554a6e2f56fa79c32c29b9d               819 multiverse/i18n/Translation-en_US.asc
+ b9d02027a0a9f979db83dc17aebb479887460896ed2e54e7b5fa983439b0b268               819 multiverse/i18n/Translation-en_US.asc
  a3979b8b10e12a8fa131871825b5baa4d59d7afac838b2682e006200e55c1fe8               230 multiverse/i18n/Translation-en_US.bz2
- 289d44710410db9ddccf1fb3e6349551e57457982598bdbcef3887fdc327560a               819 multiverse/i18n/Translation-en_US.bz2.asc
- 3d77392cddb6151a8932f5020095e922838d48ee2ed4171fab7ddd36d0a6b68a               191 multiverse/i18n/Translation-en_US.gz
- e17305090c114f957e91628bff6dd5bb02b7ccad4008cc93ba6ccc09979f95ce               819 multiverse/i18n/Translation-en_US.gz.asc
+ b106011428c963b21ba30868cda2a8f1558e0c9b680f2123dd02499fa3a5601c               819 multiverse/i18n/Translation-en_US.bz2.asc
+ 86741c442e4ceb2b81b3371d627f98bea4a8deb90018f6951fced94cc13f060f               196 multiverse/i18n/Translation-en_US.gz
+ 8408865279ae75c4ce7eb3f3ac899b3e48ace3fc58a436376fa56d4e6eacffd2               819 multiverse/i18n/Translation-en_US.gz.asc
  2f79274eb60abf8f4b300aa301d1f602ab4f49a997a6f45d100ff9bcd4c7e06c               213 multiverse/i18n/Translation-en_US.lzma
- 302e70028c3f84879edbea1f6b6d8403ec47188225a74b13564d06bfb8874526               819 multiverse/i18n/Translation-en_US.lzma.asc
+ 1a3656847dc0076794de76090d6a0d3a9262386ff59c0f74c3f6cd237a82daf7               819 multiverse/i18n/Translation-en_US.lzma.asc
  7818591fc2929c7647a3fc5e835a80026ca7fa3730f8b698fa74c5f4c24c5d65               260 multiverse/i18n/Translation-en_US.xz
- 5215839e52102881315bfcf3fb42c837d0036916739b3b703fcf904acf336857               819 multiverse/i18n/Translation-en_US.xz.asc
+ a553b417950afdedeca64f7f2ffc4ffdd619b5e22822567745b093da814f90fc               819 multiverse/i18n/Translation-en_US.xz.asc
  aad187bd0367f7632e2e70914258ec6abbf3fcdbf7f188bbd3df0b64e37b8ccb               253 multiverse/i18n/Translation-en_ZA
- 8ac0c1b9f5e27109d05aae27d12f1955bb6e175c0eba0e16b27a41db3b8c5529               819 multiverse/i18n/Translation-en_ZA.asc
+ b9d02027a0a9f979db83dc17aebb479887460896ed2e54e7b5fa983439b0b268               819 multiverse/i18n/Translation-en_ZA.asc
  a3979b8b10e12a8fa131871825b5baa4d59d7afac838b2682e006200e55c1fe8               230 multiverse/i18n/Translation-en_ZA.bz2
- 289d44710410db9ddccf1fb3e6349551e57457982598bdbcef3887fdc327560a               819 multiverse/i18n/Translation-en_ZA.bz2.asc
- 3d77392cddb6151a8932f5020095e922838d48ee2ed4171fab7ddd36d0a6b68a               191 multiverse/i18n/Translation-en_ZA.gz
- e17305090c114f957e91628bff6dd5bb02b7ccad4008cc93ba6ccc09979f95ce               819 multiverse/i18n/Translation-en_ZA.gz.asc
+ b106011428c963b21ba30868cda2a8f1558e0c9b680f2123dd02499fa3a5601c               819 multiverse/i18n/Translation-en_ZA.bz2.asc
+ 86741c442e4ceb2b81b3371d627f98bea4a8deb90018f6951fced94cc13f060f               196 multiverse/i18n/Translation-en_ZA.gz
+ 8408865279ae75c4ce7eb3f3ac899b3e48ace3fc58a436376fa56d4e6eacffd2               819 multiverse/i18n/Translation-en_ZA.gz.asc
  2f79274eb60abf8f4b300aa301d1f602ab4f49a997a6f45d100ff9bcd4c7e06c               213 multiverse/i18n/Translation-en_ZA.lzma
- 302e70028c3f84879edbea1f6b6d8403ec47188225a74b13564d06bfb8874526               819 multiverse/i18n/Translation-en_ZA.lzma.asc
+ 1a3656847dc0076794de76090d6a0d3a9262386ff59c0f74c3f6cd237a82daf7               819 multiverse/i18n/Translation-en_ZA.lzma.asc
  7818591fc2929c7647a3fc5e835a80026ca7fa3730f8b698fa74c5f4c24c5d65               260 multiverse/i18n/Translation-en_ZA.xz
- 5215839e52102881315bfcf3fb42c837d0036916739b3b703fcf904acf336857               819 multiverse/i18n/Translation-en_ZA.xz.asc
+ a553b417950afdedeca64f7f2ffc4ffdd619b5e22822567745b093da814f90fc               819 multiverse/i18n/Translation-en_ZA.xz.asc
