@@ -138,11 +138,14 @@ swaddle_package_rpm_rpmbuild()
 		core_temporaryFiles_newFileToRemoveOnExit
 		local gpgProxyBecauseRpmIsAwful="$TMP_FILE"
 		printf '%s' "#!/usr/bin/env sh
-signatureFileName=\"\$1\"
-plainTextFileName=\"\$2\"
+gpg=\"\$1\"
+signatureFileName=\"\$2\"
+plainTextFileName=\"\$3\"
+echo "$#"
+echo "$@" 1>&2
+set -x
 export GNUPGHOME='$home'
-echo $gpg --quiet --home '$home' --force-v3-sigs --digest-algo=sha1 --batch --no-verbose --no-armor --passphrase-fd 3 --no-secmem-warning -u '$keyName' -sbo \"\$signatureFileName\" \"\$plainTextFileName\" 1>&2
-exec $gpg --quiet --home '$home' --force-v3-sigs --digest-algo=sha1 --batch --no-verbose --no-armor --passphrase-fd 3 --no-secmem-warning -u '$keyName' -sbo \"\$signatureFileName\" \"\$plainTextFileName\"
+exec $gpg --quiet --no-options --home '$home' --force-v3-sigs --digest-algo=sha1 --batch --no-verbose --no-armor --passphrase-fd 3 --no-secmem-warning -u '$keyName' --sign --detach-sign --output \"\$signatureFileName\" \"\$plainTextFileName\"
 " >"$gpgProxyBecauseRpmIsAwful"
 		chmod +x "$gpgProxyBecauseRpmIsAwful"
 		if [ $(core_init_verbosity) -gt 1 ]; then
