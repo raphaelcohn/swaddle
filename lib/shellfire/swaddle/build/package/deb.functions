@@ -359,9 +359,6 @@ core_dependency_requires '*' tar rm
 core_functions_register _swaddle_build_package_deb_functions swaddle_build_package_deb_tarData
 swaddle_build_package_deb_tarData()
 {
-	local options
-	local options_initialised
-
 	local tarball="$_swaddle_build_package_temporaryFolderPath"/data.tar
 	
 	swaddle_simulateroot_execute tar \

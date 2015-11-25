@@ -51,17 +51,17 @@ swaddle_build_package_zip_create()
 		local contents="$baseName"
 	fi
 	
-	local options
-	local options_intialised
-	core_variable_array_initialise options
+	local zipOptions
+	local zipOptions_intialised
+	core_variable_array_initialise zipOptions
 	
 	if core_variable_isTrue "$(configure_getValue swaddle_zip use_bzip2)"; then
-		core_variable_array_append options -Z bzip2
+		core_variable_array_append zipOptions -Z bzip2
 	fi
 	
-	core_variable_array_append options -z -q -r -9 "$_swaddle_build_package_zip_filePath" "$contents"
+	core_variable_array_append zipOptions -z -q -r -9 "$_swaddle_build_package_zip_filePath" "$contents"
 	
-	core_variable_array_passToFunctionAsArguments options _swaddle_build_package_zip_create
+	core_variable_array_passToFunctionAsArguments zipOptions _swaddle_build_package_zip_create
 	
 	swaddle_touch_setMtimeAndAtime "$_swaddle_build_package_zip_filePath"
 	

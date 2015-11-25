@@ -69,11 +69,11 @@ swaddle_gpg_publishSigningKey()
 		return 0
 	fi
 	
-	local options
-	local options_initialised
-	core_variable_array_initialise options
+	local gpgOptions
+	local gpgOptions_initialised
+	core_variable_array_initialise gpgOptions
 	
-	core_variable_array_append options --keyserver "$keyserver"
+	core_variable_array_append gpgOptions --keyserver "$keyserver"
 	
 	_swaddle_gpg_publishSigningKey_keyserverOptions()
 	{
@@ -96,19 +96,19 @@ swaddle_gpg_publishSigningKey()
 			fi
 			printf '%s' "$core_variable_array_element"
 		}
-		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' 'keyserver_options' _swaddle_gpg_publishSigningKey_keyserverOptions_callback "$@"
+		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' 'keyserver_gpgOptions' _swaddle_gpg_publishSigningKey_keyserverOptions_callback "$@"
 	}
 	local keyserverOptions="$(_swaddle_gpg_publishSigningKey_keyserverOptions)"
 	if [ -n "$keyserverOptions" ]; then
-		core_variable_array_append options --keyserver-options "$keyserverOptions"
+		core_variable_array_append gpgOptions --keyserver-gpgOptions "$keyserverOptions"
 	fi
 	
-	core_variable_array_append options --send-keys "$(swaddle_gpg_exportSigningKeyFingerprint)"
+	core_variable_array_append gpgOptions --send-keys "$(swaddle_gpg_exportSigningKeyFingerprint)"
 	
 	if [ $(core_init_verbosity) -gt 0 ]; then
-		core_variable_array_passToFunctionAsArguments options swaddle_gpg || core_message WARN "Could not publish signing key to keyserver"
+		core_variable_array_passToFunctionAsArguments gpgOptions swaddle_gpg || core_message WARN "Could not publish signing key to keyserver"
 	else
-		core_variable_array_passToFunctionAsArguments options swaddle_gpg 2>/dev/null || core_message WARN "Could not publish signing key to keyserver (run again with  --verbose 2  to find out why)"
+		core_variable_array_passToFunctionAsArguments gpgOptions swaddle_gpg 2>/dev/null || core_message WARN "Could not publish signing key to keyserver (run again with  --verbose 2  to find out why)"
 	fi
 }
 
