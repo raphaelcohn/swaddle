@@ -96,11 +96,11 @@ swaddle_gpg_publishSigningKey()
 			fi
 			printf '%s' "$core_variable_array_element"
 		}
-		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' 'keyserver_gpgOptions' _swaddle_gpg_publishSigningKey_keyserverOptions_callback "$@"
+		configure_iterateOverArrayWithDefaultsIfEmpty 'swaddle' 'keyserver_options' _swaddle_gpg_publishSigningKey_keyserverOptions_callback "$@"
 	}
 	local keyserverOptions="$(_swaddle_gpg_publishSigningKey_keyserverOptions)"
 	if [ -n "$keyserverOptions" ]; then
-		core_variable_array_append gpgOptions --keyserver-gpgOptions "$keyserverOptions"
+		core_variable_array_append gpgOptions --keyserver-options "$keyserverOptions"
 	fi
 	
 	core_variable_array_append gpgOptions --send-keys "$(swaddle_gpg_exportSigningKeyFingerprint)"
