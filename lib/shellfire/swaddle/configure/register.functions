@@ -50,8 +50,6 @@ swaddle_configure_register_configuration()
 		:
 	elif _swaddle_configure_register_configuration_checkCombinationIsExtant HOME '/.gnupg'; then
 		:
-	elif _swaddle_configure_register_configuration_checkCombinationIsExtant '' ~/.gnupg; then
-		:
 	else
 		core_message WARN "Signing disabled by default as no keyring at GNUPGHOME"
 		configure_register Value ReadableSearchableFolderPath swaddle keyring "$emptyKeyRingFolderIfNoneExistsToSuppressFatalChecks"
@@ -253,7 +251,7 @@ swaddle_configure_register_attemptToDiscoverUrlAndGitHubParameters()
 	configure_register Value NotEmpty swaddle host_base_url
 	configure_register Value Any swaddle bugs_url ''
 	
-	local potentialTokenFilePath=~/."${_program_namespace}"/github-personal-access-token
+	local potentialTokenFilePath="$HOME"/."${_program_namespace}"/github-personal-access-token
 	if core_path_isReadableNonEmptyFilePath "$potentialTokenFilePath"; then
 		configure_register Value GithubTokenFile swaddle_github api_token_file "$potentialTokenFilePath"
 	else

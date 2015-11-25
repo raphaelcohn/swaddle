@@ -198,7 +198,7 @@ This namespace is intended to be used in `swaddling/swaddling.conf` and `swaddli
 |`maintainer_name`|*None*|Name of the package maintainer|
 |`maintainer_comment`|*None*|Comment of the package maintainer; may be empty (`''`)|
 |`maintainer_email`|*None*|Email of the package maintainer|
-|`keyring`|*Maybe*|GPG Home. Defaults to `GNUPGHOME` environment variable, `"$HOME"/gnupg`\* or `~/.gnugpg` if the path is correctly permissioned and `gpg` present|
+|`keyring`|*Maybe*|GPG Home. Defaults to `GNUPGHOME` environment variable or `"$HOME"/gnupg`\*|
 |`sign`|`yes` or `no`|Boolean value (in the [shellfire] sense). Defaults to `yes` if `gpg` is present and `keyring` has a default|
 |`keyserver`|`hkps://hkps.pool.sks-keyservers.net` or, if running gpg < 1.4.10, `hkp://p80.pool.sks-keyservers.net:80` †|Automatically share your key with the world|
 |`keyserver_options`|*Empty*|Comma-separated list of options to pass to GPG `--keyserver-options`|
@@ -218,7 +218,7 @@ This namespace is intended to be used in `swaddling/swaddling.conf` and `swaddli
 
 As well as [SPDX licence identifiers](https://spdx.org/licenses/), we also support the values `public-domain`, `unlicensed` and `licensed` for non-Open Source works.
 
-We try very hard to sign quietly and correctly. That said, getting gpg set up correctly is a beast - you might like to review [Creating the perfect GPG keypair](https://alexcabal.com/creating-the-perfect-gpg-keypair/). We strongly encourage you to persist, for the benefit of us all. [swaddle] does not actively override any settings you put in `gpg.conf` (eg in `~/.gnupg/gpg.conf`). We strongly advise you to prefer SHA512 in it, eg:-
+We try very hard to sign quietly and correctly. That said, getting gpg set up correctly is a beast - you might like to review [Creating the perfect GPG keypair](https://alexcabal.com/creating-the-perfect-gpg-keypair/). We strongly encourage you to persist, for the benefit of us all. [swaddle] does not actively override any settings you put in `gpg.conf` (eg in `$HOME/.gnupg/gpg.conf`). We strongly advise you to prefer SHA512 in it, eg:-
 
 ```bash
 force-mdc
@@ -256,9 +256,9 @@ This namespace is intended to be used in `swaddling/swaddling.conf` and `swaddli
 |---|-------|-------|
 |`owner`|*None* or derived from repository git data|GitHub owner. Used for GitHub Releases|
 |`repository`|*None* or derived from repository git data|GitHub repository. Used for GitHub Releases|
-|`api_token_file`|`~/.swaddle/github-personal-access-token` if present|Secure, out-of-tree storage\* of GitHub REST API access credentials|
+|`api_token_file`|`$HOME/.swaddle/github-personal-access-token` if present|Secure, out-of-tree storage\* of GitHub REST API access credentials|
 
-If the file `~/.swaddle/github-personal-access-token` doesn't exist, then GitHub Releases are disabled. This contains a GitHub OAUTH personal access token created from your repository settings. It is one line (no final line feed), 40 bytes in size.
+If the file `$HOME/.swaddle/github-personal-access-token` doesn't exist, then GitHub Releases are disabled. This contains a GitHub OAUTH personal access token created from your repository settings. It is one line (no final line feed), 40 bytes in size.
 
 \* We decided not to let you specify the value directly, as even though you could put it in a conf snippet in, say `swaddling/swaddling.conf.d/00-api-token.conf`, and added that file to `.gitignore`, there's always the chance of slip up, isn't there? Been there and done that: in my case, after _not_ copying my hidden files properly once, and then checking in what should have been excluded with a naive git add in a hurry.
 

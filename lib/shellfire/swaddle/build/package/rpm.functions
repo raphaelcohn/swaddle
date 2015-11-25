@@ -118,21 +118,21 @@ swaddle_package_rpm_rpmbuild()
 	# - gpg 2.1 doesn't work at all because of security improvements to passphrases
 	# - RPM only works with GPG v3 signatures (not the v4+ that are now common)
 	# - RPM only works with a 2048-bit RSA key
-	# - rpmbuild on CentOS 5 expects _gpg_name in ~/.rpmmacros and ignores any setting of --macros OR setting in the spec file
+	# - rpmbuild on CentOS 5 expects _gpg_name in $HOME/.rpmmacros and ignores any setting of --macros OR setting in the spec file
 
 	_swaddle_package_rpm_rpmbuild_rpmMacrosCleanUp()
 	{
-		if [ -f ~/.rpmmacros."${_program_name}".$$ ]; then
-			ln -f  ~/.rpmmacros."${_program_name}".$$ ~/.rpmmacros
-			rm -rf ~/.rpmmacros."${_program_name}".$$
+		if [ -f "$HOME"/.rpmmacros."${_program_name}".$$ ]; then
+			ln -f  "$HOME"/.rpmmacros."${_program_name}".$$ "$HOME"/.rpmmacros
+			rm -rf "$HOME"/.rpmmacros."${_program_name}".$$
 		fi
 	}
 	
 	if core_variable_isTrue "$(swaddle_configure_sign)"; then
 		
-		if [ -f ~/.rpmmacros ]; then
-			ln -f  ~/.rpmmacros ~/.rpmmacros."${_program_name}".$$
-			rm -rf ~/.rpmmacros
+		if [ -f "$HOME"/.rpmmacros ]; then
+			ln -f  "$HOME"/.rpmmacros "$HOME"/.rpmmacros."${_program_name}".$$
+			rm -rf "$HOME"/.rpmmacros
 		fi
 		core_trap_addOnCleanUp _swaddle_package_rpm_rpmbuild_rpmMacrosCleanUp
 		echo "%_signature gpg
@@ -142,7 +142,7 @@ swaddle_package_rpm_rpmbuild()
 %__gpg_sign_cmd %{__gpg} \\
     $(core_compatibility_which gpg) --quiet --home "$(configure_getValue swaddle keyring)" --force-v3-sigs --digest-algo=sha1 --batch --no-verbose --no-armor \\
     --passphrase-fd 3 --no-secmem-warning -u "$(swaddle_configure_signer)" \\
-    -sbo %{__signature_filename} %{__plaintext_filename}" >~/.rpmmacros
+    -sbo %{__signature_filename} %{__plaintext_filename}" >"$HOME"/.rpmmacros
 		
 		printf '%s: %s\n' "$_program_name" "About to build RPM - you will be asked for the passphrase for your GPG key '$(swaddle_configure_signer)', even if using gpg-agent (and even if it doesn't have one)!"
 		
