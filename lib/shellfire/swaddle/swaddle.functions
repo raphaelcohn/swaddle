@@ -43,6 +43,26 @@ swaddle_createTemporaryFolder()
 	_swaddle_temporaryFolderPath="$TMP_FOLDER"
 }
 
+core_functions_register _swaddle_functions swaddle_ensureDateIsUpToDate
+swaddle_ensureDateIsUpToDate()
+{
+	if core_compatibility_whichNoOutput ntpdate-debian; then
+		if core_compatibility_whichNoOutput sudo; then
+			sudo -p "Please enter the password for user %p to let root run ntpdate-debian (to make sure dates are up-to-date before packaging): " ntpdate-debian 1>/dev/null || true
+		fi
+	fi
+}
+
+core_functions_register _swaddle_functions swaddle_ensureGnupgCurlIsPresent
+swaddle_ensureGnupgCurlIsPresent()
+{
+	if [ ${core_dependency_packageManager} = 'Debian' ]; then
+		if ! core_path_isReadableNonEmptyFilePath /usr/share/doc/gnupg-curl/changelog.Debian.gz; then
+			core_dependency_check_${core_dependency_packageManager}_packageManager gnupg-curl
+		fi
+	fi
+}
+
 core_functions_register _swaddle_functions swaddle_registerConfiguration
 swaddle_registerConfiguration()
 {
