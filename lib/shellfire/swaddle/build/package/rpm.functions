@@ -140,6 +140,7 @@ swaddle_package_rpm_rpmbuild()
 		core_temporaryFiles_newFileToRemoveOnExit
 		local gpgProxyBecauseRpmIsAwful="$TMP_FILE"
 		printf '%s' "#!/usr/bin/env sh
+set -x
 plainTextFileName=\"\$1\"
 signatureFileName=\"\$2\"
 export GNUPGHOME='$home'
