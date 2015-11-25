@@ -504,6 +504,11 @@ This namespace is intended to be used in `swaddling/swaddling.conf`. Its setting
 * `sha384`
 * `sha512`
 
+## Known Bugs
+
+* On Mac OS X, Homebrew's version of rpm (as of Sun Apr 19 20:33:06 2015 +0200 / Commit 9f9350d4f4c088f042ef4c3c4fadf9f948fb5d3b) does not work
+
+
 [fpm]: https://github.com/jordansissel/fpm "FPM GitHub page"
 [swaddle]: https://github.com/raphaelcohn/swaddle "Swaddle homepage"
 [shellfire]: https://github.com/shellfire-dev "shellfire homepage"
