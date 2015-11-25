@@ -142,9 +142,14 @@ set -x
 gpg=\"\$1\"
 signatureFileName=\"\$2\"
 plainTextFileName=\"\$3\"
-echo "$#" 1>&2
-echo "$@" 1>&2
+echo \$# 1>&2
+echo \$@ 1>&2
 export GNUPGHOME='$home'
+ls -la
+ls -la "$_swaddle_build_package_temporaryFolderPath"
+ls -la "$_swaddle_repository_yum_repositoryPath"
+ls -la "$rpmbuildTemporaryScriptsPath"
+ls -la "$_swaddle_repository_yum_repositoryPath"/"$_swaddle_build_package_translatedArchitecture"
 exec $gpg --quiet --no-options --home '$home' --force-v3-sigs --digest-algo=sha1 --batch --no-verbose --no-armor --passphrase-fd 3 --no-secmem-warning -u '$keyName' --sign --detach-sign --output \"\$signatureFileName\" \"\$plainTextFileName\"
 " >"$gpgProxyBecauseRpmIsAwful"
 		chmod +x "$gpgProxyBecauseRpmIsAwful"
